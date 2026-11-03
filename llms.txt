@@ -1,0 +1,25 @@
+# Turbo C++ Online Compiler
+
+> Run authentic Borland Turbo C & Turbo C++ 3.2 directly inside any modern web browser ("No Installation, No Configuration") with graphics.h, conio.h, instant code paste, ready-made programs, and live student chat.
+
+## Overview
+- **Name:** Turbo C++ Online Compiler (Upgrade)
+- **Developer:** Sankalp Singh (Lucky Institute of Professional Studies, Jodhpur)
+- **URL:** https://sankalpsinghcoder-ai.github.io/online-c/
+- **Core Technology:** WebAssembly DOSBox emulation via js-dos v8.4.1, Borland Turbo C++ 3.2.
+- **Libraries Supported:** full `<conio.h>` (clrscr, getch, gotoxy) and `<graphics.h>` (BGI graphics driver support).
+- **Target Platforms:** Desktop browsers (Chrome, Edge, Firefox, Safari) and Mobile/Tablets (Android, iOS).
+
+## Key Features
+- **Instant Code Injection:** Paste or upload local `.c` / `.cpp` source files directly into the virtual DOS filesystem (`TURBOC3/BIN/`) in 0.3 seconds.
+- **Ready-Made Programs:** 40+ built-in classic C and C++ programs (Hello World, Sorting, Matrices, Object-Oriented C++, Graphics, Templates).
+- **Live Student Chat:** Instant live collaborative chat for programming students powered by Google Firebase Realtime Database.
+- **Fullscreen Mode:** 100% immersive edge-to-edge IDE view with dedicated action shortcuts bar.
+
+## Essential Borland Shortcuts
+- `Ctrl + F9`: Compile and Run active program
+- `Alt + F5`: Switch to User Output Screen
+- `F5`: Zoom / Maximize Editor Window
+- `F2`: Save File
+- `F3`: Open File Dialog
+- `Shift + Insert` or `Ctrl + Shift + V`: Live code paste modal
