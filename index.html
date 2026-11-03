@@ -9,6 +9,10 @@
 <title>Turbo C++ Online Compiler | Run Turbo C &amp; C++ 3.2 in Browser</title>
 <link rel="canonical" href="https://sankalpsinghcoder-ai.github.io/online-c/">
 
+<!-- AI & Crawler Discovery Links -->
+<link rel="help" type="text/plain" href="https://sankalpsinghcoder-ai.github.io/online-c/llms.txt" title="LLM Documentation">
+<link rel="author" type="text/markdown" href="https://sankalpsinghcoder-ai.github.io/online-c/ai.md" title="AI Full Documentation">
+
 <!-- monetag ads -->
 <meta name="monetag" content="e177958b4d0a43ad3a5bed278130a10e">
 
@@ -75,7 +79,7 @@
         "turbo c android online"
       ],
       "url": "https://sankalpsinghcoder-ai.github.io/online-c/",
-      "description": "Run authentic Borland Turbo C & Turbo C++ 3.2 online directly in your browser. Features live code paste, .CPP file upload, graphics.h, conio.h support, and mobile touchscreen keyboard.",
+      "description": "No Installation and No Configuration, just run authentic Borland Turbo C & Turbo C++ 3.2 online directly in your browser. Features live code paste, .CPP file upload, graphics.h, conio.h support, and mobile touchscreen keyboard.",
       "applicationCategory": "DeveloperApplication",
       "applicationSubCategory": "C and C++ IDE Compiler",
       "operatingSystem": "All modern browsers (Chrome, Firefox, Safari, Edge, Android, iOS)",
@@ -184,6 +188,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- js-dos v8 styles -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/js-dos@8.4.1/dist/js-dos.css" integrity="sha384-tYrgAxbRPufJUrIUwrHMumsQ0yWXdNaYMGKazEkzSgtkpSAps5dIS71lqDFtoVNF" crossorigin="anonymous">
 
+<!-- Firebase App & Realtime Database SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
   :root {
     --bg-dark: #0b0c10;
@@ -217,43 +225,49 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     overflow-x: hidden;
   }
 
-/* Compact Fixed Vertical Sidebar Ads */
-.sidebar-ad-box {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 160px;
-  height: 600px;
-  background: #14171d;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  z-index: 1000;
-}
+  /* Dual Fixed Left Sidebar Ads Container */
+  .sidebar-ads-left-wrapper {
+    position: fixed;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    z-index: 1000;
+  }
 
-.sidebar-ad-left {
-  left: 10px;
-}
-
-.sidebar-ad-right {
-  right: 10px;
-}
-
-/* Automatically hide on mobile/tablets to prevent screen cramping */
-@media (max-width: 1260px) {
   .sidebar-ad-box {
+    width: 160px;
+    height: 600px;
+    background: #14171d;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* Scale or hide dual sidebars depending on available viewport width */
+  @media (max-width: 1600px) {
+    .sidebar-ads-left-wrapper {
+      transform: translateY(-50%) scale(0.85);
+      transform-origin: left center;
+    }
+  }
+
+  @media (max-width: 1380px) {
+    .sidebar-ads-left-wrapper {
+      display: none !important;
+    }
+  }
+
+  /* Hide sidebar ads in Fullscreen */
+  body.is-fullscreen .sidebar-ads-left-wrapper {
     display: none !important;
   }
-}
-
-/* Hide sidebar ads in Fullscreen */
-body.is-fullscreen .sidebar-ad-box {
-  display: none !important;
-}
 
   .ad-disclaimer {
     font-size: 0.60rem;
@@ -407,54 +421,65 @@ body.is-fullscreen .sidebar-ad-box {
     height: auto !important;
   }
 
-  /* Mobile Touch Control Bar */
-  .mobile-touch-bar {
-    display: flex;
+  /* Direct Action Buttons Panel */
+  .direct-actions-card {
     width: 100%;
-    overflow-x: auto;
     background-color: var(--bg-surface);
-    border-top: 1px solid var(--border-color);
-    padding: 6px 8px;
-    gap: 6px;
-    scrollbar-width: none;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px 0 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
-  .mobile-touch-bar::-webkit-scrollbar {
+
+  .direct-actions-title {
+    font-size: 0.80rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--cyan-accent);
+    letter-spacing: 0.03em;
+  }
+
+  .direct-actions-buttons {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow: hidden;
+  }
+  .direct-actions-buttons::-webkit-scrollbar {
     display: none;
   }
 
   .touch-btn {
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+    min-width: 0;
     background-color: var(--bg-elevated);
     border: 1px solid var(--border-color);
     color: var(--cyan-accent);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: clamp(0.60rem, 1.2vw, 0.72rem);
     font-weight: 600;
-    padding: 6px 10px;
-    border-radius: 4px;
+    padding: 7px 6px;
+    border-radius: 5px;
     cursor: pointer;
     white-space: nowrap;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.15s ease;
   }
-  .touch-btn:active {
+  .touch-btn:hover {
     background-color: var(--teal-accent);
     color: #000000;
   }
-
-  /* Shortcuts Table Reference */
-  .status-shortcut-bar {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: #8c979a;
-    padding: 6px 4px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .status-shortcut-bar strong {
-    color: var(--cyan-accent);
+  .touch-btn:active {
+    background-color: var(--cyan-accent);
+    color: #000000;
   }
 
   /* Modal Backdrop & Dialog */
@@ -628,7 +653,7 @@ body.is-fullscreen .sidebar-ad-box {
   }
 
   /* ==========================================================================
-     FULLSCREEN IMMERSIVE TURBO C++ DISPLAY (100% Screen Cover - Zero Black Bars)
+     FULLSCREEN IMMERSIVE TURBO C++ DISPLAY WITH ACTION BAR AT BOTTOM
      ========================================================================== */
   body.is-fullscreen {
     overflow: hidden !important;
@@ -645,8 +670,6 @@ body.is-fullscreen .sidebar-ad-box {
   body.is-fullscreen .feature-tagline,
   body.is-fullscreen .ide-toolbar,
   body.is-fullscreen .doc-section,
-  body.is-fullscreen .status-shortcut-bar,
-  body.is-fullscreen .mobile-touch-bar,
   body.is-fullscreen footer {
     display: none !important;
   }
@@ -690,11 +713,11 @@ body.is-fullscreen .sidebar-ad-box {
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: 0 !important;
+    bottom: 50px !important;
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - 50px) !important;
     max-width: 100vw !important;
-    max-height: 100vh !important;
+    max-height: calc(100vh - 50px) !important;
     z-index: 99999 !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -710,9 +733,9 @@ body.is-fullscreen .sidebar-ad-box {
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - 50px) !important;
     max-width: 100vw !important;
-    max-height: 100vh !important;
+    max-height: calc(100vh - 50px) !important;
     background: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -730,16 +753,15 @@ body.is-fullscreen .sidebar-ad-box {
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - 50px) !important;
     max-width: 100vw !important;
-    max-height: 100vh !important;
+    max-height: calc(100vh - 50px) !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #000000 !important;
     border: none !important;
   }
 
-  /* 100% Edge-to-edge canvas stretch */
   body.is-fullscreen #dos canvas,
   body.is-fullscreen canvas,
   body.is-fullscreen .emulator-canvas,
@@ -749,11 +771,11 @@ body.is-fullscreen .sidebar-ad-box {
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: 0 !important;
+    bottom: 50px !important;
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - 50px) !important;
     max-width: 100vw !important;
-    max-height: 100vh !important;
+    max-height: calc(100vh - 50px) !important;
     object-fit: fill !important;
     image-rendering: -webkit-optimize-contrast !important;
     image-rendering: pixelated !important;
@@ -762,6 +784,40 @@ body.is-fullscreen .sidebar-ad-box {
     padding: 0 !important;
     border: none !important;
     z-index: 100 !important;
+  }
+
+  /* Action Buttons Box in Fullscreen mode (docked below the emulator canvas) */
+  body.is-fullscreen .direct-actions-card {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 50px !important;
+    margin: 0 !important;
+    padding: 6px 14px !important;
+    background: #14171d !important;
+    border-radius: 0 !important;
+    border-top: 1px solid var(--teal-accent) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    z-index: 100005 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  body.is-fullscreen .direct-actions-title {
+    display: none !important;
+  }
+
+  body.is-fullscreen .direct-actions-buttons {
+    justify-content: center;
+    width: 100%;
   }
 
   /* Documentation & SEO FAQ Section */
@@ -890,78 +946,314 @@ body.is-fullscreen .sidebar-ad-box {
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
   }
 
-  /* When screen is Mobile or Tablet (1080px and below) */
   @media (max-width: 1080px) {
-    /* 1. Show the top banner */
     .mobile-top-ad {
       display: flex !important;
     }
-    /* 2. Hide both left & right vertical sidebars completely */
-    .sidebar-ad-box {
+    .sidebar-ads-left-wrapper {
       display: none !important;
     }
-    /* 3. Add space so top banner does not overlap page content */
     body {
       padding-top: 95px !important;
     }
   }
 
-  /* Hide mobile top banner in Fullscreen mode */
   body.is-fullscreen .mobile-top-ad {
     display: none !important;
   }
-  
+
+  /* ==========================================================================
+     LEFT: READY-MADE PROGRAMS PANEL  |  RIGHT: LIVE CHAT PANEL
+     ========================================================================== */
+  :root { --left-w: 250px; --right-w: 310px; }
+
+  .side-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-surface);
+    z-index: 1001;
+  }
+  #programs-panel { left: 0; width: var(--left-w); border-right: 1px solid var(--border-color); }
+  #chat-panel { right: 0; width: var(--right-w); border-left: 1px solid var(--border-color); }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-elevated);
+  }
+  .panel-title {
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--cyan-accent);
+  }
+  .panel-close {
+    display: none;
+    background: none;
+    border: none;
+    color: #8c979a;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .panel-close:hover { color: #ffffff; }
+
+  /* Programs: language tabs + list */
+  .lang-tabs { display: flex; gap: 6px; padding: 10px 12px 6px 12px; }
+  .lang-tab {
+    flex: 1;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 7px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lang-tab:hover { border-color: var(--teal-accent); color: var(--cyan-accent); }
+  .lang-tab.active { background: var(--teal-accent); color: var(--bg-dark); border-color: var(--cyan-accent); }
+  .prog-hint { font-size: 0.72rem; color: #8c979a; padding: 4px 14px 8px 14px; line-height: 1.35; }
+
+  .prog-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 10px 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+  .prog-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    text-align: left;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .prog-item:hover { border-color: var(--teal-accent); background-color: #25303d; }
+  .prog-item.active { border-color: var(--cyan-accent); }
+  .prog-name { font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600; color: var(--text-bright); }
+  .prog-file { font-family: var(--font-mono); font-size: 0.70rem; color: var(--cyan-accent); }
+
+  /* Chat */
+  .chat-status { display: inline-flex; align-items: center; gap: 6px; font-size: 0.70rem; color: #8c979a; font-family: var(--font-mono); }
+  .chat-dot { width: 8px; height: 8px; border-radius: 50%; background: #7a8288; display: inline-block; }
+  .chat-dot.on { background: #3ddc84; box-shadow: 0 0 6px #3ddc84; }
+  .chat-dot.wait { background: #f5b942; }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+  .chat-note { font-size: 0.72rem; color: #8c979a; text-align: center; line-height: 1.4; padding: 6px 4px; }
+  .chat-msg {
+    max-width: 92%;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 10px;
+    align-self: flex-start;
+    word-break: break-word;
+  }
+  .chat-msg.mine { align-self: flex-end; border-color: var(--teal-accent); background-color: #1b3a3a; }
+  .chat-meta { font-size: 0.66rem; color: #8c979a; font-family: var(--font-mono); margin-bottom: 2px; }
+  .chat-meta b { color: var(--cyan-accent); font-weight: 600; }
+  .chat-text { font-size: 0.84rem; color: var(--text-bright); line-height: 1.4; white-space: pre-wrap; }
+
+  .chat-compose { border-top: 1px solid var(--border-color); padding: 10px; display: flex; flex-direction: column; gap: 6px; background-color: var(--bg-elevated); }
+  .chat-compose input {
+    width: 100%;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-bright);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    padding: 8px 10px;
+    outline: none;
+  }
+  .chat-compose input:focus { border-color: var(--cyan-accent); }
+  .chat-compose input:disabled { opacity: 0.5; cursor: not-allowed; }
+  #chat-name { font-family: var(--font-mono); font-size: 0.76rem; color: var(--cyan-accent); }
+  /* Username Selection Box */
+  .chat-join-box {
+    padding: 14px 12px;
+    background-color: var(--bg-elevated);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chat-join-desc {
+    font-size: 0.72rem;
+    color: #f5b942;
+    line-height: 1.35;
+    font-family: var(--font-mono);
+  }
+  .chat-badge {
+    font-size: 0.74rem;
+    font-family: var(--font-mono);
+    color: var(--cyan-accent);
+    padding: 4px 6px;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+  }
+  .chat-row { display: flex; gap: 6px; }
+  .chat-send {
+    background-color: var(--teal-accent);
+    color: #0b0c10;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0 14px;
+    cursor: pointer;
+  }
+  .chat-send:hover { background-color: var(--cyan-accent); }
+  .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Page content sits between the two panels on desktop */
+  @media (min-width: 1200px) {
+    body { padding-left: var(--left-w); padding-right: var(--right-w); }
+  }
+  @media (min-width: 1200px) and (max-width: 1499px) {
+    :root { --left-w: 220px; --right-w: 270px; }
+  }
+
+  /* Tablet / mobile: panels become slide-in drawers */
+  .panel-toggle {
+    display: none;
+    position: fixed;
+    bottom: 14px;
+    z-index: 1003;
+    background-color: var(--teal-accent);
+    color: #0b0c10;
+    border: 1px solid var(--cyan-accent);
+    border-radius: 999px;
+    padding: 9px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  }
+  #programs-toggle { left: 12px; }
+  #chat-toggle { right: 12px; }
+  .panel-backdrop { display: none; position: fixed; inset: 0; background: rgba(5, 7, 10, 0.7); z-index: 1002; }
+
+  @media (max-width: 1199px) {
+    .panel-toggle { display: inline-flex; align-items: center; gap: 6px; }
+    .panel-close { display: inline-flex; }
+    .side-panel {
+      width: min(88vw, 330px) !important;
+      visibility: hidden;
+      transition: transform 0.25s ease, visibility 0.25s;
+      z-index: 1004;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    }
+    #programs-panel { transform: translateX(-105%); }
+    #chat-panel { transform: translateX(105%); }
+    .side-panel.open { transform: translateX(0); visibility: visible; }
+    .panel-backdrop.show { display: block; }
+  }
+
+  /* Hide everything extra in fullscreen */
+  body.is-fullscreen .side-panel,
+  body.is-fullscreen .panel-toggle,
+  body.is-fullscreen .panel-backdrop { display: none !important; }
+
+  /* Direct action bar: always a single line */
+  body.is-fullscreen .touch-btn { flex: 0 1 auto; }
+  @media (max-width: 640px) {
+    .touch-btn .sc { display: none; }
+  }
+  @media (max-width: 480px) {
+    .direct-actions-card { padding: 8px 8px; }
+    .direct-actions-buttons { gap: 4px; }
+    .touch-btn { font-size: 0.58rem; padding: 7px 2px; }
+  }
 </style>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSG23F75" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-
-<!-- Left Vertical Ad Box -->
-<aside class="sidebar-ad-box sidebar-ad-left">
-  <script>
-  atOptions = {
-    'key' : 'acbb3f1edfb250cdf3521d68d761d7d7',
-    'format' : 'iframe',
-    'height' : 600,
-    'width' : 160,
-    'params' : {}
-  };
-</script>
-<script src="https://bauval.org/22/acbb3f1edfb250cdf3521d68d761d7d7"></script>
-</aside>
-
-<!-- Right Vertical Ad Box -->
-<aside class="sidebar-ad-box sidebar-ad-right">
-  <script>
-  atOptions = {
-    'key' : 'acbb3f1edfb250cdf3521d68d761d7d7',
-    'format' : 'iframe',
-    'height' : 600,
-    'width' : 160,
-    'params' : {}
-  };
-</script>
-<script src="https://bauval.org/22/acbb3f1edfb250cdf3521d68d761d7d7"></script>
-</aside>
-
-<!-- Mobile & Tablet Only Top Banner Ad -->
-<header class="mobile-top-ad">
-  <script>
-  atOptions = {
-    'key' : 'b377b43bcd1efb3a7bc45556bd569cef',
-    'format' : 'iframe',
-    'height' : 60,
-    'width' : 468,
-    'params' : {}
-  };
-</script>
-<script src="https://bauval.org/22/b377b43bcd1efb3a7bc45556bd569cef"></script>
-  <div class="ad-disclaimer">
-    Ads generated by Adsterra; we take no responsibility for third-party ad content.
-  </div>
-</header>
   
+<!-- LEFT: Ready-made programs -->
+<aside class="side-panel" id="programs-panel" aria-label="Ready-made programs">
+  <div class="panel-head">
+    <span class="panel-title">📚 Ready-made Programs</span>
+    <button type="button" class="panel-close" id="programs-close" aria-label="Close programs">&times;</button>
+  </div>
+  <div class="lang-tabs">
+    <button type="button" class="lang-tab active" id="tab-c" data-lang="c">C</button>
+    <button type="button" class="lang-tab" id="tab-cpp" data-lang="cpp">C++</button>
+  </div>
+  <div class="prog-hint">Tap a program to load it into Turbo C++ with its file name.</div>
+  <div class="prog-list" id="prog-list"></div>
+</aside>
+
+<!-- RIGHT: Live chat -->
+<aside class="side-panel" id="chat-panel" aria-label="Live chat">
+  <div class="panel-head">
+    <span class="panel-title">💬 Live Chat</span>
+    <span class="chat-status"><span class="chat-dot" id="chat-dot"></span><span id="chat-status-text">Connecting...</span></span>
+    <button type="button" class="panel-close" id="chat-close" aria-label="Close chat">&times;</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-note">Chat with other students. Be respectful. No links or personal info, please.</div>
+  </div>
+
+  <!-- 1. Username Claim Form (Visible only before joining) -->
+  <div class="chat-join-box" id="chat-join-section">
+    <div class="chat-join-desc">⚠️ Choose your username to join. Once chosen, it cannot be changed and must be unique!</div>
+    <div style="display: flex; gap: 6px;">
+      <input type="text" id="choose-username-input" maxlength="15" placeholder="Pick a username..." style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: #fff; padding: 7px 10px; border-radius: 5px; outline: none; font-family: var(--font-mono); font-size: 0.8rem;">
+      <button type="button" class="chat-send" id="btn-claim-username" style="padding: 0 12px;">Join</button>
+    </div>
+  </div>
+
+  <!-- 2. Message Form (Visible once joined) -->
+  <form class="chat-compose" id="chat-form" autocomplete="off" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="chat-badge" id="chat-current-user">User: ...</span>
+    </div>
+    <div class="chat-row">
+      <input type="text" id="chat-input" maxlength="300" placeholder="Type a message..." disabled>
+      <button type="submit" class="chat-send" id="chat-send" disabled>Send</button>
+    </div>
+  </form>
+</aside>
+
+<button type="button" class="panel-toggle" id="programs-toggle">📚 Programs</button>
+<button type="button" class="panel-toggle" id="chat-toggle">💬 Chat</button>
+<div class="panel-backdrop" id="panel-backdrop"></div>
+
 <main class="main-wrapper">
   <!-- Header 3-Line Titles -->
   <h1>Turbo C++ Online Compiler (Upgrade)</h1>
@@ -992,14 +1284,18 @@ body.is-fullscreen .sidebar-ad-box {
     <div id="dos-wrapper">
       <div id="dos" tabindex="0"></div>
     </div>
+  </div>
 
-    <!-- Mobile Touch / Action Bar -->
-    <div class="mobile-touch-bar" id="mobile-touch-bar">
+  <!-- Direct Actions Horizontal Panel -->
+  <div class="direct-actions-card" id="direct-actions-panel">
+    <div class="direct-actions-title">⚡ Use these buttons for direct actions:</div>
+    <div class="direct-actions-buttons">
       <button type="button" class="touch-btn" id="tb-paste">📋 Paste Code</button>
-      <button type="button" class="touch-btn" id="tb-run">▶️ Run (Ctrl+F9)</button>
-      <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output (Alt+F5)</button>
-      <button type="button" class="touch-btn" id="tb-save">💾 Save (F2)</button>
-      <button type="button" class="touch-btn" id="tb-open">📂 Open (F3)</button>
+      <button type="button" class="touch-btn" id="tb-run">▶️ Run<span class="sc"> (Ctrl+F9)</span></button>
+      <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output<span class="sc"> (Alt+F5)</span></button>
+      <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
+      <button type="button" class="touch-btn" id="tb-open">📂 Open<span class="sc"> (F3)</span></button>
+      <button type="button" class="touch-btn" id="tb-zoom">🔍 Zoom<span class="sc"> (F5)</span></button>
       <button type="button" class="touch-btn" id="tb-esc">Esc</button>
     </div>
   </div>
@@ -1007,14 +1303,8 @@ body.is-fullscreen .sidebar-ad-box {
   <!-- Hidden Native File Input for Import -->
   <input type="file" id="file-importer" accept=".cpp,.c,.cc,.cxx,.h,.hpp,.txt" style="display: none;">
 
-  <!-- Hidden input for mobile keyboard (Preserved for Jest tests & touch input) -->
+  <!-- Hidden input for mobile keyboard -->
   <input id="keyboard-helper" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-
-  <!-- Desktop Key Statusbar Reference -->
-  <div class="status-shortcut-bar">
-    <div>Tip: Use these buttons for direct actions 👆</div>
-    <div><strong>F3:</strong> Open | <strong>F2:</strong> Save | <strong>Ctrl+F9:</strong> Run</div>
-  </div>
 
   <!-- Paste Code Modal Dialog -->
   <div class="modal-backdrop" id="paste-modal">
@@ -1166,7 +1456,7 @@ void main() {
   </footer>
 </main>
 
-<!-- Clear old js-dos cache once (Kept 100% intact for Jest Test compatibility) -->
+<!-- Clear old js-dos cache once -->
 <script>
 (async () => {
   try {
@@ -1194,7 +1484,6 @@ void main() {
 <script>
 // ============================================================================
 // 1. CAPTURE-PHASE KEYBOARD INTERCEPTOR
-// Prevents JS-DOS from intercepting typing inside modal textareas and inputs
 // ============================================================================
 ["keydown", "keyup", "keypress"].forEach(eventType => {
   window.addEventListener(eventType, (e) => {
@@ -1232,8 +1521,7 @@ const btnModalImport = document.getElementById("btn-modal-import");
 const btnModalClipboard = document.getElementById("btn-modal-clipboard");
 const btnInjectCode = document.getElementById("btn-inject-code");
 
-// Mobile Touch Bar Buttons
-const tbKbd = document.getElementById("tb-kbd");
+// Direct Action Buttons
 const tbPaste = document.getElementById("tb-paste");
 const tbRun = document.getElementById("tb-run");
 const tbUserscreen = document.getElementById("tb-userscreen");
@@ -1339,6 +1627,14 @@ function showToast(msg, duration = 3000) {
   toastTimer = setTimeout(() => toast.classList.remove("show"), duration);
 }
 
+function ensureCompilerStarted() {
+  if (!dosCi) {
+    showToast("Please start Turbo C++ first!");
+    return false;
+  }
+  return true;
+}
+
 function getSanitizedFilename(input) {
   let filename = (input || "CODE.CPP").trim().toUpperCase();
   if (!filename.includes(".")) filename += ".CPP";
@@ -1349,6 +1645,7 @@ function getSanitizedFilename(input) {
 }
 
 function openModal() {
+  if (!ensureCompilerStarted()) return;
   if (pasteModal) {
     pasteModal.classList.add("visible");
     if (pasteCodeInput) pasteCodeInput.focus();
@@ -1362,19 +1659,68 @@ function closeModal() {
   }
 }
 
+// Auto-bypass the internal js-dos play button overlay
+function triggerAutoPlayOverlay() {
+  const playSelectors = [
+    '.jsdos-start',
+    '.start-button',
+    '.emulator-start',
+    '.play-button',
+    '.jsdos-overlay button',
+    '.emulator-overlay button',
+    'button[title*="Play"]',
+    'button[aria-label*="Play"]'
+  ];
+  for (const sel of playSelectors) {
+    const el = dosBox.querySelector(sel);
+    if (el && typeof el.click === "function") {
+      el.click();
+      return true;
+    }
+  }
+  const allBtns = dosBox.querySelectorAll('button');
+  for (const b of allBtns) {
+    if (!b.classList.contains("touch-btn") && !b.classList.contains("tool-btn")) {
+      b.click();
+      return true;
+    }
+  }
+  return false;
+}
+
 // ============================================================================
 // 2. START DOSBOX EMULATOR
-// (Retains exact callbacks for index.test.js while setting up dosCi & keys)
 // ============================================================================
 startBtn.addEventListener("click", () => {
   startBtn.style.display = "none";
   if (emulatorCard) emulatorCard.style.display = "block";
   dosBox.style.display = "block";
 
+  // Watch for any internal play button overlay and click it immediately
+  const playObserver = new MutationObserver(() => {
+    if (triggerAutoPlayOverlay()) {
+      // triggered
+    }
+  });
+  playObserver.observe(dosBox, { childList: true, subtree: true });
+
+  const playInterval = setInterval(() => {
+    if (triggerAutoPlayOverlay() || dosCi) {
+      clearInterval(playInterval);
+      playObserver.disconnect();
+    }
+  }, 50);
+
+  setTimeout(() => {
+    clearInterval(playInterval);
+    playObserver.disconnect();
+  }, 8000);
+
   const dosPromise = Dos(dosBox, {
     url: "turboc.jsdos",
     zipUrl: "TURBOC3.zip",
     mouseCapture: false,
+    autoStart: true,
     onEvent: (event, payload) => {
       if (event === "ci-ready") {
         dosCi = payload;
@@ -1397,7 +1743,6 @@ startBtn.addEventListener("click", () => {
 
         setTimeout(() => {
           hiddenInput.focus();
-          // Auto-maximize Borland window
           if (dosCi) pressDosKey(KBD.F5, false, 25, 40);
         }, 2000);
       })
@@ -1416,7 +1761,6 @@ startBtn.addEventListener("click", () => {
     if (keyboard) keyboard.focus();
   });
 
-  // EXACT KEYBOARD-HELPER HANDLERS REQUIRED BY JEST TEST
   hiddenInput.addEventListener("beforeinput", (e) => {
     try {
       if (!keyboard) return;
@@ -1435,7 +1779,6 @@ startBtn.addEventListener("click", () => {
     }
   });
 
-  // Reset hidden input on input events to prevent input accumulation/leakage in DOM state
   hiddenInput.addEventListener("input", () => {
     hiddenInput.value = "";
   });
@@ -1445,10 +1788,7 @@ startBtn.addEventListener("click", () => {
 // 3. LIVE CODE INSERTION INTO TURBO C++
 // ============================================================================
 async function injectCodeIntoDos() {
-  if (!dosCi) {
-    showToast("Please start Turbo C++ first!");
-    return;
-  }
+  if (!ensureCompilerStarted()) return;
   const code = pasteCodeInput.value;
   if (!code || !code.trim()) {
     showToast("Please enter or paste code first!");
@@ -1472,13 +1812,9 @@ async function injectCodeIntoDos() {
       clearKeyMatrix();
       await delay(200);
 
-      // Press Esc to exit any active menu
       await pressDosKey(KBD.ESC, false, 20, 100);
-
-      // Press F3 (Open file dialog in Turbo C++)
       await pressDosKey(KBD.F3, false, 25, 200);
 
-      // Type filename into dialog
       for (let i = 0; i < dosFilename.length; i++) {
         const ch = dosFilename[i];
         const kInfo = charToDosKeys(ch);
@@ -1490,10 +1826,8 @@ async function injectCodeIntoDos() {
       }
 
       await delay(120);
-      // Press Enter to load
       await pressDosKey(KBD.ENTER, false, 25, 120);
 
-      // Auto-Zoom active window (F5)
       await delay(180);
       await pressDosKey(KBD.F5, false, 25, 80);
       clearKeyMatrix();
@@ -1593,17 +1927,14 @@ if (pasteCodeInput) {
 
 // Zoom active window
 async function triggerZoom() {
-  if (!dosCi) {
-    showToast("Start Turbo C++ first!");
-    return;
-  }
+  if (!ensureCompilerStarted()) return;
   clearKeyMatrix();
   await pressDosKey(KBD.F5, false, 25, 60);
   showToast("Zoom Toggled (F5)");
 }
 
 // ============================================================================
-// 4. FULLSCREEN SYSTEM (100% Edge-to-Edge)
+// 4. FULLSCREEN SYSTEM
 // ============================================================================
 function toggleFullscreen() {
   const isFs = document.body.classList.toggle("is-fullscreen");
@@ -1639,19 +1970,18 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 // ============================================================================
-// 5. MOBILE TOUCH TOOLBAR ACTIONS
+// 5. DIRECT ACTION BUTTONS (With compiler status check)
 // ============================================================================
-if (tbKbd) {
-  tbKbd.addEventListener("click", () => {
-    hiddenInput.focus();
-    if (keyboard) keyboard.focus();
-    showToast("Virtual Keyboard Active");
+if (tbPaste) {
+  tbPaste.addEventListener("click", () => {
+    if (!ensureCompilerStarted()) return;
+    openModal();
   });
 }
-if (tbPaste) tbPaste.addEventListener("click", openModal);
+
 if (tbRun) {
   tbRun.addEventListener("click", async () => {
-    if (!dosCi) return;
+    if (!ensureCompilerStarted()) return;
     dosCi.sendKeyEvent(KBD.LCTRL, true);
     await delay(10);
     dosCi.sendKeyEvent(KBD.F9, true);
@@ -1661,9 +1991,10 @@ if (tbRun) {
     showToast("Running Program (Ctrl+F9)...");
   });
 }
+
 if (tbUserscreen) {
   tbUserscreen.addEventListener("click", async () => {
-    if (!dosCi) return;
+    if (!ensureCompilerStarted()) return;
     dosCi.sendKeyEvent(KBD.LALT, true);
     await delay(10);
     dosCi.sendKeyEvent(KBD.F5, true);
@@ -1673,24 +2004,33 @@ if (tbUserscreen) {
     showToast("Toggled Output Screen (Alt+F5)");
   });
 }
-if (tbZoom) tbZoom.addEventListener("click", triggerZoom);
+
+if (tbZoom) {
+  tbZoom.addEventListener("click", () => {
+    if (!ensureCompilerStarted()) return;
+    triggerZoom();
+  });
+}
+
 if (tbSave) {
   tbSave.addEventListener("click", async () => {
-    if (!dosCi) return;
+    if (!ensureCompilerStarted()) return;
     await pressDosKey(KBD.F2, false, 25, 40);
     showToast("Saved (F2)");
   });
 }
+
 if (tbOpen) {
   tbOpen.addEventListener("click", async () => {
-    if (!dosCi) return;
+    if (!ensureCompilerStarted()) return;
     await pressDosKey(KBD.F3, false, 25, 40);
     showToast("Open File Dialog (F3)");
   });
 }
+
 if (tbEsc) {
   tbEsc.addEventListener("click", async () => {
-    if (!dosCi) return;
+    if (!ensureCompilerStarted()) return;
     await pressDosKey(KBD.ESC, false, 25, 40);
   });
 }
@@ -1699,19 +2039,16 @@ if (tbEsc) {
 // 6. GLOBAL SHORTCUTS
 // ============================================================================
 window.addEventListener("keydown", (e) => {
-  // F11: Fullscreen
   if (e.key === "F11") {
     e.preventDefault();
     toggleFullscreen();
     return;
   }
-  // F5: Zoom window (prevent browser reload)
   if (e.key === "F5") {
     e.preventDefault();
     triggerZoom();
     return;
   }
-  // Shift+Insert or Ctrl+Shift+V or Alt+V: Paste code
   const isPaste = (e.shiftKey && e.key === "Insert") ||
     (e.ctrlKey && e.shiftKey && (e.key === "V" || e.key === "v")) ||
     (e.altKey && (e.key === "V" || e.key === "v"));
@@ -1722,7 +2059,6 @@ window.addEventListener("keydown", (e) => {
     openModal();
     return;
   }
-  // Escape: Close modal or exit fullscreen
   if (e.key === "Escape") {
     if (pasteModal && pasteModal.classList.contains("visible")) {
       e.preventDefault();
@@ -1746,6 +2082,258 @@ if ("serviceWorker" in navigator) {
       .catch(err => console.error("Service Worker registration failed:", err));
   });
 }
+</script>
+
+<script src="programs.js"></script>
+  
+<script>
+// ============================================================================
+// 8. READY-MADE PROGRAMS PANEL (left) + DRAWER HANDLING
+// ============================================================================
+(function () {
+  const listEl = document.getElementById("prog-list");
+  const tabs = document.querySelectorAll(".lang-tab");
+  const progPanel = document.getElementById("programs-panel");
+  const chatPanel = document.getElementById("chat-panel");
+  const backdrop = document.getElementById("panel-backdrop");
+  let lang = "c";
+  let activeFile = "";
+  let busy = false;
+
+  function closeDrawers() {
+    progPanel.classList.remove("open");
+    chatPanel.classList.remove("open");
+    backdrop.classList.remove("show");
+  }
+  function openDrawer(panel) {
+    closeDrawers();
+    panel.classList.add("open");
+    backdrop.classList.add("show");
+  }
+  document.getElementById("programs-toggle").addEventListener("click", () => openDrawer(progPanel));
+  document.getElementById("chat-toggle").addEventListener("click", () => openDrawer(chatPanel));
+  document.getElementById("programs-close").addEventListener("click", closeDrawers);
+  document.getElementById("chat-close").addEventListener("click", closeDrawers);
+  backdrop.addEventListener("click", closeDrawers);
+
+  function render() {
+    listEl.innerHTML = "";
+    PROGRAMS[lang].forEach((p) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "prog-item" + (p.f === activeFile ? " active" : "");
+      const n = document.createElement("span");
+      n.className = "prog-name";
+      n.textContent = p.t;
+      const f = document.createElement("span");
+      f.className = "prog-file";
+      f.textContent = p.f;
+      b.appendChild(n);
+      b.appendChild(f);
+      b.addEventListener("click", () => loadProgram(p));
+      listEl.appendChild(b);
+    });
+  }
+
+  tabs.forEach((t) => t.addEventListener("click", () => {
+    lang = t.dataset.lang;
+    tabs.forEach((x) => x.classList.toggle("active", x === t));
+    render();
+    listEl.scrollTop = 0;
+  }));
+
+  async function waitFor(fn, timeout) {
+    const t0 = Date.now();
+    while (Date.now() - t0 < timeout) {
+      if (fn()) return true;
+      await delay(200);
+    }
+    return false;
+  }
+
+  async function loadProgram(p) {
+    if (busy) { showToast("Please wait, loading previous program..."); return; }
+    busy = true;
+    try {
+      closeDrawers();
+      if (!dosCi) {
+        if (startBtn.style.display !== "none") {
+          showToast("Starting Turbo C++ ...", 4000);
+          startBtn.click();
+        }
+        const ok = await waitFor(() => dosCi, 40000);
+        if (!ok) { showToast("Turbo C++ is still loading. Tap the program again in a moment."); return; }
+        await delay(5000); // let Turbo C++ IDE finish booting
+      }
+      activeFile = p.f;
+      render();
+      if (emulatorCard) emulatorCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      pasteCodeInput.value = p.code;
+      injectFilenameInput.value = p.f;
+      await injectCodeIntoDos();
+    } finally {
+      busy = false;
+    }
+  }
+
+  render();
+})();
+
+// ============================================================================
+// 9. LIVE CHAT (right) - Powered by Firebase Realtime Database
+// ============================================================================
+(function () {
+  const firebaseConfig = {
+    apiKey: "AIzaSyASkYqRf1HheRldg-s5YaPwIuZt_9VOmiM",
+    authDomain: "turboc-compiler.firebaseapp.com",
+    databaseURL: "https://turboc-compiler-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "turboc-compiler",
+    storageBucket: "turboc-compiler.firebasestorage.app",
+    messagingSenderId: "578042146187",
+    appId: "1:578042146187:web:83f1a3d56928d787b6d38e"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+  const messagesRef = db.ref("messages");
+  const usersRef = db.ref("usernames");
+
+  const msgBox = document.getElementById("chat-messages");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-input");
+  const sendBtn = document.getElementById("chat-send");
+  const dot = document.getElementById("chat-dot");
+  const statusText = document.getElementById("chat-status-text");
+
+  const joinSection = document.getElementById("chat-join-section");
+  const usernameInput = document.getElementById("choose-username-input");
+  const claimBtn = document.getElementById("btn-claim-username");
+  const currentUserBadge = document.getElementById("chat-current-user");
+
+  let myUsername = localStorage.getItem("tc_chat_username") || "";
+
+  function setStatus(online) {
+    if (online) {
+      dot.className = "chat-dot on";
+      statusText.textContent = "Online";
+      if (myUsername) {
+        input.disabled = false;
+        sendBtn.disabled = false;
+      }
+    } else {
+      dot.className = "chat-dot wait";
+      statusText.textContent = "Connecting...";
+      input.disabled = true;
+      sendBtn.disabled = true;
+    }
+  }
+
+  db.ref(".info/connected").on("value", (snap) => {
+    setStatus(snap.val() === true);
+  });
+
+  function showChatBox() {
+    joinSection.style.display = "none";
+    form.style.display = "flex";
+    currentUserBadge.textContent = "User: " + myUsername + " 🔒";
+    input.disabled = false;
+    sendBtn.disabled = false;
+  }
+
+  // If user already picked username previously
+  if (myUsername) {
+    showChatBox();
+  }
+
+  // Handle unique username registration
+  async function claimUsername() {
+    const desired = (usernameInput.value || "").trim().toLowerCase();
+    const cleanName = desired.replace(/[^a-z0-9_]/g, "");
+
+    if (cleanName.length < 3) {
+      alert("Username must be at least 3 letters/numbers long.");
+      return;
+    }
+
+    claimBtn.disabled = true;
+    claimBtn.textContent = "...";
+
+    try {
+      // Check if username already claimed in Firebase
+      const snapshot = await usersRef.child(cleanName).once("value");
+      if (snapshot.exists()) {
+        alert("This username is already taken! Please choose another one.");
+        claimBtn.disabled = false;
+        claimBtn.textContent = "Join";
+        return;
+      }
+
+      // Claim it permanently
+      await usersRef.child(cleanName).set({
+        claimedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      myUsername = cleanName;
+      localStorage.setItem("tc_chat_username", myUsername);
+      showChatBox();
+    } catch (e) {
+      alert("Error checking username. Check your internet connection.");
+      claimBtn.disabled = false;
+      claimBtn.textContent = "Join";
+    }
+  }
+
+  claimBtn.addEventListener("click", claimUsername);
+  usernameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") claimUsername();
+  });
+
+  function addMessage(m) {
+    const wrap = document.createElement("div");
+    wrap.className = "chat-msg" + (m.name === myUsername ? " mine" : "");
+    const meta = document.createElement("div");
+    meta.className = "chat-meta";
+    const b = document.createElement("b");
+    b.textContent = m.name || "Student";
+    const t = new Date(m.ts || Date.now());
+    const hh = String(t.getHours()).padStart(2, "0");
+    const mm = String(t.getMinutes()).padStart(2, "0");
+    meta.appendChild(b);
+    meta.appendChild(document.createTextNode("  " + hh + ":" + mm));
+    const txt = document.createElement("div");
+    txt.className = "chat-text";
+    txt.textContent = m.text || "";
+    wrap.appendChild(meta);
+    wrap.appendChild(txt);
+    msgBox.appendChild(wrap);
+    while (msgBox.children.length > 100) {
+      msgBox.removeChild(msgBox.children[1]);
+    }
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+
+  messagesRef.limitToLast(50).on("child_added", (snapshot) => {
+    const m = snapshot.val();
+    if (m && m.text) addMessage(m);
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text || !myUsername) return;
+
+    input.value = "";
+    messagesRef.push({
+      name: myUsername,
+      text: text.slice(0, 300),
+      ts: firebase.database.ServerValue.TIMESTAMP
+    }).catch((err) => {
+      console.warn("Failed to send message:", err);
+    });
+  });
+})();
 </script>
 
 </body>
