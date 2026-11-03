@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="google-adsense-account" content="ca-pub-4518793325867602">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#0b0c10">
+<title>Turbo C++ Online Compiler | Run Turbo C &amp; C++ 3.2 in Browser</title>
+<link rel="canonical" href="https://sankalpsinghcoder-ai.github.io/online-c/">
+
+<!-- AI & Crawler Discovery Links -->
+<link rel="help" type="text/plain" href="https://sankalpsinghcoder-ai.github.io/online-c/llms.txt" title="LLM Documentation">
+<link rel="author" type="text/markdown" href="https://sankalpsinghcoder-ai.github.io/online-c/ai.md" title="AI Full Documentation">
+
+<!-- monetag ads -->
+<meta name="monetag" content="e177958b4d0a43ad3a5bed278130a10e">
+
+<!-- SEO Metadata -->
+<meta name="title" content="Turbo C++ Online Compiler | Turbo CPP by Sankalp Singh">
+<meta name="description" content="Run authentic Borland Turbo C &amp; Turbo C++ 3.2 online in browser. Instant code paste, .CPP file upload, graphics.h and conio.h support. Mobile-friendly C/C++ IDE.">
+<meta name="keywords" content="turbo c, turboc, turboc++, turbo c online, turbo c compiler, turbo c++ online, online c compiler, online c++ compiler, turbo c simulator, borland turbo c 3.2, copy paste turbo c, import cpp file, graphics.h online, conio.h online, turbo c for android, mobile turbo c, sankalp singh, tc online">
+<meta name="author" content="Sankalp Singh">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
+<!-- Open Graph / Social -->
+<meta property="og:title" content="Turbo C++ Online Compiler | Browser C++ IDE">
+<meta property="og:description" content="Run Borland Turbo C &amp; C++ 3.2 online in your browser. Live code paste, file upload, full screen &amp; mobile keyboard support.">
+<meta property="og:image" content="https://sankalpsinghcoder-ai.github.io/online-c/icon-1-192.png">
+<meta property="og:url" content="https://sankalpsinghcoder-ai.github.io/online-c/">
+<meta property="og:type" content="website">
+
+<!-- Twitter Cards -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Turbo C++ Online Compiler">
+<meta name="twitter:description" content="Run Turbo C++ 3.2 directly in your web browser instantly with code paste and file upload.">
+<meta name="twitter:image" content="https://sankalpsinghcoder-ai.github.io/online-c/icon-1-192.png">
+
+<!-- Google Standard Favicons for Search Snippets -->
+<link rel="icon" type="image/x-icon" href="https://sankalpsinghcoder-ai.github.io/online-c/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://sankalpsinghcoder-ai.github.io/online-c/icon-1-48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="https://sankalpsinghcoder-ai.github.io/online-c/icon-1-96.png">
+<link rel="icon" type="image/png" sizes="144x144" href="https://sankalpsinghcoder-ai.github.io/online-c/icon-1-144.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://sankalpsinghcoder-ai.github.io/online-c/icon-1-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://sankalpsinghcoder-ai.github.io/online-c/icon-1-192.png">
+<link rel="manifest" href="/online-c/manifest.json">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- JSON-LD Structured Data: WebApplication + FAQPage for Top Google Ranking -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": "https://sankalpsinghcoder-ai.github.io/online-c/#webapp",
+      "name": "Turbo C++ Online Compiler",
+      "alternateName": [
+        "Turbo C",
+        "turbo c",
+        "turbo c++",
+        "turbo c++ online compiler",
+        "turbo c++ online",
+        "turbo c compiler",
+        "turbo c++ compiler",
+        "turbo c++ compiler online",
+        "turbo c compiler online",
+        "online turbo c++",
+        "online turbo c compiler",
+        "online c compiler",
+        "online c++ compiler",
+        "tc online",
+        "tc++ online",
+        "borland turbo c 3.2 online",
+        "turbo c android online"
+      ],
+      "url": "https://sankalpsinghcoder-ai.github.io/online-c/",
+      "description": "Run authentic Borland Turbo C & Turbo C++ 3.2 online directly in your browser. Features live code paste, .CPP file upload, graphics.h, conio.h support, and mobile touchscreen keyboard.",
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "C and C++ IDE Compiler",
+      "operatingSystem": "All modern browsers (Chrome, Firefox, Safari, Edge, Android, iOS)",
+      "browserRequirements": "Requires JavaScript and WebAssembly support",
+      "softwareVersion": "3.2",
+      "keywords": "Turbo C++, Turbo C++ Compiler, Online Turbo C++, Turbo C Compiler, Turbo C Online Compiler, conio.h online, graphics.h online, copy paste turbo c",
+      "datePublished": "2024-01-15",
+      "dateModified": "2026-09-15",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "author": {
+        "@type": "Person",
+        "@id": "https://sankalpsinghcoder-ai.github.io/online-c/#author",
+        "name": "Sankalp Singh",
+        "jobTitle": "Developer",
+        "affiliation": {
+          "@type": "EducationalOrganization",
+          "name": "Lucky Institute of Professional Studies, Jodhpur"
+        },
+        "sameAs": [
+          "https://github.com/sankalpsinghcoder-ai"
+        ]
+      },
+      "featureList": [
+        "Authentic Turbo C++ 3.2 DOSBox WebAssembly compiler",
+        "Instant code paste & 0.3s live insertion into Turbo C++",
+        "Upload and run local .C and .CPP source files",
+        "Touch-friendly controls and mobile keyboard helper",
+        "Full support for conio.h (getch, clrscr) and graphics.h",
+        "Fullscreen immersive mode with 100% screen cover"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://sankalpsinghcoder-ai.github.io/online-c/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I copy and paste code into Turbo C++ Online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Click the 'Paste Code' button in the toolbar or press Shift+Insert (or Ctrl+Shift+V). Paste your C or C++ code into the box, give it a filename (e.g. CODE.CPP), and click 'Insert into Turbo C++'. Your code will be automatically written to the virtual DOS disk and opened in the Turbo C++ editor in 0.3 seconds."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I upload my own .C and .CPP files from my computer or phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Click the 'Import (.CPP)' button in the toolbar or drag and drop any .c, .cpp, or .h file directly onto the emulator screen. The file will load instantly into the editor."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I see the output screen in Turbo C++?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Turbo C++ displays program execution on the DOS User Screen. Press Alt+F5 (or click 'Output' on the mobile action bar) to view output. You can also add getch(); before return 0; in main() to pause the screen."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use Turbo C++ on my mobile phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! This compiler includes a dedicated mobile toolbar and a virtual keyboard toggle button so you can easily type, compile (Ctrl+F9), view output (Alt+F5), and zoom (F5) right from your smartphone touch screen."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this online compiler support graphics.h and conio.h?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, full Borland BGI graphics (initgraph, circle, line) and conio.h console functions (clrscr, getch, gotoxy) are supported via WebAssembly DOSBox emulation."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<!-- Deferred Analytics & Ads for Performance Optimization -->
+<script async defer src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4518793325867602" crossorigin="anonymous"></script>
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-PSG23F75');</script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9K4J2B06HE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9K4J2B06HE');
+</script>
+
+<!-- js-dos v8 styles -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/js-dos@8.4.1/dist/js-dos.css" integrity="sha384-tYrgAxbRPufJUrIUwrHMumsQ0yWXdNaYMGKazEkzSgtkpSAps5dIS71lqDFtoVNF" crossorigin="anonymous">
+
+<!-- Firebase App & Realtime Database SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+  :root {
+    --bg-dark: #0b0c10;
+    --bg-surface: #14171d;
+    --bg-elevated: #1f2833;
+    --border-color: #333f48;
+    --cyan-accent: #66fcf1;
+    --teal-accent: #45a29e;
+    --text-primary: #c5c6c7;
+    --text-bright: #ffffff;
+    --font-mono: 'Fira Code', Consolas, monospace;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    padding-bottom: 40px;
+    overflow-x: hidden;
+  }
+
+  /* Dual Fixed Left Sidebar Ads Container */
+  .sidebar-ads-left-wrapper {
+    position: fixed;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    z-index: 1000;
+  }
+
+  .sidebar-ad-box {
+    width: 160px;
+    height: 600px;
+    background: #14171d;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* Scale or hide dual sidebars depending on available viewport width */
+  @media (max-width: 1600px) {
+    .sidebar-ads-left-wrapper {
+      transform: translateY(-50%) scale(0.85);
+      transform-origin: left center;
+    }
+  }
+
+  @media (max-width: 1380px) {
+    .sidebar-ads-left-wrapper {
+      display: none !important;
+    }
+  }
+
+  /* Hide sidebar ads in Fullscreen */
+  body.is-fullscreen .sidebar-ads-left-wrapper {
+    display: none !important;
+  }
+
+  .ad-disclaimer {
+    font-size: 0.60rem;
+    color: #7a8288;
+    margin-top: 2px;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  /* Main Container */
+  .main-wrapper {
+    width: 100%;
+    max-width: 900px;
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Header 3-Line Titles */
+  h1 {
+    font-size: 1.85rem;
+    color: var(--cyan-accent);
+    margin-bottom: 4px;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .author-line {
+    font-size: 0.95rem;
+    color: var(--cyan-accent);
+    margin-bottom: 6px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+
+  .feature-tagline {
+    font-size: 0.86rem;
+    color: #8c979a;
+    margin-bottom: 14px;
+    text-align: center;
+    max-width: 760px;
+    line-height: 1.45;
+  }
+
+  /* Toolbar Actions */
+  .ide-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    width: 100%;
+  }
+
+  .tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--cyan-accent);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .tool-btn:hover {
+    background-color: var(--bg-elevated);
+    border-color: var(--teal-accent);
+    transform: translateY(-1px);
+  }
+
+  .tool-btn.highlight {
+    background: var(--teal-accent);
+    color: var(--bg-dark);
+    border-color: var(--cyan-accent);
+  }
+  .tool-btn.highlight:hover {
+    background: var(--cyan-accent);
+  }
+
+  /* Launch Button Card */
+  #start-btn {
+    background: linear-gradient(135deg, #45a29e 0%, #66fcf1 100%);
+    color: #0b0c10;
+    font-size: 1.15rem;
+    font-weight: 700;
+    padding: 16px 36px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin: 15px 0 20px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px rgba(102, 252, 241, 0.3);
+  }
+
+  #start-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(102, 252, 241, 0.5);
+  }
+
+  /* Emulator Container */
+  #emulator-card {
+    display: none;
+    width: 100%;
+    background-color: #000000;
+    border: 2px solid var(--teal-accent);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  #dos-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000000;
+    position: relative;
+  }
+
+  #dos {
+    width: 800px;
+    height: 600px;
+    max-width: 100%;
+    background: #000000;
+    display: block;
+    outline: none;
+  }
+
+  #dos canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Direct Action Buttons Panel */
+  .direct-actions-card {
+    width: 100%;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px 0 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+
+  .direct-actions-title {
+    font-size: 0.80rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--cyan-accent);
+    letter-spacing: 0.03em;
+  }
+
+  .direct-actions-buttons {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow: hidden;
+  }
+  .direct-actions-buttons::-webkit-scrollbar {
+    display: none;
+  }
+
+  .touch-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    color: var(--cyan-accent);
+    font-family: var(--font-mono);
+    font-size: clamp(0.60rem, 1.2vw, 0.72rem);
+    font-weight: 600;
+    padding: 7px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.15s ease;
+  }
+  .touch-btn:hover {
+    background-color: var(--teal-accent);
+    color: #000000;
+  }
+  .touch-btn:active {
+    background-color: var(--cyan-accent);
+    color: #000000;
+  }
+
+  /* Modal Backdrop & Dialog */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(5, 7, 10, 0.85);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 100000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .modal-backdrop.visible {
+    display: flex;
+  }
+
+  .modal-dialog {
+    background-color: #14181f;
+    border: 2px solid var(--teal-accent);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 680px;
+    padding: 20px;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--cyan-accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-close-btn {
+    background: none;
+    border: none;
+    color: #8c979a;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal-close-btn:hover {
+    color: #ffffff;
+  }
+
+  .code-textarea {
+    width: 100%;
+    height: 240px;
+    background-color: #0b0c10;
+    color: #66fcf1;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.45;
+    resize: vertical;
+    white-space: pre;
+    outline: none;
+    tab-size: 4;
+  }
+  .code-textarea:focus {
+    border-color: var(--cyan-accent);
+  }
+
+  .modal-filename-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .filename-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+
+  .filename-input {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--cyan-accent);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    padding: 6px 10px;
+    width: 120px;
+    text-transform: uppercase;
+    outline: none;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .btn-inject {
+    background-color: var(--teal-accent);
+    color: #0b0c10;
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 9px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-inject:hover {
+    background-color: var(--cyan-accent);
+  }
+
+  .btn-cancel {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  /* Toast Notification */
+  .toast-box {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(30px);
+    background-color: #171d24;
+    border: 1px solid var(--teal-accent);
+    color: var(--cyan-accent);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 1000000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  }
+  .toast-box.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ==========================================================================
+     FULLSCREEN IMMERSIVE TURBO C++ DISPLAY WITH ACTION BAR AT BOTTOM
+     ========================================================================== */
+  body.is-fullscreen {
+    overflow: hidden !important;
+    background: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+
+  body.is-fullscreen .sticky-navbar,
+  body.is-fullscreen h1,
+  body.is-fullscreen .author-line,
+  body.is-fullscreen .feature-tagline,
+  body.is-fullscreen .ide-toolbar,
+  body.is-fullscreen .doc-section,
+  body.is-fullscreen footer {
+    display: none !important;
+  }
+
+  /* Hide JS-DOS left sidebar and UI controls in fullscreen */
+  body.is-fullscreen .emulator-sidebar,
+  body.is-fullscreen .jsdos-controls,
+  body.is-fullscreen .sidebar,
+  body.is-fullscreen .sidebar-thin,
+  body.is-fullscreen .sidebar-button,
+  body.is-fullscreen .contentbar,
+  body.is-fullscreen .sidebar-slider,
+  body.is-fullscreen div[class*="sidebar"],
+  #dos-wrapper:fullscreen .sidebar,
+  #dos-wrapper:fullscreen .jsdos-controls,
+  #dos-wrapper:fullscreen div[class*="sidebar"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  body.is-fullscreen .main-wrapper {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.is-fullscreen #emulator-card {
+    border: none !important;
+    border-radius: 0 !important;
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 50px !important;
+    width: 100vw !important;
+    height: calc(100vh - 50px) !important;
+    max-width: 100vw !important;
+    max-height: calc(100vh - 50px) !important;
+    z-index: 99999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #000000 !important;
+    overflow: hidden !important;
+  }
+
+  body.is-fullscreen #dos-wrapper,
+  #dos-wrapper:fullscreen,
+  :-webkit-full-screen #dos-wrapper {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 50px) !important;
+    max-width: 100vw !important;
+    max-height: calc(100vh - 50px) !important;
+    background: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    overflow: hidden !important;
+  }
+
+  body.is-fullscreen #dos,
+  body.is-fullscreen .emulator-wrapper,
+  body.is-fullscreen .emulator-screen,
+  body.is-fullscreen .emulator-content,
+  body.is-fullscreen .jsdos-screen {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 50px) !important;
+    max-width: 100vw !important;
+    max-height: calc(100vh - 50px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #000000 !important;
+    border: none !important;
+  }
+
+  body.is-fullscreen #dos canvas,
+  body.is-fullscreen canvas,
+  body.is-fullscreen .emulator-canvas,
+  #dos-wrapper:fullscreen canvas,
+  :-webkit-full-screen canvas {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 50px !important;
+    width: 100vw !important;
+    height: calc(100vh - 50px) !important;
+    max-width: 100vw !important;
+    max-height: calc(100vh - 50px) !important;
+    object-fit: fill !important;
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: pixelated !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    z-index: 100 !important;
+  }
+
+  /* Action Buttons Box in Fullscreen mode (docked below the emulator canvas) */
+  body.is-fullscreen .direct-actions-card {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 50px !important;
+    margin: 0 !important;
+    padding: 6px 14px !important;
+    background: #14171d !important;
+    border-radius: 0 !important;
+    border-top: 1px solid var(--teal-accent) !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    z-index: 100005 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  body.is-fullscreen .direct-actions-title {
+    display: none !important;
+  }
+
+  body.is-fullscreen .direct-actions-buttons {
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Documentation & SEO FAQ Section */
+  .doc-section {
+    width: 100%;
+    max-width: 900px;
+    margin-top: 35px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .doc-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 22px;
+  }
+
+  .doc-card h2 {
+    color: var(--cyan-accent);
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+  }
+
+  .doc-card p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+
+  /* Shortcuts Table */
+  .shortcuts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+  .shortcuts-table th, .shortcuts-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .shortcuts-table th {
+    color: var(--cyan-accent);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+  .key-tag {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    color: var(--cyan-accent);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* FAQ Accordion */
+  .faq-item {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .faq-question {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--cyan-accent);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+  }
+  .faq-question::-webkit-details-marker { display: none; }
+  .faq-question::after {
+    content: "+";
+    font-size: 1.2rem;
+    color: var(--teal-accent);
+  }
+  .faq-item[open] .faq-question::after {
+    content: "−";
+  }
+  .faq-answer {
+    padding: 0 16px 14px 16px;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+
+  #keyboard-helper {
+    position: absolute;
+    opacity: 0;
+    z-index: -1;
+  }
+
+  footer {
+    margin-top: 30px;
+    font-size: 0.85rem;
+    color: #7a8288;
+    text-align: center;
+  }
+
+  /* Mobile/Tablet Top Ad Banner (Hidden on desktop by default) */
+  .mobile-top-ad {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 75px;
+    background-color: #171d24;
+    border-bottom: 2px solid var(--teal-accent);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+    padding: 6px 10px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+  }
+
+  @media (max-width: 1080px) {
+    .mobile-top-ad {
+      display: flex !important;
+    }
+    .sidebar-ads-left-wrapper {
+      display: none !important;
+    }
+    body {
+      padding-top: 95px !important;
+    }
+  }
+
+  body.is-fullscreen .mobile-top-ad {
+    display: none !important;
+  }
+
+  /* ==========================================================================
+     LEFT: READY-MADE PROGRAMS PANEL  |  RIGHT: LIVE CHAT PANEL
+     ========================================================================== */
+  :root { --left-w: 250px; --right-w: 310px; }
+
+  .side-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-surface);
+    z-index: 1001;
+  }
+  #programs-panel { left: 0; width: var(--left-w); border-right: 1px solid var(--border-color); }
+  #chat-panel { right: 0; width: var(--right-w); border-left: 1px solid var(--border-color); }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-elevated);
+  }
+  .panel-title {
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--cyan-accent);
+  }
+  .panel-close {
+    display: none;
+    background: none;
+    border: none;
+    color: #8c979a;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .panel-close:hover { color: #ffffff; }
+
+  /* Programs: language tabs + list */
+  .lang-tabs { display: flex; gap: 6px; padding: 10px 12px 6px 12px; }
+  .lang-tab {
+    flex: 1;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 7px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lang-tab:hover { border-color: var(--teal-accent); color: var(--cyan-accent); }
+  .lang-tab.active { background: var(--teal-accent); color: var(--bg-dark); border-color: var(--cyan-accent); }
+  .prog-hint { font-size: 0.72rem; color: #8c979a; padding: 4px 14px 8px 14px; line-height: 1.35; }
+
+  .prog-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 10px 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+  .prog-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    text-align: left;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .prog-item:hover { border-color: var(--teal-accent); background-color: #25303d; }
+  .prog-item.active { border-color: var(--cyan-accent); }
+  .prog-name { font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600; color: var(--text-bright); }
+  .prog-file { font-family: var(--font-mono); font-size: 0.70rem; color: var(--cyan-accent); }
+
+  /* Chat */
+  .chat-status { display: inline-flex; align-items: center; gap: 6px; font-size: 0.70rem; color: #8c979a; font-family: var(--font-mono); }
+  .chat-dot { width: 8px; height: 8px; border-radius: 50%; background: #7a8288; display: inline-block; }
+  .chat-dot.on { background: #3ddc84; box-shadow: 0 0 6px #3ddc84; }
+  .chat-dot.wait { background: #f5b942; }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+  .chat-note { font-size: 0.72rem; color: #8c979a; text-align: center; line-height: 1.4; padding: 6px 4px; }
+  .chat-msg {
+    max-width: 92%;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 10px;
+    align-self: flex-start;
+    word-break: break-word;
+  }
+  .chat-msg.mine { align-self: flex-end; border-color: var(--teal-accent); background-color: #1b3a3a; }
+  .chat-meta { font-size: 0.66rem; color: #8c979a; font-family: var(--font-mono); margin-bottom: 2px; }
+  .chat-meta b { color: var(--cyan-accent); font-weight: 600; }
+  .chat-text { font-size: 0.84rem; color: var(--text-bright); line-height: 1.4; white-space: pre-wrap; }
+
+  .chat-compose { border-top: 1px solid var(--border-color); padding: 10px; display: flex; flex-direction: column; gap: 6px; background-color: var(--bg-elevated); }
+  .chat-compose input {
+    width: 100%;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-bright);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    padding: 8px 10px;
+    outline: none;
+  }
+  .chat-compose input:focus { border-color: var(--cyan-accent); }
+  .chat-compose input:disabled { opacity: 0.5; cursor: not-allowed; }
+  #chat-name { font-family: var(--font-mono); font-size: 0.76rem; color: var(--cyan-accent); }
+  /* Username Selection Box */
+  .chat-join-box {
+    padding: 14px 12px;
+    background-color: var(--bg-elevated);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chat-join-desc {
+    font-size: 0.72rem;
+    color: #f5b942;
+    line-height: 1.35;
+    font-family: var(--font-mono);
+  }
+  .chat-badge {
+    font-size: 0.74rem;
+    font-family: var(--font-mono);
+    color: var(--cyan-accent);
+    padding: 4px 6px;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+  }
+  .chat-row { display: flex; gap: 6px; }
+  .chat-send {
+    background-color: var(--teal-accent);
+    color: #0b0c10;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0 14px;
+    cursor: pointer;
+  }
+  .chat-send:hover { background-color: var(--cyan-accent); }
+  .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Page content sits between the two panels on desktop */
+  @media (min-width: 1200px) {
+    body { padding-left: var(--left-w); padding-right: var(--right-w); }
+  }
+  @media (min-width: 1200px) and (max-width: 1499px) {
+    :root { --left-w: 220px; --right-w: 270px; }
+  }
+
+  /* Tablet / mobile: panels become slide-in drawers */
+  .panel-toggle {
+    display: none;
+    position: fixed;
+    bottom: 14px;
+    z-index: 1003;
+    background-color: var(--teal-accent);
+    color: #0b0c10;
+    border: 1px solid var(--cyan-accent);
+    border-radius: 999px;
+    padding: 9px 14px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  }
+  #programs-toggle { left: 12px; }
+  #chat-toggle { right: 12px; }
+  .panel-backdrop { display: none; position: fixed; inset: 0; background: rgba(5, 7, 10, 0.7); z-index: 1002; }
+
+  @media (max-width: 1199px) {
+    .panel-toggle { display: inline-flex; align-items: center; gap: 6px; }
+    .panel-close { display: inline-flex; }
+    .side-panel {
+      width: min(88vw, 330px) !important;
+      visibility: hidden;
+      transition: transform 0.25s ease, visibility 0.25s;
+      z-index: 1004;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    }
+    #programs-panel { transform: translateX(-105%); }
+    #chat-panel { transform: translateX(105%); }
+    .side-panel.open { transform: translateX(0); visibility: visible; }
+    .panel-backdrop.show { display: block; }
+  }
+
+  /* Hide everything extra in fullscreen */
+  body.is-fullscreen .side-panel,
+  body.is-fullscreen .panel-toggle,
+  body.is-fullscreen .panel-backdrop { display: none !important; }
+
+  /* Direct action bar: always a single line */
+  body.is-fullscreen .touch-btn { flex: 0 1 auto; }
+  @media (max-width: 640px) {
+    .touch-btn .sc { display: none; }
+  }
+  @media (max-width: 480px) {
+    .direct-actions-card { padding: 8px 8px; }
+    .direct-actions-buttons { gap: 4px; }
+    .touch-btn { font-size: 0.58rem; padding: 7px 2px; }
+  }
+</style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSG23F75" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  
+<!-- LEFT: Ready-made programs -->
+<aside class="side-panel" id="programs-panel" aria-label="Ready-made programs">
+  <div class="panel-head">
+    <span class="panel-title">📚 Ready-made Programs</span>
+    <button type="button" class="panel-close" id="programs-close" aria-label="Close programs">&times;</button>
+  </div>
+  <div class="lang-tabs">
+    <button type="button" class="lang-tab active" id="tab-c" data-lang="c">C</button>
+    <button type="button" class="lang-tab" id="tab-cpp" data-lang="cpp">C++</button>
+  </div>
+  <div class="prog-hint">Tap a program to load it into Turbo C++ with its file name.</div>
+  <div class="prog-list" id="prog-list"></div>
+</aside>
+
+<!-- RIGHT: Live chat -->
+<aside class="side-panel" id="chat-panel" aria-label="Live chat">
+  <div class="panel-head">
+    <span class="panel-title">💬 Live Chat</span>
+    <span class="chat-status"><span class="chat-dot" id="chat-dot"></span><span id="chat-status-text">Connecting...</span></span>
+    <button type="button" class="panel-close" id="chat-close" aria-label="Close chat">&times;</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-note">Chat with other students. Be respectful. No links or personal info, please.</div>
+  </div>
+
+  <!-- 1. Username Claim Form (Visible only before joining) -->
+  <div class="chat-join-box" id="chat-join-section">
+    <div class="chat-join-desc">⚠️ Choose your username to join. Once chosen, it cannot be changed and must be unique!</div>
+    <div style="display: flex; gap: 6px;">
+      <input type="text" id="choose-username-input" maxlength="15" placeholder="Pick a username..." style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: #fff; padding: 7px 10px; border-radius: 5px; outline: none; font-family: var(--font-mono); font-size: 0.8rem;">
+      <button type="button" class="chat-send" id="btn-claim-username" style="padding: 0 12px;">Join</button>
+    </div>
+  </div>
+
+  <!-- 2. Message Form (Visible once joined) -->
+  <form class="chat-compose" id="chat-form" autocomplete="off" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="chat-badge" id="chat-current-user">User: ...</span>
+    </div>
+    <div class="chat-row">
+      <input type="text" id="chat-input" maxlength="300" placeholder="Type a message..." disabled>
+      <button type="submit" class="chat-send" id="chat-send" disabled>Send</button>
+    </div>
+  </form>
+</aside>
+
+<button type="button" class="panel-toggle" id="programs-toggle">📚 Programs</button>
+<button type="button" class="panel-toggle" id="chat-toggle">💬 Chat</button>
+<div class="panel-backdrop" id="panel-backdrop"></div>
+
+<main class="main-wrapper">
+  <!-- Header 3-Line Titles -->
+  <h1>Turbo C++ Online Compiler (Upgrade)</h1>
+  <div class="author-line">Created by Sankalp Singh (Lucky Institute, Jodhpur)</div>
+  <div class="feature-tagline">Now mobile compatible and supports import code and copy/paste for desktop and mobile users especially.</div>
+  <div class="feature-tagline">Note: If the compiler gets stuck at the output screen, then refresh the website.</div>
+
+  <!-- Action / Feature Toolbar -->
+  <div class="ide-toolbar">
+    <button type="button" id="btn-open-paste" class="tool-btn highlight" title="Paste C/C++ Code (Shift+Insert or Ctrl+Shift+V)">
+      📂 <span>Paste/Import Code (use this if mobile users | desktop users can also use it)</span>
+    </button>
+    <button type="button" id="btn-toggle-fs" class="tool-btn" title="Toggle Fullscreen (F11)">
+      ⛶ <span>Fullscreen</span>
+    </button>
+  </div>
+
+  <!-- Start Emulator Button -->
+  <button id="start-btn">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+    </svg>
+    <span>Tap to Start Turbo C++ 3.2</span>
+  </button>
+
+  <!-- Emulator Display Card -->
+  <div id="emulator-card">
+    <div id="dos-wrapper">
+      <div id="dos" tabindex="0"></div>
+    </div>
+  </div>
+
+  <!-- Direct Actions Horizontal Panel -->
+  <div class="direct-actions-card" id="direct-actions-panel">
+    <div class="direct-actions-title">⚡ Use these buttons for direct actions:</div>
+    <div class="direct-actions-buttons">
+      <button type="button" class="touch-btn" id="tb-paste">📋 Paste Code</button>
+      <button type="button" class="touch-btn" id="tb-run">▶️ Run<span class="sc"> (Ctrl+F9)</span></button>
+      <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output<span class="sc"> (Alt+F5)</span></button>
+      <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
+      <button type="button" class="touch-btn" id="tb-open">📂 Open<span class="sc"> (F3)</span></button>
+      <button type="button" class="touch-btn" id="tb-zoom">🔍 Zoom<span class="sc"> (F5)</span></button>
+      <button type="button" class="touch-btn" id="tb-esc">Esc</button>
+    </div>
+  </div>
+
+  <!-- Hidden Native File Input for Import -->
+  <input type="file" id="file-importer" accept=".cpp,.c,.cc,.cxx,.h,.hpp,.txt" style="display: none;">
+
+  <!-- Hidden input for mobile keyboard -->
+  <input id="keyboard-helper" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+  <!-- Paste Code Modal Dialog -->
+  <div class="modal-backdrop" id="paste-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">⚡ Insert Code into Turbo C++</h3>
+        <button type="button" class="modal-close-btn" id="modal-close-btn">&times;</button>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span style="font-size: 0.8rem; color: #8c979a;">Paste C/C++ code or drag &amp; drop a file:</span>
+        <div style="display: flex; gap: 6px;">
+          <button type="button" id="btn-modal-import" class="tool-btn" style="padding: 4px 8px; font-size: 0.75rem;">📂 Import File</button>
+          <button type="button" id="btn-modal-clipboard" class="tool-btn" style="padding: 4px 8px; font-size: 0.75rem;">📋 From Clipboard</button>
+        </div>
+      </div>
+
+      <textarea id="paste-code-input" class="code-textarea" spellcheck="false" placeholder="#include <iostream.h>
+#include <conio.h>
+
+void main() {
+    clrscr();
+    cout << &quot;Hello from Sankalp's Turbo C++!&quot; << endl;
+    getch();
+}"></textarea>
+
+      <div class="modal-filename-group">
+        <div>
+          <div class="filename-label">Target DOS Filename:</div>
+          <div style="font-size: 0.7rem; color: #8c979a;">Saved to TURBOC3/BIN/ (Max 8 letters + .CPP)</div>
+        </div>
+        <input type="text" id="inject-filename" class="filename-input" value="CODE.CPP">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="modal-cancel-btn">Cancel</button>
+        <button type="button" class="btn-inject" id="btn-inject-code">
+          ⚡ <span>Insert into Turbo C++</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Box -->
+  <div id="toast" class="toast-box">Ready</div>
+
+  <!-- Semantic SEO Guides & Documentation Section -->
+  <section class="doc-section">
+    <div class="doc-card">
+      <h2>About Turbo C++ Online IDE</h2>
+      <p>You can run Turbo C and C++ directly in your browser using this <strong> Turbo C++ Online Compiler</strong>. Turbo C++ Online | turbo c compiler online | compilation with standard DOS libraries including <code>&lt;conio.h&gt;</code> and <code>&lt;graphics.h&gt;</code> without complex local installation.</p>
+    </div>
+
+    <!-- Essential Keyboard Shortcuts -->
+    <div class="doc-card">
+      <h2>⌨️ Borland Turbo C++ Essential Shortcuts</h2>
+      <table class="shortcuts-table">
+        <thead>
+          <tr>
+            <th>Shortcut</th>
+            <th>Function</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="key-tag">Ctrl + F9</span></td>
+            <td>Run Program</td>
+            <td>Compiles, links, and runs the active program.</td>
+          </tr>
+          <tr>
+            <td><span class="key-tag">Alt + F5</span></td>
+            <td>User Screen</td>
+            <td>Switches to the output console to view program results.</td>
+          </tr>
+          <tr>
+            <td><span class="key-tag">F5</span></td>
+            <td>Zoom Window</td>
+            <td>Maximizes or restores the current active editor window.</td>
+          </tr>
+          <tr>
+            <td><span class="key-tag">F2</span></td>
+            <td>Save File</td>
+            <td>Saves the currently open source code file.</td>
+          </tr>
+          <tr>
+            <td><span class="key-tag">F3</span></td>
+            <td>Open File</td>
+            <td>Opens an existing .C or .CPP file from the virtual disk.</td>
+          </tr>
+          <tr>
+            <td><span class="key-tag">Shift + Insert</span></td>
+            <td>Paste Modal</td>
+            <td>Opens the browser live code insertion dialog.</td>
+          </tr>
+          <tr>
+            <td><span class="key-tag">Alt + X</span></td>
+            <td>Quit Turbo C++</td>
+            <td>Exits the Borland IDE environment.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Frequently Asked Questions (FAQ) Accordion -->
+    <div class="doc-card">
+      <h2>❓ Frequently Asked Questions (FAQ)</h2>
+      
+      <details class="faq-item" open>
+        <summary class="faq-question">How do I paste code into Turbo C++ without typing?</summary>
+        <div class="faq-answer">
+          Click the <strong>Paste Code (for mobile users)</strong> button at the top (or press <code>Shift+Insert</code> / <code>Ctrl+Shift+V</code>). Paste your C or C++ code into the box, choose a target filename (e.g., <code>CODE.CPP</code>), and click <strong>Insert into Turbo C++</strong>. The code will be saved directly into the DOS filesystem and loaded into the editor in under 0.3 seconds.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">Can I upload my existing .C or .CPP project files?</summary>
+        <div class="faq-answer">
+          Yes! Click the <strong>Import (.CPP)</strong> button in the toolbar, or simply drag and drop your source file anywhere onto the emulator window. Your code will load into the injection dialog ready to run.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">Does this compiler support graphics.h and BGI?</summary>
+        <div class="faq-answer">
+          Yes, full EGA/VGA graphic modes via <code>&lt;graphics.h&gt;</code> and <code>initgraph(&amp;gd, &amp;gm, "C:\\TURBOC3\\BGI");</code> are supported. All shapes, circles, lines, and custom palettes render accurately inside the browser canvas.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">How do I view program output screen?</summary>
+        <div class="faq-answer">
+          Press <code>Alt + F5</code> on your keyboard or tap the <strong>Output (Alt+F5)</strong> button on the mobile toolbar. You can also place <code>getch();</code> right before <code>return 0;</code> in your <code>main()</code> function.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">How do I use this on Android or iPhone?</summary>
+        <div class="faq-answer">
+          Our online compiler includes a mobile-optimized touch bar located directly beneath the screen. Tap <strong>Keyboard</strong> to bring up your phone's virtual keyboard, and use the dedicated buttons for <strong>Run</strong>, <strong>Output</strong>, <strong>Save</strong>, and <strong>Zoom</strong>.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <footer>
+    Developed with ❤️ by Sankalp Singh | Lucky Institute of Professional Studies, Jodhpur<br>
+    Powered by js-dos &amp; DOSBox WebAssembly | Authentic Turbo C++ 3.2
+  </footer>
+</main>
+
+<!-- Clear old js-dos cache once -->
+<script>
+(async () => {
+  try {
+    if (!localStorage.getItem("jsdos_cache_cleared")) {
+      if (window.indexedDB && typeof indexedDB.databases === "function") {
+        const dbs = await indexedDB.databases();
+        for (const db of dbs) {
+          if (db.name && db.name.startsWith("jsdos")) {
+            indexedDB.deleteDatabase(db.name);
+          }
+        }
+      }
+      localStorage.setItem("jsdos_cache_cleared", "true");
+    }
+  } catch (e) {
+    console.warn("Storage access restricted:", e);
+  }
+})();
+</script>
+
+<!-- js-dos scripts -->
+<script src="https://cdn.jsdelivr.net/npm/js-dos@8.4.1/dist/js-dos.js" integrity="sha384-uYvVxxF95v52Wy2Cep+7dZZn2dzU6IAdVyDhfMGEsS8Mi3LfnZYPXSHa2QBB4d5+" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/emulators@8.4.1/dist/emulators.js" integrity="sha384-FzWKva074SY9VCh3Va9cLlO27GEXOUl1FAwYy/Fr6ugoHKp6dVWwFD5n+pXq3laI" crossorigin="anonymous"></script>
+
+<script>
+// ============================================================================
+// 1. CAPTURE-PHASE KEYBOARD INTERCEPTOR
+// ============================================================================
+["keydown", "keyup", "keypress"].forEach(eventType => {
+  window.addEventListener(eventType, (e) => {
+    const target = e.target;
+    if (!target) return;
+    const tag = target.tagName ? target.tagName.toUpperCase() : "";
+    if (tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT" || target.isContentEditable || (target.closest && target.closest(".modal-backdrop"))) {
+      if (target.id !== "keyboard-helper") {
+        e.stopImmediatePropagation();
+      }
+    }
+  }, true);
+});
+
+// UI Elements
+const startBtn = document.getElementById("start-btn");
+const emulatorCard = document.getElementById("emulator-card");
+const dosBox = document.getElementById("dos");
+const hiddenInput = document.getElementById("keyboard-helper");
+const toast = document.getElementById("toast");
+
+// Modals & Inputs
+const pasteModal = document.getElementById("paste-modal");
+const pasteCodeInput = document.getElementById("paste-code-input");
+const injectFilenameInput = document.getElementById("inject-filename");
+const fileImporter = document.getElementById("file-importer");
+
+// Action Buttons
+const btnOpenPaste = document.getElementById("btn-open-paste");
+const btnImportFile = document.getElementById("btn-import-file");
+const btnToggleFs = document.getElementById("btn-toggle-fs");
+const modalCloseBtn = document.getElementById("modal-close-btn");
+const modalCancelBtn = document.getElementById("modal-cancel-btn");
+const btnModalImport = document.getElementById("btn-modal-import");
+const btnModalClipboard = document.getElementById("btn-modal-clipboard");
+const btnInjectCode = document.getElementById("btn-inject-code");
+
+// Direct Action Buttons
+const tbPaste = document.getElementById("tb-paste");
+const tbRun = document.getElementById("tb-run");
+const tbUserscreen = document.getElementById("tb-userscreen");
+const tbZoom = document.getElementById("tb-zoom");
+const tbSave = document.getElementById("tb-save");
+const tbOpen = document.getElementById("tb-open");
+const tbEsc = document.getElementById("tb-esc");
+
+// Global State
+let dosboxInstance = null;
+let dosCi = null;
+let keyboard = null;
+let toastTimer = null;
+
+// DOS Scan Code Constants
+const KBD = {
+  ENTER: 257, TAB: 258, BACKSPACE: 259, SPACE: 32, ESC: 256,
+  LSHIFT: 340, RSHIFT: 344, LCTRL: 341, RCTRL: 345, LALT: 342, RALT: 346,
+  F1: 290, F2: 291, F3: 292, F4: 293, F5: 294,
+  F6: 295, F7: 296, F8: 297, F9: 298, F10: 299,
+  MINUS: 45, EQUALS: 61, BACKSLASH: 92,
+  LBRACKET: 91, RBRACKET: 93, SEMICOLON: 59,
+  QUOTE: 39, PERIOD: 46, COMMA: 44, SLASH: 47, GRAVE: 96
+};
+
+// Character to DOS scancode converter
+function charToDosKeys(char) {
+  const code = char.charCodeAt(0);
+  if (char === '\r') return null;
+  if (char === '\n') return [{ keyCode: KBD.ENTER, shift: false }];
+  if (char === '\t') return [{ keyCode: KBD.TAB, shift: false }];
+  if (char === ' ') return [{ keyCode: KBD.SPACE, shift: false }];
+
+  if (code >= 97 && code <= 122) { // a-z
+    return [{ keyCode: code - 32, shift: false }];
+  }
+  if (code >= 65 && code <= 90) { // A-Z
+    return [{ keyCode: code, shift: true }];
+  }
+  if (code >= 48 && code <= 57) { // 0-9
+    return [{ keyCode: code, shift: false }];
+  }
+
+  const shiftMap = {
+    '!': 49, '@': 50, '#': 51, '$': 52, '%': 53,
+    '^': 54, '&': 55, '*': 56, '(': 57, ')': 48,
+    '_': KBD.MINUS, '+': KBD.EQUALS, '{': KBD.LBRACKET, '}': KBD.RBRACKET,
+    '|': KBD.BACKSLASH, ':': KBD.SEMICOLON, '"': KBD.QUOTE,
+    '<': KBD.COMMA, '>': KBD.PERIOD, '?': KBD.SLASH, '~': KBD.GRAVE
+  };
+  if (shiftMap[char] !== undefined) {
+    return [{ keyCode: shiftMap[char], shift: true }];
+  }
+
+  const directMap = {
+    '-': KBD.MINUS, '=': KBD.EQUALS, '[': KBD.LBRACKET, ']': KBD.RBRACKET,
+    '\\': KBD.BACKSLASH, ';': KBD.SEMICOLON, '\'': KBD.QUOTE,
+    ',': KBD.COMMA, '.': KBD.PERIOD, '/': KBD.SLASH, '`': KBD.GRAVE
+  };
+  if (directMap[char] !== undefined) {
+    return [{ keyCode: directMap[char], shift: false }];
+  }
+  return null;
+}
+
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+function clearKeyMatrix() {
+  if (dosCi && dosCi.keyMatrix) {
+    for (const k in dosCi.keyMatrix) {
+      if (dosCi.keyMatrix[k]) {
+        dosCi.sendKeyEvent(Number(k), false);
+        dosCi.keyMatrix[k] = false;
+      }
+    }
+  }
+}
+
+async function pressDosKey(keyCode, shift = false, holdMs = 15, waitMs = 15) {
+  if (!dosCi) return;
+  if (shift) {
+    dosCi.sendKeyEvent(KBD.LSHIFT, true);
+    await delay(8);
+    dosCi.sendKeyEvent(keyCode, true);
+    await delay(holdMs);
+    dosCi.sendKeyEvent(keyCode, false);
+    await delay(8);
+    dosCi.sendKeyEvent(KBD.LSHIFT, false);
+    await delay(waitMs);
+  } else {
+    dosCi.sendKeyEvent(keyCode, true);
+    await delay(holdMs);
+    dosCi.sendKeyEvent(keyCode, false);
+    await delay(waitMs);
+  }
+}
+
+function showToast(msg, duration = 3000) {
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add("show");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), duration);
+}
+
+function ensureCompilerStarted() {
+  if (!dosCi) {
+    showToast("Please start Turbo C++ first!");
+    return false;
+  }
+  return true;
+}
+
+function getSanitizedFilename(input) {
+  let filename = (input || "CODE.CPP").trim().toUpperCase();
+  if (!filename.includes(".")) filename += ".CPP";
+  const parts = filename.split(".");
+  const base = parts[0].replace(/[^A-Z0-9_]/g, "").slice(0, 8) || "CODE";
+  let ext = parts[1].replace(/[^A-Z0-9_]/g, "").slice(0, 3) || "CPP";
+  return base + "." + ext;
+}
+
+function openModal() {
+  if (!ensureCompilerStarted()) return;
+  if (pasteModal) {
+    pasteModal.classList.add("visible");
+    if (pasteCodeInput) pasteCodeInput.focus();
+  }
+}
+
+function closeModal() {
+  if (pasteModal) {
+    pasteModal.classList.remove("visible");
+    clearKeyMatrix();
+  }
+}
+
+// Auto-bypass the internal js-dos play button overlay
+function triggerAutoPlayOverlay() {
+  const playSelectors = [
+    '.jsdos-start',
+    '.start-button',
+    '.emulator-start',
+    '.play-button',
+    '.jsdos-overlay button',
+    '.emulator-overlay button',
+    'button[title*="Play"]',
+    'button[aria-label*="Play"]'
+  ];
+  for (const sel of playSelectors) {
+    const el = dosBox.querySelector(sel);
+    if (el && typeof el.click === "function") {
+      el.click();
+      return true;
+    }
+  }
+  const allBtns = dosBox.querySelectorAll('button');
+  for (const b of allBtns) {
+    if (!b.classList.contains("touch-btn") && !b.classList.contains("tool-btn")) {
+      b.click();
+      return true;
+    }
+  }
+  return false;
+}
+
+// ============================================================================
+// 2. START DOSBOX EMULATOR
+// ============================================================================
+startBtn.addEventListener("click", () => {
+  startBtn.style.display = "none";
+  if (emulatorCard) emulatorCard.style.display = "block";
+  dosBox.style.display = "block";
+
+  // Watch for any internal play button overlay and click it immediately
+  const playObserver = new MutationObserver(() => {
+    if (triggerAutoPlayOverlay()) {
+      // triggered
+    }
+  });
+  playObserver.observe(dosBox, { childList: true, subtree: true });
+
+  const playInterval = setInterval(() => {
+    if (triggerAutoPlayOverlay() || dosCi) {
+      clearInterval(playInterval);
+      playObserver.disconnect();
+    }
+  }, 50);
+
+  setTimeout(() => {
+    clearInterval(playInterval);
+    playObserver.disconnect();
+  }, 8000);
+
+  const dosPromise = Dos(dosBox, {
+    url: "turboc.jsdos",
+    zipUrl: "TURBOC3.zip",
+    mouseCapture: false,
+    autoStart: true,
+    onEvent: (event, payload) => {
+      if (event === "ci-ready") {
+        dosCi = payload;
+        window.ci = dosCi;
+      }
+    }
+  });
+
+  if (dosPromise && typeof dosPromise.then === "function") {
+    dosPromise
+      .then(async (dosbox) => {
+        console.log("Turbo C++ loaded successfully!");
+        dosboxInstance = dosbox;
+        if (!dosCi && dosbox.ci) dosCi = dosbox.ci;
+
+        const ev = await dosbox.events();
+        keyboard = ev.keyboard;
+
+        dosbox.run("C:\\TURBOC3\\BIN\\TC.EXE");
+
+        setTimeout(() => {
+          hiddenInput.focus();
+          if (dosCi) pressDosKey(KBD.F5, false, 25, 40);
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Error loading Turbo C++:", err);
+        alert("Failed to load Turbo C++ emulator. Check console.");
+      });
+  }
+
+  dosBox.addEventListener("touchstart", () => {
+    hiddenInput.focus();
+    if (keyboard) keyboard.focus();
+  });
+  dosBox.addEventListener("click", () => {
+    hiddenInput.focus();
+    if (keyboard) keyboard.focus();
+  });
+
+  hiddenInput.addEventListener("beforeinput", (e) => {
+    try {
+      if (!keyboard) return;
+      const val = e.data;
+      if (val) {
+        if (val.length > 256) return;
+        const code = val.toUpperCase().charCodeAt(0);
+        if (!isNaN(code)) {
+          keyboard.keyPress(code);
+        }
+      }
+    } catch (err) {
+      console.warn("Error processing beforeinput event:", err);
+    } finally {
+      hiddenInput.value = "";
+    }
+  });
+
+  hiddenInput.addEventListener("input", () => {
+    hiddenInput.value = "";
+  });
+});
+
+// ============================================================================
+// 3. LIVE CODE INSERTION INTO TURBO C++
+// ============================================================================
+async function injectCodeIntoDos() {
+  if (!ensureCompilerStarted()) return;
+  const code = pasteCodeInput.value;
+  if (!code || !code.trim()) {
+    showToast("Please enter or paste code first!");
+    pasteCodeInput.focus();
+    return;
+  }
+
+  const dosFilename = getSanitizedFilename(injectFilenameInput.value);
+  const fullPath = "TURBOC3/BIN/" + dosFilename;
+
+  try {
+    const encoder = new TextEncoder();
+    const uint8 = encoder.encode(code);
+
+    if (typeof dosCi.fsWriteFile === "function") {
+      await dosCi.fsWriteFile(fullPath, uint8);
+      closeModal();
+      showToast(`Injecting ${dosFilename}...`);
+
+      dosBox.focus();
+      clearKeyMatrix();
+      await delay(200);
+
+      await pressDosKey(KBD.ESC, false, 20, 100);
+      await pressDosKey(KBD.F3, false, 25, 200);
+
+      for (let i = 0; i < dosFilename.length; i++) {
+        const ch = dosFilename[i];
+        const kInfo = charToDosKeys(ch);
+        if (kInfo) {
+          for (const k of kInfo) {
+            await pressDosKey(k.keyCode, k.shift, 14, 12);
+          }
+        }
+      }
+
+      await delay(120);
+      await pressDosKey(KBD.ENTER, false, 25, 120);
+
+      await delay(180);
+      await pressDosKey(KBD.F5, false, 25, 80);
+      clearKeyMatrix();
+
+      showToast(`Loaded ${dosFilename} into Turbo C++!`);
+    } else {
+      showToast("Filesystem write unavailable in this session.");
+    }
+  } catch (err) {
+    console.error("Injection error:", err);
+    showToast("Failed to inject code: " + err.message);
+  }
+}
+
+// Modal Buttons
+if (btnOpenPaste) btnOpenPaste.addEventListener("click", openModal);
+if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
+if (modalCancelBtn) modalCancelBtn.addEventListener("click", closeModal);
+if (btnInjectCode) btnInjectCode.addEventListener("click", injectCodeIntoDos);
+if (pasteModal) {
+  pasteModal.addEventListener("click", (e) => {
+    if (e.target === pasteModal) closeModal();
+  });
+}
+
+// Clipboard Paste
+if (btnModalClipboard) {
+  btnModalClipboard.addEventListener("click", async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        pasteCodeInput.value = text;
+        showToast("Pasted from clipboard!");
+      }
+    } catch (e) {
+      showToast("Clipboard permission denied. Use Ctrl+V inside box.");
+      pasteCodeInput.focus();
+    }
+  });
+}
+
+// File Importer
+function triggerFileImport() {
+  if (fileImporter) fileImporter.click();
+}
+if (btnImportFile) btnImportFile.addEventListener("click", triggerFileImport);
+if (btnModalImport) btnModalImport.addEventListener("click", triggerFileImport);
+
+if (fileImporter) {
+  fileImporter.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      pasteCodeInput.value = ev.target.result;
+      injectFilenameInput.value = getSanitizedFilename(file.name);
+      openModal();
+      showToast(`Loaded ${file.name}`);
+    };
+    reader.readAsText(file);
+    fileImporter.value = "";
+  });
+}
+
+// Drag and drop onto emulator or textarea
+[emulatorCard, pasteCodeInput].forEach(elem => {
+  if (!elem) return;
+  elem.addEventListener("dragover", (e) => e.preventDefault());
+  elem.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        pasteCodeInput.value = ev.target.result;
+        injectFilenameInput.value = getSanitizedFilename(file.name);
+        openModal();
+        showToast(`Loaded ${file.name}`);
+      };
+      reader.readAsText(file);
+    }
+  });
+});
+
+// Tab indentation in textarea
+if (pasteCodeInput) {
+  pasteCodeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const start = pasteCodeInput.selectionStart;
+      const end = pasteCodeInput.selectionEnd;
+      pasteCodeInput.value = pasteCodeInput.value.substring(0, start) + "    " + pasteCodeInput.value.substring(end);
+      pasteCodeInput.selectionStart = pasteCodeInput.selectionEnd = start + 4;
+    }
+  });
+}
+
+// Zoom active window
+async function triggerZoom() {
+  if (!ensureCompilerStarted()) return;
+  clearKeyMatrix();
+  await pressDosKey(KBD.F5, false, 25, 60);
+  showToast("Zoom Toggled (F5)");
+}
+
+// ============================================================================
+// 4. FULLSCREEN SYSTEM
+// ============================================================================
+function toggleFullscreen() {
+  const isFs = document.body.classList.toggle("is-fullscreen");
+  if (btnToggleFs) {
+    btnToggleFs.querySelector("span").textContent = isFs ? "Exit Fullscreen" : "Fullscreen";
+  }
+  const wrapper = document.getElementById("dos-wrapper");
+  if (isFs && wrapper) {
+    const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen || wrapper.mozRequestFullScreen;
+    if (req) req.call(wrapper).catch(() => {});
+  } else if (!isFs && document.fullscreenElement) {
+    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  }
+}
+
+function exitFullscreen() {
+  document.body.classList.remove("is-fullscreen");
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  }
+  if (btnToggleFs) {
+    btnToggleFs.querySelector("span").textContent = "Fullscreen";
+  }
+}
+
+if (btnToggleFs) btnToggleFs.addEventListener("click", toggleFullscreen);
+
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement && document.body.classList.contains("is-fullscreen")) {
+    document.body.classList.remove("is-fullscreen");
+    if (btnToggleFs) btnToggleFs.querySelector("span").textContent = "Fullscreen";
+  }
+});
+
+// ============================================================================
+// 5. DIRECT ACTION BUTTONS (With compiler status check)
+// ============================================================================
+if (tbPaste) {
+  tbPaste.addEventListener("click", () => {
+    if (!ensureCompilerStarted()) return;
+    openModal();
+  });
+}
+
+if (tbRun) {
+  tbRun.addEventListener("click", async () => {
+    if (!ensureCompilerStarted()) return;
+    dosCi.sendKeyEvent(KBD.LCTRL, true);
+    await delay(10);
+    dosCi.sendKeyEvent(KBD.F9, true);
+    await delay(30);
+    dosCi.sendKeyEvent(KBD.F9, false);
+    dosCi.sendKeyEvent(KBD.LCTRL, false);
+    showToast("Running Program (Ctrl+F9)...");
+  });
+}
+
+if (tbUserscreen) {
+  tbUserscreen.addEventListener("click", async () => {
+    if (!ensureCompilerStarted()) return;
+    dosCi.sendKeyEvent(KBD.LALT, true);
+    await delay(10);
+    dosCi.sendKeyEvent(KBD.F5, true);
+    await delay(30);
+    dosCi.sendKeyEvent(KBD.F5, false);
+    dosCi.sendKeyEvent(KBD.LALT, false);
+    showToast("Toggled Output Screen (Alt+F5)");
+  });
+}
+
+if (tbZoom) {
+  tbZoom.addEventListener("click", () => {
+    if (!ensureCompilerStarted()) return;
+    triggerZoom();
+  });
+}
+
+if (tbSave) {
+  tbSave.addEventListener("click", async () => {
+    if (!ensureCompilerStarted()) return;
+    await pressDosKey(KBD.F2, false, 25, 40);
+    showToast("Saved (F2)");
+  });
+}
+
+if (tbOpen) {
+  tbOpen.addEventListener("click", async () => {
+    if (!ensureCompilerStarted()) return;
+    await pressDosKey(KBD.F3, false, 25, 40);
+    showToast("Open File Dialog (F3)");
+  });
+}
+
+if (tbEsc) {
+  tbEsc.addEventListener("click", async () => {
+    if (!ensureCompilerStarted()) return;
+    await pressDosKey(KBD.ESC, false, 25, 40);
+  });
+}
+
+// ============================================================================
+// 6. GLOBAL SHORTCUTS
+// ============================================================================
+window.addEventListener("keydown", (e) => {
+  if (e.key === "F11") {
+    e.preventDefault();
+    toggleFullscreen();
+    return;
+  }
+  if (e.key === "F5") {
+    e.preventDefault();
+    triggerZoom();
+    return;
+  }
+  const isPaste = (e.shiftKey && e.key === "Insert") ||
+    (e.ctrlKey && e.shiftKey && (e.key === "V" || e.key === "v")) ||
+    (e.altKey && (e.key === "V" || e.key === "v"));
+
+  if (isPaste) {
+    if (e.target && (e.target.id === "paste-code-input" || e.target.id === "inject-filename")) return;
+    e.preventDefault();
+    openModal();
+    return;
+  }
+  if (e.key === "Escape") {
+    if (pasteModal && pasteModal.classList.contains("visible")) {
+      e.preventDefault();
+      closeModal();
+      return;
+    }
+    if (document.body.classList.contains("is-fullscreen")) {
+      e.preventDefault();
+      exitFullscreen();
+    }
+  }
+}, true);
+
+// ============================================================================
+// 7. SERVICE WORKER REGISTRATION
+// ============================================================================
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/online-c/service-worker.js", { scope: "/online-c/" })
+      .then(reg => console.log("Service Worker registered:", reg.scope))
+      .catch(err => console.error("Service Worker registration failed:", err));
+  });
+}
+</script>
+
+<script src="programs.js"></script>
+  
+<script>
+// ============================================================================
+// 8. READY-MADE PROGRAMS PANEL (left) + DRAWER HANDLING
+// ============================================================================
+(function () {
+  const listEl = document.getElementById("prog-list");
+  const tabs = document.querySelectorAll(".lang-tab");
+  const progPanel = document.getElementById("programs-panel");
+  const chatPanel = document.getElementById("chat-panel");
+  const backdrop = document.getElementById("panel-backdrop");
+  let lang = "c";
+  let activeFile = "";
+  let busy = false;
+
+  function closeDrawers() {
+    progPanel.classList.remove("open");
+    chatPanel.classList.remove("open");
+    backdrop.classList.remove("show");
+  }
+  function openDrawer(panel) {
+    closeDrawers();
+    panel.classList.add("open");
+    backdrop.classList.add("show");
+  }
+  document.getElementById("programs-toggle").addEventListener("click", () => openDrawer(progPanel));
+  document.getElementById("chat-toggle").addEventListener("click", () => openDrawer(chatPanel));
+  document.getElementById("programs-close").addEventListener("click", closeDrawers);
+  document.getElementById("chat-close").addEventListener("click", closeDrawers);
+  backdrop.addEventListener("click", closeDrawers);
+
+  function render() {
+    listEl.innerHTML = "";
+    PROGRAMS[lang].forEach((p) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "prog-item" + (p.f === activeFile ? " active" : "");
+      const n = document.createElement("span");
+      n.className = "prog-name";
+      n.textContent = p.t;
+      const f = document.createElement("span");
+      f.className = "prog-file";
+      f.textContent = p.f;
+      b.appendChild(n);
+      b.appendChild(f);
+      b.addEventListener("click", () => loadProgram(p));
+      listEl.appendChild(b);
+    });
+  }
+
+  tabs.forEach((t) => t.addEventListener("click", () => {
+    lang = t.dataset.lang;
+    tabs.forEach((x) => x.classList.toggle("active", x === t));
+    render();
+    listEl.scrollTop = 0;
+  }));
+
+  async function waitFor(fn, timeout) {
+    const t0 = Date.now();
+    while (Date.now() - t0 < timeout) {
+      if (fn()) return true;
+      await delay(200);
+    }
+    return false;
+  }
+
+  async function loadProgram(p) {
+    if (busy) { showToast("Please wait, loading previous program..."); return; }
+    busy = true;
+    try {
+      closeDrawers();
+      if (!dosCi) {
+        if (startBtn.style.display !== "none") {
+          showToast("Starting Turbo C++ ...", 4000);
+          startBtn.click();
+        }
+        const ok = await waitFor(() => dosCi, 40000);
+        if (!ok) { showToast("Turbo C++ is still loading. Tap the program again in a moment."); return; }
+        await delay(5000); // let Turbo C++ IDE finish booting
+      }
+      activeFile = p.f;
+      render();
+      if (emulatorCard) emulatorCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      pasteCodeInput.value = p.code;
+      injectFilenameInput.value = p.f;
+      await injectCodeIntoDos();
+    } finally {
+      busy = false;
+    }
+  }
+
+  render();
+})();
+
+// ============================================================================
+// 9. LIVE CHAT (right) - Powered by Firebase Realtime Database
+// ============================================================================
+(function () {
+  const firebaseConfig = {
+    apiKey: "AIzaSyASkYqRf1HheRldg-s5YaPwIuZt_9VOmiM",
+    authDomain: "turboc-compiler.firebaseapp.com",
+    databaseURL: "https://turboc-compiler-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "turboc-compiler",
+    storageBucket: "turboc-compiler.firebasestorage.app",
+    messagingSenderId: "578042146187",
+    appId: "1:578042146187:web:83f1a3d56928d787b6d38e"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+  const messagesRef = db.ref("messages");
+  const usersRef = db.ref("usernames");
+
+  const msgBox = document.getElementById("chat-messages");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-input");
+  const sendBtn = document.getElementById("chat-send");
+  const dot = document.getElementById("chat-dot");
+  const statusText = document.getElementById("chat-status-text");
+
+  const joinSection = document.getElementById("chat-join-section");
+  const usernameInput = document.getElementById("choose-username-input");
+  const claimBtn = document.getElementById("btn-claim-username");
+  const currentUserBadge = document.getElementById("chat-current-user");
+
+  let myUsername = localStorage.getItem("tc_chat_username") || "";
+
+  function setStatus(online) {
+    if (online) {
+      dot.className = "chat-dot on";
+      statusText.textContent = "Online";
+      if (myUsername) {
+        input.disabled = false;
+        sendBtn.disabled = false;
+      }
+    } else {
+      dot.className = "chat-dot wait";
+      statusText.textContent = "Connecting...";
+      input.disabled = true;
+      sendBtn.disabled = true;
+    }
+  }
+
+  db.ref(".info/connected").on("value", (snap) => {
+    setStatus(snap.val() === true);
+  });
+
+  function showChatBox() {
+    joinSection.style.display = "none";
+    form.style.display = "flex";
+    currentUserBadge.textContent = "User: " + myUsername + " 🔒";
+    input.disabled = false;
+    sendBtn.disabled = false;
+  }
+
+  // If user already picked username previously
+  if (myUsername) {
+    showChatBox();
+  }
+
+  // Handle unique username registration
+  async function claimUsername() {
+    const desired = (usernameInput.value || "").trim().toLowerCase();
+    const cleanName = desired.replace(/[^a-z0-9_]/g, "");
+
+    if (cleanName.length < 3) {
+      alert("Username must be at least 3 letters/numbers long.");
+      return;
+    }
+
+    claimBtn.disabled = true;
+    claimBtn.textContent = "...";
+
+    try {
+      // Check if username already claimed in Firebase
+      const snapshot = await usersRef.child(cleanName).once("value");
+      if (snapshot.exists()) {
+        alert("This username is already taken! Please choose another one.");
+        claimBtn.disabled = false;
+        claimBtn.textContent = "Join";
+        return;
+      }
+
+      // Claim it permanently
+      await usersRef.child(cleanName).set({
+        claimedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      myUsername = cleanName;
+      localStorage.setItem("tc_chat_username", myUsername);
+      showChatBox();
+    } catch (e) {
+      alert("Error checking username. Check your internet connection.");
+      claimBtn.disabled = false;
+      claimBtn.textContent = "Join";
+    }
+  }
+
+  claimBtn.addEventListener("click", claimUsername);
+  usernameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") claimUsername();
+  });
+
+  function addMessage(m) {
+    const wrap = document.createElement("div");
+    wrap.className = "chat-msg" + (m.name === myUsername ? " mine" : "");
+    const meta = document.createElement("div");
+    meta.className = "chat-meta";
+    const b = document.createElement("b");
+    b.textContent = m.name || "Student";
+    const t = new Date(m.ts || Date.now());
+    const hh = String(t.getHours()).padStart(2, "0");
+    const mm = String(t.getMinutes()).padStart(2, "0");
+    meta.appendChild(b);
+    meta.appendChild(document.createTextNode("  " + hh + ":" + mm));
+    const txt = document.createElement("div");
+    txt.className = "chat-text";
+    txt.textContent = m.text || "";
+    wrap.appendChild(meta);
+    wrap.appendChild(txt);
+    msgBox.appendChild(wrap);
+    while (msgBox.children.length > 100) {
+      msgBox.removeChild(msgBox.children[1]);
+    }
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+
+  messagesRef.limitToLast(50).on("child_added", (snapshot) => {
+    const m = snapshot.val();
+    if (m && m.text) addMessage(m);
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text || !myUsername) return;
+
+    input.value = "";
+    messagesRef.push({
+      name: myUsername,
+      text: text.slice(0, 300),
+      ts: firebase.database.ServerValue.TIMESTAMP
+    }).catch((err) => {
+      console.warn("Failed to send message:", err);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
