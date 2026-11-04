@@ -2084,10 +2084,21 @@ startBtn.addEventListener("click", () => {
         // 3. Launch TC.EXE now that it is guaranteed to exist on disk
         dosbox.run("C:\\TURBOC3\\BIN\\TC.EXE");
 
-        setTimeout(() => {
+        // 4. Force browser canvas repaint and wake up the DOSBox video loop
+        dosBox.focus();
+        window.dispatchEvent(new Event("resize")); // forces WebGL buffer refresh
+
+        setTimeout(async () => {
+          // Send an ENTER key to wake the shell buffer if standing by
+          if (dosCi) {
+            await pressDosKey(KBD.ENTER, false, 15, 30);
+          }
+          // Focus input & auto-maximize window
           hiddenInput.focus();
-          if (dosCi) pressDosKey(KBD.F5, false, 25, 40);
-        }, 2200);
+          if (dosCi) {
+            await pressDosKey(KBD.F5, false, 25, 40);
+          }
+        }, 1200);
       })
       .catch((err) => {
         console.error("Error loading Turbo C++:", err);
