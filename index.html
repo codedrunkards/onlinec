@@ -1311,6 +1311,152 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     background: var(--teal-accent);
     color: #0b0c10;
   }
+
+  /* Auto-wrapping multiline chat textarea */
+  .chat-compose textarea {
+    width: 100%;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-bright);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    padding: 8px 10px;
+    outline: none;
+    resize: none;
+    min-height: 38px;
+    max-height: 120px;
+    line-height: 1.4;
+    caret-color: var(--cyan-accent);
+    filter: drop-shadow(0 0 2px var(--cyan-accent));
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .chat-compose textarea:focus { border-color: var(--cyan-accent); }
+  .chat-compose textarea:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Admin Control Box (Visible only to sankalpsingh) */
+  .admin-panel-box {
+    display: none;
+    background: #10151c;
+    border: 1px solid #ffd700;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .admin-panel-title {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #ffd700;
+    font-family: var(--font-mono);
+    display: flex;
+    justify-content: space-between;
+  }
+  .admin-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .admin-input-group input, .admin-input-group textarea {
+    background: #0b0c10;
+    border: 1px solid var(--border-color);
+    color: #ffffff;
+    font-size: 0.78rem;
+    padding: 6px 8px;
+    border-radius: 4px;
+    outline: none;
+    font-family: var(--font-sans);
+  }
+  .admin-send-btn {
+    background: #ffd700;
+    color: #0b0c10;
+    border: none;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.74rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* Center Screen Popup Notification Modal */
+  .center-popup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(4px);
+    z-index: 1000005;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .center-popup-overlay.show { display: flex; }
+  .center-popup-card {
+    background: #14171d;
+    border: 2px solid var(--cyan-accent);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 460px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+    position: relative;
+    animation: popupScale 0.25s ease-out;
+  }
+  @keyframes popupScale {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .center-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+  .center-popup-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--cyan-accent);
+    font-family: var(--font-mono);
+    line-height: 1.3;
+  }
+  .center-popup-close {
+    background: none;
+    border: none;
+    color: #8c979a;
+    font-size: 1.6rem;
+    cursor: pointer;
+    line-height: 0.8;
+  }
+  .center-popup-close:hover { color: #ffffff; }
+  .center-popup-body {
+    font-size: 0.92rem;
+    color: var(--text-bright);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 16px;
+  }
+  .center-popup-footer {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .center-popup-btn {
+    background: var(--teal-accent);
+    color: #0b0c10;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.82rem;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
   
 </style>
 </head>
@@ -1354,13 +1500,36 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   <!-- 2. Message Form (Visible once joined) -->
   <form class="chat-compose" id="chat-form" autocomplete="off" style="display: none;">
+    <!-- Admin Control Panel (Visible only to sankalpsingh) -->
+    <div class="admin-panel-box" id="admin-panel-box">
+      <div class="admin-panel-title">👑 Admin Notification Panel</div>
+      
+      <!-- Feature 1: Targeted @username popup -->
+      <div class="admin-input-group">
+        <span style="font-size: 0.70rem; color: #8c979a;">Direct Popup (@username or @all):</span>
+        <input type="text" id="admin-target-user" placeholder="e.g. @hello or @all">
+        <textarea id="admin-target-msg" rows="2" placeholder="Type personal message for user..."></textarea>
+        <button type="button" class="admin-send-btn" id="btn-admin-send-targeted">🚀 Send User Popup</button>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 4px 0;">
+
+      <!-- Feature 2: Broadcast to ALL visitors of the website -->
+      <div class="admin-input-group">
+        <span style="font-size: 0.70rem; color: #8c979a;">Global Visitor Popup (All Visitors):</span>
+        <input type="text" id="admin-global-title" placeholder="Announcement Title">
+        <textarea id="admin-global-msg" rows="2" placeholder="Message visible to everyone visiting site..."></textarea>
+        <button type="button" class="admin-send-btn" id="btn-admin-send-global">📢 Broadcast to All Visitors</button>
+      </div>
+    </div>
+
     <button type="button" class="btn-open-fullchat" id="btn-open-fullchat">⛶ Expand Full Chat Window</button>
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <span class="chat-badge" id="chat-current-user">User: ...</span>
     </div>
-    <div class="chat-row">
-      <input type="text" id="chat-input" maxlength="300" placeholder="Type a message..." disabled>
-      <button type="submit" class="chat-send" id="chat-send" disabled>Send</button>
+    <div class="chat-row" style="align-items: flex-end;">
+      <textarea id="chat-input" rows="1" maxlength="300" placeholder="Type a message... (Enter to send)" disabled></textarea>
+      <button type="submit" class="chat-send" id="chat-send" disabled style="height: 38px;">Send</button>
     </div>
   </form>
 </aside>
@@ -1378,11 +1547,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </div>
     <div class="chat-messages" id="full-chat-messages" style="flex: 1;"></div>
     <form class="chat-compose" id="full-chat-form" autocomplete="off">
-      <div class="chat-row">
-        <input type="text" id="full-chat-input" maxlength="300" placeholder="Type a message...">
-        <button type="submit" class="chat-send">Send</button>
+      <div class="chat-row" style="align-items: flex-end;">
+        <textarea id="full-chat-input" rows="1" maxlength="300" placeholder="Type a message... (Enter to send)"></textarea>
+        <button type="submit" class="chat-send" style="height: 38px;">Send</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Middle of Website Popup Notification Dialog -->
+<div class="center-popup-overlay" id="center-popup-overlay">
+  <div class="center-popup-card">
+    <div class="center-popup-header">
+      <div class="center-popup-title" id="center-popup-title">Message for you:</div>
+      <button type="button" class="center-popup-close" id="center-popup-close">&times;</button>
+    </div>
+    <div class="center-popup-body" id="center-popup-body"></div>
+    <div class="center-popup-footer">
+      <button type="button" class="center-popup-btn" id="center-popup-ok">Got it</button>
+    </div>
   </div>
 </div>
   
@@ -2318,7 +2501,7 @@ if ("serviceWorker" in navigator) {
 })();
 
 // ============================================================================
-// 9. LIVE CHAT (Full Date/Time + NOTE Highlight + Delete + Admin + Tabs)
+// 9. LIVE CHAT (Multiline Auto-wrap, Admin DM & Global Visitor Popups)
 // ============================================================================
 (function () {
   const firebaseConfig = {
@@ -2336,6 +2519,8 @@ if ("serviceWorker" in navigator) {
   const messagesRef = db.ref("messages");
   const problemsRef = db.ref("problems");
   const usersRef = db.ref("usernames");
+  const directPopupRef = db.ref("direct_popups");
+  const globalPopupRef = db.ref("global_popups");
 
   // DOM Elements
   const msgBox = document.getElementById("chat-messages");
@@ -2351,6 +2536,22 @@ if ("serviceWorker" in navigator) {
   const claimBtn = document.getElementById("btn-claim-username");
   const currentUserBadge = document.getElementById("chat-current-user");
 
+  // Admin Elements
+  const adminPanelBox = document.getElementById("admin-panel-box");
+  const adminTargetUser = document.getElementById("admin-target-user");
+  const adminTargetMsg = document.getElementById("admin-target-msg");
+  const btnAdminSendTargeted = document.getElementById("btn-admin-send-targeted");
+  const adminGlobalTitle = document.getElementById("admin-global-title");
+  const adminGlobalMsg = document.getElementById("admin-global-msg");
+  const btnAdminSendGlobal = document.getElementById("btn-admin-send-global");
+
+  // Center Popup Modal Elements
+  const centerPopupOverlay = document.getElementById("center-popup-overlay");
+  const centerPopupTitle = document.getElementById("center-popup-title");
+  const centerPopupBody = document.getElementById("center-popup-body");
+  const centerPopupClose = document.getElementById("center-popup-close");
+  const centerPopupOk = document.getElementById("center-popup-ok");
+
   // Popup Modal Elements
   const btnOpenFull = document.getElementById("btn-open-fullchat");
   const fullModal = document.getElementById("full-chat-modal");
@@ -2360,7 +2561,7 @@ if ("serviceWorker" in navigator) {
   const fullForm = document.getElementById("full-chat-form");
   const fullInput = document.getElementById("full-chat-input");
 
-  let activeTab = "general"; // "general" or "problems"
+  let activeTab = "general";
   let myUsername = (localStorage.getItem("tc_chat_username") || "").trim().toLowerCase();
   const isAdmin = (myUsername === "sankalpsingh");
 
@@ -2375,7 +2576,6 @@ if ("serviceWorker" in navigator) {
       input.disabled = true; sendBtn.disabled = true;
     }
   }
-
   db.ref(".info/connected").on("value", (snap) => setStatus(snap.val() === true));
 
   function showChatBox() {
@@ -2384,8 +2584,29 @@ if ("serviceWorker" in navigator) {
     currentUserBadge.textContent = "User: " + myUsername + (isAdmin ? " 👑 (Admin)" : " 🔒");
     input.disabled = false;
     sendBtn.disabled = false;
+
+    // Show Admin Tools ONLY for sankalpsingh
+    if (isAdmin) {
+      adminPanelBox.style.display = "flex";
+    }
   }
   if (myUsername) showChatBox();
+
+  // Auto-grow textarea height & Send on Enter (Shift+Enter for newline)
+  function setupTextarea(ta, submitForm) {
+    ta.addEventListener("input", () => {
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+    });
+    ta.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        submitForm.dispatchEvent(new Event("submit"));
+      }
+    });
+  }
+  setupTextarea(input, form);
+  setupTextarea(fullInput, fullForm);
 
   // Username Claim
   claimBtn.addEventListener("click", async () => {
@@ -2402,14 +2623,13 @@ if ("serviceWorker" in navigator) {
       await usersRef.child(clean).set({ claimedAt: firebase.database.ServerValue.TIMESTAMP });
       myUsername = clean;
       localStorage.setItem("tc_chat_username", myUsername);
-      location.reload(); // Refresh to set admin permissions if sankalpsingh
+      location.reload();
     } catch (e) {
       alert("Error checking username. Check internet connection.");
       claimBtn.disabled = false; claimBtn.textContent = "Join";
     }
   });
 
-  // Full Date and Time Formatter (e.g., "16 May 2024, 10:48")
   function formatFullDateTime(ts) {
     const d = new Date(ts || Date.now());
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -2421,14 +2641,12 @@ if ("serviceWorker" in navigator) {
     return `${day} ${month} ${year}, ${hh}:${mm}`;
   }
 
-  // Create Message Element
   function createMsgElement(m, key, currentRef) {
     const isMine = (m.name && m.name.toLowerCase() === myUsername);
     const wrap = document.createElement("div");
     wrap.className = "chat-msg" + (isMine ? " mine" : "");
     wrap.id = "msg-" + key;
 
-    // Check if NOTE: is in message (animated glowing red boundary)
     if (m.text && m.text.toUpperCase().includes("NOTE:")) {
       wrap.classList.add("has-note");
     }
@@ -2443,7 +2661,6 @@ if ("serviceWorker" in navigator) {
     left.appendChild(document.createTextNode("  " + formatFullDateTime(m.ts)));
     meta.appendChild(left);
 
-    // Delete button: visible to author OR sankalpsingh (Admin can delete anyone's)
     if (isMine || isAdmin) {
       const delBtn = document.createElement("button");
       delBtn.type = "button";
@@ -2467,7 +2684,6 @@ if ("serviceWorker" in navigator) {
     return wrap;
   }
 
-  // Listeners for General Chat
   messagesRef.limitToLast(50).on("child_added", (snap) => {
     const m = snap.val();
     if (!m || !m.text) return;
@@ -2488,19 +2704,18 @@ if ("serviceWorker" in navigator) {
     if (el2) el2.remove();
   });
 
-  // Modal Open / Close
+  // Modal Open/Close
   btnOpenFull.addEventListener("click", () => {
     fullModal.classList.add("open");
     loadTab(activeTab);
   });
   fullClose.addEventListener("click", () => fullModal.classList.remove("open"));
 
-  // Tab Switching inside Popup
   tabGeneral.addEventListener("click", () => {
     tabGeneral.classList.add("active");
     tabProblems.classList.remove("active");
     activeTab = "general";
-    fullInput.placeholder = "Type in General Chat...";
+    fullInput.placeholder = "Type in General Chat... (Enter to send)";
     loadTab("general");
   });
 
@@ -2508,7 +2723,7 @@ if ("serviceWorker" in navigator) {
     tabProblems.classList.add("active");
     tabGeneral.classList.remove("active");
     activeTab = "problems";
-    fullInput.placeholder = "Describe your problem/bug here...";
+    fullInput.placeholder = "Describe your problem/bug here... (Enter to send)";
     loadTab("problems");
   });
 
@@ -2523,13 +2738,11 @@ if ("serviceWorker" in navigator) {
     });
   }
 
-  // Listeners for Problems Tab deletion
   problemsRef.on("child_removed", (snap) => {
     const el = fullMsgBox.querySelector("#msg-" + snap.key);
     if (el) el.remove();
   });
 
-  // Send Message
   function sendMessage(text, isProblem = false) {
     if (!text || !myUsername) return;
     const ref = isProblem ? problemsRef : messagesRef;
@@ -2544,6 +2757,7 @@ if ("serviceWorker" in navigator) {
     e.preventDefault();
     sendMessage(input.value.trim(), false);
     input.value = "";
+    input.style.height = "auto";
   });
 
   fullForm.addEventListener("submit", (e) => {
@@ -2551,8 +2765,89 @@ if ("serviceWorker" in navigator) {
     const isProb = (activeTab === "problems");
     sendMessage(fullInput.value.trim(), isProb);
     fullInput.value = "";
-    if (isProb) {
-      setTimeout(() => loadTab("problems"), 300);
+    fullInput.style.height = "auto";
+    if (isProb) setTimeout(() => loadTab("problems"), 300);
+  });
+
+  // ==========================================================================
+  // ADMIN ACTIONS (sankalpsingh only)
+  // ==========================================================================
+  if (isAdmin) {
+    // 1. Send targeted @user popup
+    btnAdminSendTargeted.addEventListener("click", () => {
+      const rawUser = adminTargetUser.value.trim().toLowerCase().replace(/^@/, "");
+      const msg = adminTargetMsg.value.trim();
+      if (!rawUser || !msg) { alert("Please provide both @username and message!"); return; }
+
+      const popupId = "dm_" + Date.now();
+      directPopupRef.set({
+        id: popupId,
+        targetUser: rawUser,
+        text: msg,
+        ts: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        alert("Direct popup sent successfully to @" + rawUser);
+        adminTargetMsg.value = "";
+      });
+    });
+
+    // 2. Broadcast to ALL website visitors
+    btnAdminSendGlobal.addEventListener("click", () => {
+      const title = adminGlobalTitle.value.trim() || "Important Announcement";
+      const msg = adminGlobalMsg.value.trim();
+      if (!msg) { alert("Please write a message to broadcast!"); return; }
+
+      const popupId = "global_" + Date.now();
+      globalPopupRef.set({
+        id: popupId,
+        title: title,
+        text: msg,
+        ts: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        alert("Broadcast sent to all visitors of the website!");
+        adminGlobalMsg.value = "";
+      });
+    });
+  }
+
+  // ==========================================================================
+  // POPUP LISTENERS (Displays in middle of website)
+  // ==========================================================================
+  let currentActivePopupId = "";
+
+  function displayCenterPopup(title, text, id) {
+    const dismissed = localStorage.getItem("tc_dismissed_popup_" + id);
+    if (dismissed) return; // Never show again
+
+    currentActivePopupId = id;
+    centerPopupTitle.textContent = title;
+    centerPopupBody.textContent = text;
+    centerPopupOverlay.classList.add("show");
+  }
+
+  function dismissCenterPopup() {
+    if (currentActivePopupId) {
+      localStorage.setItem("tc_dismissed_popup_" + currentActivePopupId, "true");
+    }
+    centerPopupOverlay.classList.remove("show");
+  }
+  centerPopupClose.addEventListener("click", dismissCenterPopup);
+  centerPopupOk.addEventListener("click", dismissCenterPopup);
+
+  // Listener A: Global Announcements (Shows to ALL visitors, even before joining chat)
+  globalPopupRef.on("value", (snap) => {
+    const data = snap.val();
+    if (!data || !data.text || !data.id) return;
+    displayCenterPopup(data.title || "Announcement", data.text, data.id);
+  });
+
+  // Listener B: Direct @user notification
+  directPopupRef.on("value", (snap) => {
+    const data = snap.val();
+    if (!data || !data.text || !data.id || !myUsername) return;
+    if (data.targetUser === "all" || data.targetUser === myUsername) {
+      const title = `${myUsername}, message for you:`;
+      displayCenterPopup(title, data.text, data.id);
     }
   });
 })();
