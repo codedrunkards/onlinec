@@ -1198,6 +1198,120 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .direct-actions-buttons { gap: 4px; }
     .touch-btn { font-size: 0.58rem; padding: 7px 2px; }
   }
+
+  /* Glowing Red Animated Border for NOTE: */
+  @keyframes noteGlowPulse {
+    0% { border-color: #ff3333; box-shadow: 0 0 8px rgba(255, 51, 51, 0.4); }
+    50% { border-color: #ff0055; box-shadow: 0 0 18px rgba(255, 0, 85, 0.85); }
+    100% { border-color: #ff3333; box-shadow: 0 0 8px rgba(255, 51, 51, 0.4); }
+  }
+  .chat-msg.has-note {
+    border: 2px solid #ff3333 !important;
+    background-color: rgba(255, 20, 50, 0.12) !important;
+    animation: noteGlowPulse 1.8s infinite ease-in-out;
+  }
+
+  /* Glowing Cursor & Word Wrap for Chat Inputs */
+  .chat-compose input,
+  .chat-compose textarea {
+    caret-color: var(--cyan-accent);
+    filter: drop-shadow(0 0 2px var(--cyan-accent));
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .chat-msg .chat-text {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* Message Header & Delete Button */
+  .chat-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+  .chat-delete-btn {
+    background: none;
+    border: none;
+    color: #8c979a;
+    font-size: 0.72rem;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+  .chat-delete-btn:hover {
+    color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.2);
+  }
+
+  /* Full Chat Modal Popup */
+  .full-chat-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .full-chat-modal.open { display: flex; }
+  .full-chat-box {
+    width: 95%;
+    max-width: 780px;
+    height: 82vh;
+    background: var(--bg-surface);
+    border: 2px solid var(--teal-accent);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.9);
+  }
+  .full-chat-tabs {
+    display: flex;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .full-chat-tab {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+  }
+  .full-chat-tab.active {
+    color: var(--cyan-accent);
+    border-bottom: 2px solid var(--cyan-accent);
+    background: rgba(102, 252, 241, 0.05);
+  }
+  .btn-open-fullchat {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--cyan-accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: all 0.15s ease;
+  }
+  .btn-open-fullchat:hover {
+    background: var(--teal-accent);
+    color: #0b0c10;
+  }
+  
 </style>
 </head>
 <body>
@@ -1240,6 +1354,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   <!-- 2. Message Form (Visible once joined) -->
   <form class="chat-compose" id="chat-form" autocomplete="off" style="display: none;">
+    <button type="button" class="btn-open-fullchat" id="btn-open-fullchat">⛶ Expand Full Chat Window</button>
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <span class="chat-badge" id="chat-current-user">User: ...</span>
     </div>
@@ -1250,6 +1365,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   </form>
 </aside>
 
+<!-- Full Chat Modal Popup -->
+<div class="full-chat-modal" id="full-chat-modal">
+  <div class="full-chat-box">
+    <div class="panel-head">
+      <span class="panel-title">💬 Turbo C++ Community Chat</span>
+      <button type="button" class="panel-close" id="full-chat-close" style="display: block;">&times;</button>
+    </div>
+    <div class="full-chat-tabs">
+      <button type="button" class="full-chat-tab active" id="tab-general">💬 General Chat</button>
+      <button type="button" class="full-chat-tab" id="tab-problems">⚠️ Problems &amp; Bugs</button>
+    </div>
+    <div class="chat-messages" id="full-chat-messages" style="flex: 1;"></div>
+    <form class="chat-compose" id="full-chat-form" autocomplete="off">
+      <div class="chat-row">
+        <input type="text" id="full-chat-input" maxlength="300" placeholder="Type a message...">
+        <button type="submit" class="chat-send">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+  
 <button type="button" class="panel-toggle" id="programs-toggle">📚 Programs</button>
 <button type="button" class="panel-toggle" id="chat-toggle">💬 Chat</button>
 <div class="panel-backdrop" id="panel-backdrop"></div>
@@ -2182,7 +2318,7 @@ if ("serviceWorker" in navigator) {
 })();
 
 // ============================================================================
-// 9. LIVE CHAT (right) - Powered by Firebase Realtime Database
+// 9. LIVE CHAT (Full Date/Time + NOTE Highlight + Delete + Admin + Tabs)
 // ============================================================================
 (function () {
   const firebaseConfig = {
@@ -2195,14 +2331,15 @@ if ("serviceWorker" in navigator) {
     appId: "1:578042146187:web:83f1a3d56928d787b6d38e"
   };
 
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const messagesRef = db.ref("messages");
+  const problemsRef = db.ref("problems");
   const usersRef = db.ref("usernames");
 
+  // DOM Elements
   const msgBox = document.getElementById("chat-messages");
+  const fullMsgBox = document.getElementById("full-chat-messages");
   const form = document.getElementById("chat-form");
   const input = document.getElementById("chat-input");
   const sendBtn = document.getElementById("chat-send");
@@ -2214,126 +2351,209 @@ if ("serviceWorker" in navigator) {
   const claimBtn = document.getElementById("btn-claim-username");
   const currentUserBadge = document.getElementById("chat-current-user");
 
-  let myUsername = localStorage.getItem("tc_chat_username") || "";
+  // Popup Modal Elements
+  const btnOpenFull = document.getElementById("btn-open-fullchat");
+  const fullModal = document.getElementById("full-chat-modal");
+  const fullClose = document.getElementById("full-chat-close");
+  const tabGeneral = document.getElementById("tab-general");
+  const tabProblems = document.getElementById("tab-problems");
+  const fullForm = document.getElementById("full-chat-form");
+  const fullInput = document.getElementById("full-chat-input");
+
+  let activeTab = "general"; // "general" or "problems"
+  let myUsername = (localStorage.getItem("tc_chat_username") || "").trim().toLowerCase();
+  const isAdmin = (myUsername === "sankalpsingh");
 
   function setStatus(online) {
     if (online) {
       dot.className = "chat-dot on";
       statusText.textContent = "Online";
-      if (myUsername) {
-        input.disabled = false;
-        sendBtn.disabled = false;
-      }
+      if (myUsername) { input.disabled = false; sendBtn.disabled = false; }
     } else {
       dot.className = "chat-dot wait";
       statusText.textContent = "Connecting...";
-      input.disabled = true;
-      sendBtn.disabled = true;
+      input.disabled = true; sendBtn.disabled = true;
     }
   }
 
-  db.ref(".info/connected").on("value", (snap) => {
-    setStatus(snap.val() === true);
-  });
+  db.ref(".info/connected").on("value", (snap) => setStatus(snap.val() === true));
 
   function showChatBox() {
     joinSection.style.display = "none";
     form.style.display = "flex";
-    currentUserBadge.textContent = "User: " + myUsername + " 🔒";
+    currentUserBadge.textContent = "User: " + myUsername + (isAdmin ? " 👑 (Admin)" : " 🔒");
     input.disabled = false;
     sendBtn.disabled = false;
   }
+  if (myUsername) showChatBox();
 
-  // If user already picked username previously
-  if (myUsername) {
-    showChatBox();
-  }
-
-  // Handle unique username registration
-  async function claimUsername() {
-    const desired = (usernameInput.value || "").trim().toLowerCase();
-    const cleanName = desired.replace(/[^a-z0-9_]/g, "");
-
-    if (cleanName.length < 3) {
-      alert("Username must be at least 3 letters/numbers long.");
-      return;
-    }
-
-    claimBtn.disabled = true;
-    claimBtn.textContent = "...";
-
+  // Username Claim
+  claimBtn.addEventListener("click", async () => {
+    const clean = (usernameInput.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (clean.length < 3) { alert("Username must be at least 3 letters/numbers long."); return; }
+    claimBtn.disabled = true; claimBtn.textContent = "...";
     try {
-      // Check if username already claimed in Firebase
-      const snapshot = await usersRef.child(cleanName).once("value");
-      if (snapshot.exists()) {
+      const snap = await usersRef.child(clean).once("value");
+      if (snap.exists()) {
         alert("This username is already taken! Please choose another one.");
-        claimBtn.disabled = false;
-        claimBtn.textContent = "Join";
+        claimBtn.disabled = false; claimBtn.textContent = "Join";
         return;
       }
-
-      // Claim it permanently
-      await usersRef.child(cleanName).set({
-        claimedAt: firebase.database.ServerValue.TIMESTAMP
-      });
-
-      myUsername = cleanName;
+      await usersRef.child(clean).set({ claimedAt: firebase.database.ServerValue.TIMESTAMP });
+      myUsername = clean;
       localStorage.setItem("tc_chat_username", myUsername);
-      showChatBox();
+      location.reload(); // Refresh to set admin permissions if sankalpsingh
     } catch (e) {
-      alert("Error checking username. Check your internet connection.");
-      claimBtn.disabled = false;
-      claimBtn.textContent = "Join";
+      alert("Error checking username. Check internet connection.");
+      claimBtn.disabled = false; claimBtn.textContent = "Join";
     }
-  }
-
-  claimBtn.addEventListener("click", claimUsername);
-  usernameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") claimUsername();
   });
 
-  function addMessage(m) {
+  // Full Date and Time Formatter (e.g., "16 May 2024, 10:48")
+  function formatFullDateTime(ts) {
+    const d = new Date(ts || Date.now());
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${day} ${month} ${year}, ${hh}:${mm}`;
+  }
+
+  // Create Message Element
+  function createMsgElement(m, key, currentRef) {
+    const isMine = (m.name && m.name.toLowerCase() === myUsername);
     const wrap = document.createElement("div");
-    wrap.className = "chat-msg" + (m.name === myUsername ? " mine" : "");
+    wrap.className = "chat-msg" + (isMine ? " mine" : "");
+    wrap.id = "msg-" + key;
+
+    // Check if NOTE: is in message (animated glowing red boundary)
+    if (m.text && m.text.toUpperCase().includes("NOTE:")) {
+      wrap.classList.add("has-note");
+    }
+
     const meta = document.createElement("div");
     meta.className = "chat-meta";
+
+    const left = document.createElement("span");
     const b = document.createElement("b");
     b.textContent = m.name || "Student";
-    const t = new Date(m.ts || Date.now());
-    const hh = String(t.getHours()).padStart(2, "0");
-    const mm = String(t.getMinutes()).padStart(2, "0");
-    meta.appendChild(b);
-    meta.appendChild(document.createTextNode("  " + hh + ":" + mm));
+    left.appendChild(b);
+    left.appendChild(document.createTextNode("  " + formatFullDateTime(m.ts)));
+    meta.appendChild(left);
+
+    // Delete button: visible to author OR sankalpsingh (Admin can delete anyone's)
+    if (isMine || isAdmin) {
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "chat-delete-btn";
+      delBtn.innerHTML = "🗑️";
+      delBtn.title = isAdmin && !isMine ? "Admin Delete" : "Delete Message";
+      delBtn.addEventListener("click", () => {
+        if (confirm("Delete this message?")) {
+          currentRef.child(key).remove();
+        }
+      });
+      meta.appendChild(delBtn);
+    }
+
     const txt = document.createElement("div");
     txt.className = "chat-text";
     txt.textContent = m.text || "";
+
     wrap.appendChild(meta);
     wrap.appendChild(txt);
-    msgBox.appendChild(wrap);
-    while (msgBox.children.length > 100) {
-      msgBox.removeChild(msgBox.children[1]);
-    }
-    msgBox.scrollTop = msgBox.scrollHeight;
+    return wrap;
   }
 
-  messagesRef.limitToLast(50).on("child_added", (snapshot) => {
-    const m = snapshot.val();
-    if (m && m.text) addMessage(m);
+  // Listeners for General Chat
+  messagesRef.limitToLast(50).on("child_added", (snap) => {
+    const m = snap.val();
+    if (!m || !m.text) return;
+    msgBox.appendChild(createMsgElement(m, snap.key, messagesRef));
+    while (msgBox.children.length > 100) msgBox.removeChild(msgBox.children[1]);
+    msgBox.scrollTop = msgBox.scrollHeight;
+
+    if (activeTab === "general") {
+      fullMsgBox.appendChild(createMsgElement(m, snap.key, messagesRef));
+      fullMsgBox.scrollTop = fullMsgBox.scrollHeight;
+    }
   });
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (!text || !myUsername) return;
+  messagesRef.on("child_removed", (snap) => {
+    const el1 = msgBox.querySelector("#msg-" + snap.key);
+    if (el1) el1.remove();
+    const el2 = fullMsgBox.querySelector("#msg-" + snap.key);
+    if (el2) el2.remove();
+  });
 
-    input.value = "";
-    messagesRef.push({
+  // Modal Open / Close
+  btnOpenFull.addEventListener("click", () => {
+    fullModal.classList.add("open");
+    loadTab(activeTab);
+  });
+  fullClose.addEventListener("click", () => fullModal.classList.remove("open"));
+
+  // Tab Switching inside Popup
+  tabGeneral.addEventListener("click", () => {
+    tabGeneral.classList.add("active");
+    tabProblems.classList.remove("active");
+    activeTab = "general";
+    fullInput.placeholder = "Type in General Chat...";
+    loadTab("general");
+  });
+
+  tabProblems.addEventListener("click", () => {
+    tabProblems.classList.add("active");
+    tabGeneral.classList.remove("active");
+    activeTab = "problems";
+    fullInput.placeholder = "Describe your problem/bug here...";
+    loadTab("problems");
+  });
+
+  function loadTab(tab) {
+    fullMsgBox.innerHTML = "";
+    const targetRef = (tab === "general") ? messagesRef : problemsRef;
+    targetRef.limitToLast(50).once("value", (snap) => {
+      snap.forEach((child) => {
+        fullMsgBox.appendChild(createMsgElement(child.val(), child.key, targetRef));
+      });
+      fullMsgBox.scrollTop = fullMsgBox.scrollHeight;
+    });
+  }
+
+  // Listeners for Problems Tab deletion
+  problemsRef.on("child_removed", (snap) => {
+    const el = fullMsgBox.querySelector("#msg-" + snap.key);
+    if (el) el.remove();
+  });
+
+  // Send Message
+  function sendMessage(text, isProblem = false) {
+    if (!text || !myUsername) return;
+    const ref = isProblem ? problemsRef : messagesRef;
+    ref.push({
       name: myUsername,
       text: text.slice(0, 300),
       ts: firebase.database.ServerValue.TIMESTAMP
-    }).catch((err) => {
-      console.warn("Failed to send message:", err);
-    });
+    }).catch((err) => console.warn("Send error:", err));
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    sendMessage(input.value.trim(), false);
+    input.value = "";
+  });
+
+  fullForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const isProb = (activeTab === "problems");
+    sendMessage(fullInput.value.trim(), isProb);
+    fullInput.value = "";
+    if (isProb) {
+      setTimeout(() => loadTab("problems"), 300);
+    }
   });
 })();
 </script>
