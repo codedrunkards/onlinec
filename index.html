@@ -2853,5 +2853,177 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+<!-- ==========================================================================
+     WEBMCP (Model Context Protocol) AGENT EXPOSURE
+     ========================================================================== -->
+<script>
+(function() {
+  // Define Turbo C++ Tools for AI Agents
+  const TurboCTools = {
+    start_compiler: {
+      name: "start_compiler",
+      description: "Starts the Turbo C++ 3.2 DOSBox emulator if it has not already been started.",
+      parameters: { type: "object", properties: {} },
+      execute: async () => {
+        if (dosCi) return { status: "already_running" };
+        const btn = document.getElementById("start-btn");
+        if (btn && btn.style.display !== "none") {
+          btn.click();
+        }
+        let attempts = 0;
+        while (!dosCi && attempts < 50) {
+          await delay(200);
+          attempts++;
+        }
+        await delay(3000); // Wait for TC.EXE to load
+        return { status: dosCi ? "success" : "failed", message: "Turbo C++ is ready" };
+      }
+    },
+
+    inject_code: {
+      name: "inject_code",
+      description: "Inserts C or C++ source code into a virtual DOS file and opens it inside the editor.",
+      parameters: {
+        type: "object",
+        properties: {
+          code: { type: "string", description: "The full C or C++ source code." },
+          filename: { type: "string", description: "Filename (e.g. MAIN.CPP or HELLO.C). Maximum 8 characters." }
+        },
+        required: ["code"]
+      },
+      execute: async (args) => {
+        if (!dosCi) {
+          const startRes = await TurboCTools.start_compiler.execute();
+          if (startRes.status === "failed") throw new Error("Failed to start Turbo C++.");
+        }
+        const codeInput = document.getElementById("paste-code-input");
+        const fileInput = document.getElementById("inject-filename");
+        
+        codeInput.value = args.code;
+        fileInput.value = args.filename || "MAIN.CPP";
+        
+        await injectCodeIntoDos();
+        return { status: "success", file: fileInput.value, code_length: args.code.length };
+      }
+    },
+
+    run_program: {
+      name: "run_program",
+      description: "Triggers Compile & Run (Ctrl+F9) inside Turbo C++.",
+      parameters: { type: "object", properties: {} },
+      execute: async () => {
+        if (!dosCi) throw new Error("Compiler not running.");
+        dosCi.sendKeyEvent(KBD.LCTRL, true);
+        await delay(10);
+        dosCi.sendKeyEvent(KBD.F9, true);
+        await delay(40);
+        dosCi.sendKeyEvent(KBD.F9, false);
+        dosCi.sendKeyEvent(KBD.LCTRL, false);
+        return { status: "success", action: "Ctrl+F9 triggered" };
+      }
+    },
+
+    view_output: {
+      name: "view_output",
+      description: "Toggles the Output console screen (Alt+F5) to see runtime output.",
+      parameters: { type: "object", properties: {} },
+      execute: async () => {
+        if (!dosCi) throw new Error("Compiler not running.");
+        dosCi.sendKeyEvent(KBD.LALT, true);
+        await delay(10);
+        dosCi.sendKeyEvent(KBD.F5, true);
+        await delay(40);
+        dosCi.sendKeyEvent(KBD.F5, false);
+        dosCi.sendKeyEvent(KBD.LALT, false);
+        return { status: "success", action: "Alt+F5 triggered" };
+      }
+    },
+
+    send_keys: {
+      name: "send_keys",
+      description: "Sends keyboard inputs or text to Turbo C++ (useful for typing inputs for scanf/cin or pressing Enter).",
+      parameters: {
+        type: "object",
+        properties: {
+          text: { type: "string", description: "The string of characters to send." },
+          press_enter: { type: "boolean", description: "Whether to press Enter afterwards. Default is true." }
+        },
+        required: ["text"]
+      },
+      execute: async (args) => {
+        if (!dosCi) throw new Error("Compiler not running.");
+        const text = args.text || "";
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          const kInfo = charToDosKeys(ch);
+          if (kInfo) {
+            for (const k of kInfo) {
+              await pressDosKey(k.keyCode, k.shift, 14, 14);
+            }
+          }
+        }
+        if (args.press_enter !== false) {
+          await delay(20);
+          await pressDosKey(KBD.ENTER, false, 25, 40);
+        }
+        return { status: "success", sent: text };
+      }
+    },
+
+    capture_screen: {
+      name: "capture_screen",
+      description: "Captures a screenshot of the Turbo C++ screen so the AI can verify program output, compiler errors, or graphics.",
+      parameters: { type: "object", properties: {} },
+      execute: async () => {
+        const canvas = dosBox.querySelector("canvas");
+        if (!canvas) throw new Error("No display canvas found.");
+        const dataUrl = canvas.toDataURL("image/png");
+        return {
+          status: "success",
+          mimeType: "image/png",
+          data: dataUrl
+        };
+      }
+    }
+  };
+
+  // 1. Standard WebMCP Browser Interface (for WebMCP Chrome Extensions & Agents)
+  window.modelContext = window.modelContext || {};
+  window.modelContext.tools = Object.values(TurboCTools).map(t => ({
+    name: t.name,
+    description: t.description,
+    parameters: t.parameters
+  }));
+  window.modelContext.executeTool = async (name, args) => {
+    if (!TurboCTools[name]) throw new Error("Tool not found: " + name);
+    return await TurboCTools[name].execute(args || {});
+  };
+
+  // 2. Direct JS API for Headless Agents (Puppeteer, Playwright, Chrome DevTools Protocol)
+  window.__TURBOC_MCP__ = {
+    listTools: () => window.modelContext.tools,
+    callTool: (name, args) => window.modelContext.executeTool(name, args)
+  };
+
+  // 3. PostMessage Bridge for iframe / extension agents
+  window.addEventListener("message", async (event) => {
+    if (!event.data || event.data.type !== "MCP_REQUEST") return;
+    const { id, method, params } = event.data;
+    try {
+      if (method === "tools/list") {
+        window.postMessage({ type: "MCP_RESPONSE", id, result: { tools: window.modelContext.tools } }, "*");
+      } else if (method === "tools/call") {
+        const out = await window.modelContext.executeTool(params.name, params.arguments);
+        window.postMessage({ type: "MCP_RESPONSE", id, result: out }, "*");
+      }
+    } catch (err) {
+      window.postMessage({ type: "MCP_RESPONSE", id, error: err.message }, "*");
+    }
+  });
+
+  console.log("⚡ Turbo C++ WebMCP Tools Registered:", Object.keys(TurboCTools));
+})();
+</script>
+
 </body>
 </html>
