@@ -2053,19 +2053,41 @@ startBtn.addEventListener("click", () => {
   if (dosPromise && typeof dosPromise.then === "function") {
     dosPromise
       .then(async (dosbox) => {
-        console.log("Turbo C++ loaded successfully!");
+        console.log("Turbo C++ loading core...");
         dosboxInstance = dosbox;
         if (!dosCi && dosbox.ci) dosCi = dosbox.ci;
 
         const ev = await dosbox.events();
         keyboard = ev.keyboard;
 
+        // 1. Wait until TURBOC3.zip has completely finished downloading & extracting
+        showToast("Loading Turbo C++ files...", 2500);
+        let tcReady = false;
+        for (let attempt = 0; attempt < 35; attempt++) {
+          if (dosCi && typeof dosCi.fsReadFile === "function") {
+            try {
+              const check = await dosCi.fsReadFile("TURBOC3/BIN/TC.EXE");
+              if (check && check.length > 0) {
+                tcReady = true;
+                break;
+              }
+            } catch (e) {
+              // Still unzipping, wait 250ms
+            }
+          }
+          await delay(250);
+        }
+
+        // 2. Small settle delay for DOSBox shell
+        await delay(300);
+
+        // 3. Launch TC.EXE now that it is guaranteed to exist on disk
         dosbox.run("C:\\TURBOC3\\BIN\\TC.EXE");
 
         setTimeout(() => {
           hiddenInput.focus();
           if (dosCi) pressDosKey(KBD.F5, false, 25, 40);
-        }, 2000);
+        }, 2200);
       })
       .catch((err) => {
         console.error("Error loading Turbo C++:", err);
