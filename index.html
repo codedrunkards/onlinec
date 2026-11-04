@@ -2007,8 +2007,9 @@ function triggerAutoPlayOverlay() {
   return false;
 }
 
+
 // ============================================================================
-// 2. START DOSBOX EMULATOR
+// 2. START DOSBOX EMULATOR (Bulletproof Launch with Canvas Render Loop)
 // ============================================================================
 startBtn.addEventListener("click", () => {
   startBtn.style.display = "none";
@@ -2016,11 +2017,9 @@ startBtn.addEventListener("click", () => {
   dosBox.style.display = "block";
   emulators.pathPrefix = "./";
 
-  // Watch for any internal play button overlay and click it immediately
+  // Watch for internal play overlay button and click it immediately
   const playObserver = new MutationObserver(() => {
-    if (triggerAutoPlayOverlay()) {
-      // triggered
-    }
+    if (triggerAutoPlayOverlay()) {}
   });
   playObserver.observe(dosBox, { childList: true, subtree: true });
 
@@ -2053,33 +2052,66 @@ startBtn.addEventListener("click", () => {
   if (dosPromise && typeof dosPromise.then === "function") {
     dosPromise
       .then(async (dosbox) => {
-        console.log("Turbo C++ loaded successfully!");
         dosboxInstance = dosbox;
         if (!dosCi && dosbox.ci) dosCi = dosbox.ci;
 
         const ev = await dosbox.events();
         keyboard = ev.keyboard;
 
+        // 1. Wait for TURBOC3.zip to extract into the virtual drive
+        for (let attempt = 0; attempt < 35; attempt++) {
+          if (dosCi && typeof dosCi.fsReadFile === "function") {
+            try {
+              const check = await dosCi.fsReadFile("TURBOC3/BIN/TC.EXE");
+              if (check && check.length > 0) break;
+            } catch (e) {}
+          }
+          await delay(200);
+        }
+
+        // 2. Settle shell
+        await delay(300);
+
+        // 3. Launch TC.EXE
         dosbox.run("C:\\TURBOC3\\BIN\\TC.EXE");
 
-        setTimeout(() => {
-          hiddenInput.focus();
-          if (dosCi) pressDosKey(KBD.F5, false, 25, 40);
-        }, 2000);
+        // 4. Force continuous render repaint without switching tabs
+        let frames = 0;
+        const forceRepaint = () => {
+          const canvas = dosBox.querySelector("canvas");
+          if (canvas) {
+            canvas.focus();
+          }
+          window.dispatchEvent(new Event("resize"));
+          frames++;
+          if (frames < 25) {
+            requestAnimationFrame(forceRepaint);
+          }
+        };
+        requestAnimationFrame(forceRepaint);
+
+        // 5. Maximize window (F5) once loaded
+        setTimeout(async () => {
+          const canvas = dosBox.querySelector("canvas");
+          if (canvas) canvas.focus();
+          if (dosCi) {
+            await pressDosKey(KBD.F5, false, 25, 40);
+          }
+        }, 1800);
       })
       .catch((err) => {
         console.error("Error loading Turbo C++:", err);
-        alert("Failed to load Turbo C++ emulator. Check console.");
       });
   }
 
+  // Tap canvas to focus
   dosBox.addEventListener("touchstart", () => {
-    hiddenInput.focus();
-    if (keyboard) keyboard.focus();
+    const canvas = dosBox.querySelector("canvas");
+    if (canvas) canvas.focus();
   });
   dosBox.addEventListener("click", () => {
-    hiddenInput.focus();
-    if (keyboard) keyboard.focus();
+    const canvas = dosBox.querySelector("canvas");
+    if (canvas) canvas.focus();
   });
 
   hiddenInput.addEventListener("beforeinput", (e) => {
@@ -2089,15 +2121,10 @@ startBtn.addEventListener("click", () => {
       if (val) {
         if (val.length > 256) return;
         const code = val.toUpperCase().charCodeAt(0);
-        if (!isNaN(code)) {
-          keyboard.keyPress(code);
-        }
+        if (!isNaN(code)) keyboard.keyPress(code);
       }
-    } catch (err) {
-      console.warn("Error processing beforeinput event:", err);
-    } finally {
-      hiddenInput.value = "";
-    }
+    } catch (err) {}
+    finally { hiddenInput.value = ""; }
   });
 
   hiddenInput.addEventListener("input", () => {
@@ -2105,6 +2132,7 @@ startBtn.addEventListener("click", () => {
   });
 });
 
+  
 // ============================================================================
 // 3. LIVE CODE INSERTION INTO TURBO C++
 // ============================================================================
