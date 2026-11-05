@@ -1480,7 +1480,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   /* Top Right Saved Programs Button */
   .saved-programs-btn {
-    position: absolute;
+    position: fixed; /* Changed to fixed so it stays relative to screen */
     top: 20px;
     right: 20px;
     background: var(--bg-elevated);
@@ -1492,17 +1492,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    z-index: 99999; /* Boosted z-index */
     transition: all 0.2s;
   }
   .saved-programs-btn:hover {
     background: var(--teal-accent);
     color: #000;
   }
+  body.is-fullscreen .saved-programs-btn {
+    display: none !important; /* Hide in fullscreen */
+  }
   @media (max-width: 1080px) {
     .saved-programs-btn {
-      top: 110px; /* Push below mobile ad */
+      top: 90px; /* Push below mobile ad */
       padding: 6px 10px;
       font-size: 0.75rem;
     }
@@ -2520,35 +2523,41 @@ if (tbClear) {
   tbClear.addEventListener("click", async () => {
     if (!ensureCompilerStarted()) return;
 
-    clearKeyMatrix(); 
+    // VERY IMPORTANT: Force focus back to emulator so keys don't drop
+    dosBox.focus();
+    const canvas = dosBox.querySelector("canvas");
+    if (canvas) canvas.focus();
+
+    clearKeyMatrix();
+    await delay(50); // Small buffer after focus
+
+    // Helper to press complex combos flawlessly in DOS
+    const pressCombo = async (mods, key) => {
+      for (let m of mods) { dosCi.sendKeyEvent(m, true); await delay(30); }
+      dosCi.sendKeyEvent(key, true); await delay(40);
+      dosCi.sendKeyEvent(key, false); await delay(40);
+      for (let m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(30); }
+      await delay(60);
+    };
+
     // 1. Esc a few times to close any stray menus
-    await pressDosKey(KBD.ESC, false, 30, 80);
-    await pressDosKey(KBD.ESC, false, 30, 80);
+    await pressDosKey(KBD.ESC, false, 30, 60);
+    await pressDosKey(KBD.ESC, false, 30, 60);
     
-    // 2. Ctrl+Home to top of file
-    dosCi.sendKeyEvent(KBD.LCTRL, true); await delay(40);
-    dosCi.sendKeyEvent(268, true); await delay(40); // 268 = Home
-    dosCi.sendKeyEvent(268, false); await delay(40);
-    dosCi.sendKeyEvent(KBD.LCTRL, false); await delay(100);
+    // 2. Ctrl+Home to jump cursor strictly to top of file (Key: 268)
+    await pressCombo([KBD.LCTRL], 268);
     
-    // 3. Ctrl+Shift+End to select everything to bottom
-    dosCi.sendKeyEvent(KBD.LCTRL, true);
-    dosCi.sendKeyEvent(KBD.LSHIFT, true); await delay(40);
-    dosCi.sendKeyEvent(269, true); await delay(40); // 269 = End
-    dosCi.sendKeyEvent(269, false); await delay(40);
-    dosCi.sendKeyEvent(KBD.LSHIFT, false);
-    dosCi.sendKeyEvent(KBD.LCTRL, false); await delay(100);
+    // 3. Ctrl+Shift+End to highlight everything to bottom (Key: 269)
+    await pressCombo([KBD.LCTRL, KBD.LSHIFT], 269);
     
-    // 4. Ctrl+Del to clear selection (Edit > Clear shortcut)
-    dosCi.sendKeyEvent(KBD.LCTRL, true); await delay(40);
-    dosCi.sendKeyEvent(261, true); await delay(40); // 261 = Del
-    dosCi.sendKeyEvent(261, false); await delay(40);
-    dosCi.sendKeyEvent(KBD.LCTRL, false);
+    // 4. Ctrl+Del to clear selection (Edit > Clear shortcut) (Key: 261)
+    await pressCombo([KBD.LCTRL], 261);
     
     showToast("Workspace strictly cleared");
   });
 }
 
+  
 // ============================================================================
 // DOWNLOAD CODE FROM THE COMPILER (button + confirmation dialog)
 // ============================================================================
