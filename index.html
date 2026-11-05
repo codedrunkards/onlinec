@@ -1202,6 +1202,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .touch-btn { font-size: 0.58rem; padding: 7px 2px; }
   }
 
+    /* Normal (non-fullscreen) mode: let the action buttons wrap onto extra lines */
+  body:not(.is-fullscreen) .direct-actions-buttons {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  body:not(.is-fullscreen) .touch-btn {
+    flex: 1 1 auto;
+    min-width: max-content;     /* never cut the label, wrap the button instead */
+    overflow: visible;
+    text-overflow: clip;
+  }
+
   /* Glowing Red Animated Border for NOTE: */
   @keyframes noteGlowPulse {
     0% { border-color: #ff3333; box-shadow: 0 0 8px rgba(255, 51, 51, 0.4); }
