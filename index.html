@@ -1499,47 +1499,6 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
     overflow: hidden !important;
   }
 
-  /* Top Right Saved Programs Button */
-  .saved-programs-btn {
-    position: fixed; 
-    top: 10px;
-    right: 10px; /* Default for mobile/tablet where chat is a hidden drawer */
-    background: var(--bg-elevated);
-    border: 1px solid var(--teal-accent);
-    color: var(--cyan-accent);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-family: var(--font-mono);
-    font-weight: 500;
-    font-size: 0.80rem;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    z-index: 99999; 
-    transition: all 0.2s;
-  }
-  .saved-programs-btn:hover {
-    background: var(--teal-accent);
-    color: #000;
-  }
-  body.is-fullscreen .saved-programs-btn {
-    display: none !important; /* Hide in fullscreen */
-  }
-
-  /* Automatically push it left of the live chat on desktop screens */
-  @media (min-width: 1200px) {
-    .saved-programs-btn {
-      right: calc(var(--right-w) + 20px);
-    }
-  }
-
-  @media (max-width: 1080px) {
-    .saved-programs-btn {
-      top: 90px; /* Push below mobile ad */
-      padding: 6px 10px;
-      font-size: 0.75rem;
-    }
-  }
-
   /* Ready-Made Program Direct Download Icon */
   .prog-item {
     position: relative; 
