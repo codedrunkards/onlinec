@@ -2035,7 +2035,9 @@ startBtn.addEventListener("click", () => {
     playObserver.disconnect();
   }, 8000);
 
-  const dosPromise = Dos(dosBox, {
+  // js-dos 8.x: Dos() returns a plain object (NOT a Promise). The emulator hands us
+  // the CommandInterface through the "ci-ready" event, so everything starts from there.
+  const dosPlayer = Dos(dosBox, {
     url: "turboc.jsdos",
     zipUrl: "TURBOC3.zip",
     pathPrefix: "./",
@@ -2045,63 +2047,35 @@ startBtn.addEventListener("click", () => {
       if (event === "ci-ready") {
         dosCi = payload;
         window.ci = dosCi;
+        onEmulatorReady(dosCi);
       }
     }
   });
+  dosboxInstance = dosPlayer;
 
-  if (dosPromise && typeof dosPromise.then === "function") {
-    dosPromise
-      .then(async (dosbox) => {
-        dosboxInstance = dosbox;
-        if (!dosCi && dosbox.ci) dosCi = dosbox.ci;
+  function onEmulatorReady(ci) {
+    // Mobile keyboard helper (the old `keyboard` object never existed in js-dos 8).
+    keyboard = { keyPress: (code) => ci.simulateKeyPress(code) };
 
-        const ev = await dosbox.events();
-        keyboard = ev.keyboard;
-
-        // 1. Wait for TURBOC3.zip to extract into the virtual drive
-        for (let attempt = 0; attempt < 35; attempt++) {
-          if (dosCi && typeof dosCi.fsReadFile === "function") {
-            try {
-              const check = await dosCi.fsReadFile("TURBOC3/BIN/TC.EXE");
-              if (check && check.length > 0) break;
-            } catch (e) {}
-          }
-          await delay(200);
-        }
-
-        // 2. Settle shell
-        await delay(300);
-
-        // 3. Launch TC.EXE
-        dosbox.run("C:\\TURBOC3\\BIN\\TC.EXE");
-
-        // 4. Force continuous render repaint without switching tabs
-        let frames = 0;
-        const forceRepaint = () => {
-          const canvas = dosBox.querySelector("canvas");
-          if (canvas) {
-            canvas.focus();
-          }
-          window.dispatchEvent(new Event("resize"));
-          frames++;
-          if (frames < 25) {
-            requestAnimationFrame(forceRepaint);
-          }
-        };
-        requestAnimationFrame(forceRepaint);
-
-        // 5. Maximize window (F5) once loaded
-        setTimeout(async () => {
-          const canvas = dosBox.querySelector("canvas");
-          if (canvas) canvas.focus();
-          if (dosCi) {
-            await pressDosKey(KBD.F5, false, 25, 40);
-          }
-        }, 1800);
-      })
-      .catch((err) => {
-        console.error("Error loading Turbo C++:", err);
-      });
+    // Switching tabs "fixes" the screen because js-dos calls ci.pause() when the tab is
+    // hidden and ci.resume() when it is shown again. Do the same pair ourselves a few times
+    // while TC.EXE is booting, without the user having to leave the tab.
+    let nudges = 0;
+    const nudgeTimer = setInterval(() => {
+      nudges++;
+      if (!document.hidden) {
+        try {
+          ci.pause();
+          setTimeout(() => {
+            try { ci.resume(); } catch (e) {}
+            window.dispatchEvent(new Event("resize"));
+          }, 50);
+        } catch (e) {}
+        const canvas = dosBox.querySelector("canvas");
+        if (canvas) canvas.focus();
+      }
+      if (nudges >= 10) clearInterval(nudgeTimer);
+    }, 1000);
   }
 
   // Tap canvas to focus
