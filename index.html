@@ -2042,6 +2042,7 @@ startBtn.addEventListener("click", () => {
     pathPrefix: "./",
     mouseCapture: false,
     autoStart: true,
+    kiosk: true,
     onEvent: (event, payload) => {
       if (event === "ci-ready") {
         dosCi = payload;
@@ -2263,7 +2264,7 @@ function toggleFullscreen() {
   if (btnToggleFs) {
     btnToggleFs.querySelector("span").textContent = isFs ? "Exit Fullscreen" : "Fullscreen";
   }
-  const wrapper = document.getElementById("dos-wrapper");
+  const wrapper = document.documentElement;   // page root, so the action bar stays visible
   if (isFs && wrapper) {
     const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen || wrapper.mozRequestFullScreen;
     if (req) req.call(wrapper).catch(() => {});
