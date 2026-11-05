@@ -1473,6 +1473,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     cursor: pointer;
   }
 
+  /* Allow selecting and copying text everywhere (except on buttons) */
+body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
+.full-chat-box, .chat-messages, .code-textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+.chat-msg, .chat-text {
+  -webkit-touch-callout: default;
+}
+
+/* Clickable, underlined links in chat and popups */
+.chat-text a, .center-popup-body a {
+  color: #66fcf1;
+  text-decoration: underline;
+  cursor: pointer;
+  word-break: break-all;
+}
+.chat-text a:hover, .center-popup-body a:hover {
+  color: #ffffff;
+}
+  
   /* Stop background scrolling when any modal is open */
   body.modal-open {
     overflow: hidden !important;
@@ -1579,7 +1600,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <button type="button" class="lang-tab active" id="tab-c" data-lang="c">C</button>
     <button type="button" class="lang-tab" id="tab-cpp" data-lang="cpp">C++</button>
   </div>
-  <div class="prog-hint">Tap a program to load it into Turbo C++ with its file name.</div>
+  <div class="prog-hint">Tap a program to load it into Turbo C++ with its file name OR tap on download button ⬇️ to save the program directly on your system.</div>
   <div class="prog-list" id="prog-list"></div>
 </aside>
 
@@ -1783,7 +1804,7 @@ void main() {
       </div>
 
       <div style="font-size: 0.8rem; color: var(--cyan-accent); margin-bottom: -4px;">
-        ✏️ You can edit your code here before downloading:
+        You can edit your code here before downloading:
       </div>
       <textarea id="dl-code" class="code-textarea" spellcheck="false"></textarea>
 
@@ -1815,12 +1836,12 @@ void main() {
   <div class="modal-backdrop" id="save-list-modal">
     <div class="modal-dialog">
       <div class="modal-header">
-        <h3 class="modal-title">💾 Save Program to List</h3>
+        <h3 class="modal-title">💾 Save Program to the Save Programs List</h3>
         <button type="button" class="modal-close-btn" id="save-close-btn">&times;</button>
       </div>
       <div class="modal-filename-group">
         <div>
-          <div class="filename-label">Program Name:</div>
+          <div class="filename-label">Write Your File Name and Extension:</div>
           <div style="font-size: 0.7rem; color: #8c979a;">Name and extension to save in your browser list</div>
         </div>
         <input type="text" id="save-list-filename" class="filename-input" value="MYPROG.CPP" style="width:160px;">
@@ -2007,6 +2028,19 @@ void main() {
   }, true);
 });
 
+
+// Let Ctrl/Cmd + C / A / X work normally when selecting page text (outside the emulator)
+window.addEventListener("keydown", (e) => {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  const k = (e.key || "").toLowerCase();
+  if (k !== "c" && k !== "a" && k !== "x") return;
+  const t = e.target;
+  const inEmulator = t && t.closest && t.closest("#dos");
+  const sel = window.getSelection ? String(window.getSelection()) : "";
+  if (!inEmulator || sel) e.stopImmediatePropagation();
+}, true);
+  
+  
 // UI Elements
 const startBtn = document.getElementById("start-btn");
 const emulatorCard = document.getElementById("emulator-card");
@@ -2810,7 +2844,7 @@ document.getElementById("btn-open-saved").addEventListener("click", () => {
   savedPreviewArea.style.display = "none";
 
   if(saved.length === 0) {
-    savedProgramsList.innerHTML = "<div style='color:#8c979a; font-size:0.85rem; text-align:center;'>No programs saved yet. Use the Save button in IDE.</div>";
+    savedProgramsList.innerHTML = "<div style='color:#8c979a; font-size:0.85rem; text-align:center;'>No programs saved yet. Use the Save button in direct actions.</div>";
   } else {
     saved.forEach((prog, index) => {
       const item = document.createElement("div");
@@ -3173,6 +3207,27 @@ if ("serviceWorker" in navigator) {
     }
   });
 
+    // Turns http(s):// and www. links into real clickable links (safe: no innerHTML)
+  function linkify(container, text) {
+    const re = /((?:https?:\/\/|www\.)[^\s<]+)/gi;
+    let last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) container.appendChild(document.createTextNode(text.slice(last, m.index)));
+      let url = m[0], extra = "";
+      const trail = url.match(/[.,!?;:)\]]+$/);
+      if (trail) { extra = trail[0]; url = url.slice(0, -extra.length); }
+      const a = document.createElement("a");
+      a.href = /^www\./i.test(url) ? "https://" + url : url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer nofollow";
+      a.textContent = url;
+      container.appendChild(a);
+      if (extra) container.appendChild(document.createTextNode(extra));
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) container.appendChild(document.createTextNode(text.slice(last)));
+  }
+  
   function formatFullDateTime(ts) {
     const d = new Date(ts || Date.now());
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -3220,7 +3275,7 @@ if ("serviceWorker" in navigator) {
 
     const txt = document.createElement("div");
     txt.className = "chat-text";
-    txt.textContent = m.text || "";
+    linkify(txt, m.text || "");
 
     wrap.appendChild(meta);
     wrap.appendChild(txt);
@@ -3364,7 +3419,8 @@ if ("serviceWorker" in navigator) {
 
     currentActivePopupId = id;
     centerPopupTitle.textContent = title;
-    centerPopupBody.textContent = text;
+    centerPopupBody.textContent = "";
+    linkify(centerPopupBody, text);
     centerPopupOverlay.classList.add("show");
   }
 
