@@ -1613,7 +1613,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output<span class="sc"> (Alt+F5)</span></button>
       <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
       <button type="button" class="touch-btn" id="tb-open">📂 Open<span class="sc"> (F3)</span></button>
-      <button type="button" class="touch-btn" id="tb-zoom">🔍 Zoom<span class="sc"> (F5)</span></button>
+      <button type="button" class="touch-btn" id="tb-clear">🧹 Clear<span class="sc"> (Ctrl+Del)</span></button>
       <button type="button" class="touch-btn" id="tb-esc">Esc</button>
     </div>
   </div>
@@ -1843,7 +1843,7 @@ const btnInjectCode = document.getElementById("btn-inject-code");
 const tbPaste = document.getElementById("tb-paste");
 const tbRun = document.getElementById("tb-run");
 const tbUserscreen = document.getElementById("tb-userscreen");
-const tbZoom = document.getElementById("tb-zoom");
+const tbClear = document.getElementById("tb-clear");
 const tbSave = document.getElementById("tb-save");
 const tbOpen = document.getElementById("tb-open");
 const tbEsc = document.getElementById("tb-esc");
@@ -2327,13 +2327,25 @@ if (tbUserscreen) {
   });
 }
 
-if (tbZoom) {
-  tbZoom.addEventListener("click", () => {
+if (tbClear) {
+  tbClear.addEventListener("click", async () => {
     if (!ensureCompilerStarted()) return;
-    triggerZoom();
+
+    // press a key while holding modifier keys (e.g. Ctrl+Shift+End)
+    const combo = async (mods, key) => {
+      for (const m of mods) { dosCi.sendKeyEvent(m, true); await delay(15); }
+      await pressDosKey(key, false, 25, 40);
+      for (const m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(15); }
+    };
+
+    await pressDosKey(KBD.ESC, false, 25, 60);        // close any open menu/dialog
+    await combo([KBD.LCTRL], 268);                    // Ctrl+Home        -> top of file
+    await combo([KBD.LCTRL, KBD.LSHIFT], 269);        // Ctrl+Shift+End   -> select everything
+    await combo([KBD.LCTRL], 261);                    // Ctrl+Delete      -> Edit > Clear
+    showToast("Editor cleared (Alt+Backspace to undo)");
   });
 }
-
+  
 if (tbSave) {
   tbSave.addEventListener("click", async () => {
     if (!ensureCompilerStarted()) return;
