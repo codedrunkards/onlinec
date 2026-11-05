@@ -2531,40 +2531,41 @@ if (tbClear) {
   tbClear.addEventListener("click", async () => {
     if (!ensureCompilerStarted()) return;
 
-    // VERY IMPORTANT: Force focus back to emulator so keys don't drop
     dosBox.focus();
     const canvas = dosBox.querySelector("canvas");
     if (canvas) canvas.focus();
 
     clearKeyMatrix();
-    await delay(50); // Small buffer after focus
+    await delay(50);
 
-    // Helper to press complex combos flawlessly in DOS
+    // Presses a key with Ctrl held down
     const pressCombo = async (mods, key) => {
       for (let m of mods) { dosCi.sendKeyEvent(m, true); await delay(30); }
       dosCi.sendKeyEvent(key, true); await delay(40);
       dosCi.sendKeyEvent(key, false); await delay(40);
       for (let m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(30); }
-      await delay(60);
+      await delay(90);
     };
 
-    // 1. Esc a few times to close any stray menus
+    const K = 75, B = 66, Y = 89;   // letter keys
+
+    // Close any open menus
     await pressDosKey(KBD.ESC, false, 30, 60);
     await pressDosKey(KBD.ESC, false, 30, 60);
-    
-    // 2. Ctrl+Home to jump cursor strictly to top of file (Key: 268)
-    await pressCombo([KBD.LCTRL], 268);
-    
-    // 3. Ctrl+Shift+End to highlight everything to bottom (Key: 269)
-    await pressCombo([KBD.LCTRL, KBD.LSHIFT], 269);
-    
-    // 4. Ctrl+Del to clear selection (Edit > Clear shortcut) (Key: 261)
-    await pressCombo([KBD.LCTRL], 261);
-    
-    showToast("Workspace strictly cleared");
+
+    // Run the clear twice so nothing is left behind
+    for (let pass = 0; pass < 2; pass++) {
+      await pressCombo([KBD.LCTRL], 266);                                   // Ctrl+PgUp: top of FILE
+      await pressCombo([KBD.LCTRL], K); await pressCombo([KBD.LCTRL], B);   // Ctrl+K B: start selection
+      await pressCombo([KBD.LCTRL], 267);                                   // Ctrl+PgDn: bottom of FILE
+      await pressCombo([KBD.LCTRL], K); await pressCombo([KBD.LCTRL], K);   // Ctrl+K K: end selection
+      await pressCombo([KBD.LCTRL], K); await pressCombo([KBD.LCTRL], Y);   // Ctrl+K Y: delete selection
+    }
+
+    clearKeyMatrix();
+    showToast("Workspace cleared");
   });
 }
-
   
 // ============================================================================
 // DOWNLOAD CODE FROM THE COMPILER (button + confirmation dialog)
@@ -2619,26 +2620,16 @@ async function loadDownloadSource(path) {
 async function openDownloadDialog() {
   if (!ensureCompilerStarted()) return;
   showToast("Grabbing code from compiler...");
+  let text = null;
+  try { text = await extractWorkspaceText(); } catch (e) { console.error(e); }
+  if (!text || !text.trim()) { showToast("Workspace is empty, nothing to download!"); return; }
 
-  let before = {}, after = {};
-  try { before = await snapshotSources(); } catch (e) {}
-  clearKeyMatrix();
-  await pressDosKey(KBD.ESC, false, 20, 80);
-  await pressDosKey(KBD.F2, false, 25, 400); // Trigger save inside TC
-  try { after = await snapshotSources(); } catch (e) { console.error(e); }
-
-  const paths = Object.keys(after).sort();
-  if (!paths.length) {
-    showToast("No file active. Write some code first!", 3000);
-    return;
-  }
-
-  // Grab most recently modified/saved file
-  let pick = paths.find(p => !(p in before) || before[p] !== after[p]);
-  if (!pick && lastDosFilename) pick = paths.find(p => p.toUpperCase().endsWith(lastDosFilename.toUpperCase()));
-  if (!pick) pick = paths[paths.length - 1];
-
-  await loadDownloadSource(pick);
+  dlCode.value = text;
+  const base = lastDosFilename || "CODE.CPP";
+  const dot = base.lastIndexOf(".");
+  dlFilename.value = (dot > 0 ? base.slice(0, dot) : base).toLowerCase();
+  const ext = dot > 0 ? base.slice(dot + 1).toLowerCase() : "cpp";
+  dlExt.value = ["c", "cpp", "h", "hpp", "txt"].includes(ext) ? "." + ext : ".cpp";
   
   downloadModal.classList.add("visible");
   toggleModalScroll(true);
@@ -2682,6 +2673,80 @@ if (downloadModal) {
     if (e.target === downloadModal) closeDownloadModal();
   });
 }
+
+
+// ============================================================================
+// EXTRACT EXACTLY WHAT IS IN THE EDITOR (ignores file name / path completely)
+// ============================================================================
+function findFileInTree(node, name, prefix = "") {
+  if (!node) return null;
+  let p = node.name ? (prefix ? prefix + "/" + node.name : node.name) : prefix;
+  p = p.replace(/^[.\/]+/, "").replace(/\/{2,}/g, "/");
+  if (node.nodes) {
+    for (const n of node.nodes) {
+      const r = findFileInTree(n, name, p);
+      if (r) return r;
+    }
+    return null;
+  }
+  return (node.name && node.name.toUpperCase() === name) ? p : null;
+}
+
+async function extractWorkspaceText() {
+  dosBox.focus();
+  const canvas = dosBox.querySelector("canvas");
+  if (canvas) canvas.focus();
+  clearKeyMatrix();
+  await delay(50);
+
+  const combo = async (mods, key) => {
+    for (const m of mods) { dosCi.sendKeyEvent(m, true); await delay(30); }
+    dosCi.sendKeyEvent(key, true); await delay(40);
+    dosCi.sendKeyEvent(key, false); await delay(40);
+    for (const m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(30); }
+    await delay(90);
+  };
+
+  const K = 75, B = 66, W = 87;
+  const tmpName = "X" + String(Date.now()).slice(-6) + ".TMP";   // unique, so no "overwrite?" prompt
+
+  // Close menus
+  await pressDosKey(KBD.ESC, false, 30, 60);
+  await pressDosKey(KBD.ESC, false, 30, 60);
+
+  // Select the ENTIRE file
+  await combo([KBD.LCTRL], 266);                                   // Ctrl+PgUp  (top of file)
+  await combo([KBD.LCTRL], K); await combo([KBD.LCTRL], B);        // Ctrl+K B   (block start)
+  await combo([KBD.LCTRL], 267);                                   // Ctrl+PgDn  (bottom of file)
+  await combo([KBD.LCTRL], K); await combo([KBD.LCTRL], K);        // Ctrl+K K   (block end)
+
+  // Write the selection to a temp file: Ctrl+K W
+  await combo([KBD.LCTRL], K); await combo([KBD.LCTRL], W);
+  await delay(500);
+
+  const target = "C:\\TURBOC3\\BIN\\" + tmpName;
+  for (const ch of target) {
+    const kInfo = charToDosKeys(ch);
+    if (kInfo) for (const k of kInfo) await pressDosKey(k.keyCode, k.shift, 14, 14);
+  }
+  await delay(100);
+  await pressDosKey(KBD.ENTER, false, 25, 300);
+
+  // Wait for the temp file to appear, then read it
+  let foundPath = null;
+  for (let i = 0; i < 15 && !foundPath; i++) {
+    await delay(200);
+    try { foundPath = findFileInTree(await dosCi.fsTree(), tmpName); } catch (e) {}
+  }
+  if (!foundPath) return null;   // editor was empty (nothing to write)
+
+  const bytes = await dosCi.fsReadFile(foundPath);
+  const text = new TextDecoder("utf-8").decode(bytes);
+  try { await dosCi.fsDeleteFile(foundPath); } catch (e) {}   // tidy up
+  clearKeyMatrix();
+  return text;
+}
+  
   
 // --- NEW: SAVE TO CUSTOM LIST ---
 const saveListModal = document.getElementById("save-list-modal");
@@ -2709,30 +2774,15 @@ if (tbSave) {
     if (!ensureCompilerStarted()) return;
     showToast("Reading current workspace...");
 
-    let before = {}, after = {};
-    try { before = await snapshotSources(); } catch (e) {}
-    clearKeyMatrix();
-    await pressDosKey(KBD.ESC, false, 20, 80);
-    await pressDosKey(KBD.F2, false, 25, 400); // Save inside Turbo C++
-    try { after = await snapshotSources(); } catch (e) {}
+    let text = null;
+    try { text = await extractWorkspaceText(); } catch (e) { console.error(e); }
 
-    const paths = Object.keys(after).sort();
-    if (!paths.length) { showToast("No code to save!"); return; }
+    if (!text || !text.trim()) { showToast("Workspace is empty, nothing to save!"); return; }
 
-    let pick = paths.find(p => !(p in before) || before[p] !== after[p]);
-    if (!pick && lastDosFilename) pick = paths.find(p => p.toUpperCase().endsWith(lastDosFilename.toUpperCase()));
-    if (!pick) pick = paths[paths.length - 1];
-
-    try {
-      const bytes = await dosCi.fsReadFile(pick);
-      saveListCode.value = new TextDecoder("utf-8").decode(bytes);
-      const base = pick.split("/").pop();
-      saveListFilename.value = base;
-      saveListModal.classList.add("visible");
-      toggleModalScroll(true);
-    } catch (e) {
-      showToast("Error reading file to save");
-    }
+    saveListCode.value = text;
+    saveListFilename.value = lastDosFilename || "MYPROG.CPP";
+    saveListModal.classList.add("visible");
+    toggleModalScroll(true);
   });
 }
 
