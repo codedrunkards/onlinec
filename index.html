@@ -1480,9 +1480,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   /* Top Right Saved Programs Button */
   .saved-programs-btn {
-    position: fixed; /* Changed to fixed so it stays relative to screen */
+    position: fixed; 
     top: 20px;
-    right: 20px;
+    right: 20px; /* Default for mobile/tablet where chat is a hidden drawer */
     background: var(--bg-elevated);
     border: 1px solid var(--teal-accent);
     color: var(--cyan-accent);
@@ -1493,7 +1493,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     font-size: 0.85rem;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    z-index: 99999; /* Boosted z-index */
+    z-index: 99999; 
     transition: all 0.2s;
   }
   .saved-programs-btn:hover {
@@ -1503,6 +1503,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   body.is-fullscreen .saved-programs-btn {
     display: none !important; /* Hide in fullscreen */
   }
+
+  /* Automatically push it left of the live chat on desktop screens */
+  @media (min-width: 1200px) {
+    .saved-programs-btn {
+      right: calc(var(--right-w) + 20px);
+    }
+  }
+
   @media (max-width: 1080px) {
     .saved-programs-btn {
       top: 90px; /* Push below mobile ad */
