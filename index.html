@@ -496,6 +496,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     padding: 16px;
   }
 
+  #download-modal { z-index: 1000010; }
+  #download-modal .filename-input { text-transform: none; width: auto; max-width: 100%; }
+  
   .modal-backdrop.visible {
     display: flex;
   }
@@ -1611,9 +1614,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       <button type="button" class="touch-btn" id="tb-paste">📋 Paste Code</button>
       <button type="button" class="touch-btn" id="tb-run">▶️ Run<span class="sc"> (Ctrl+F9)</span></button>
       <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output<span class="sc"> (Alt+F5)</span></button>
-      <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
-      <button type="button" class="touch-btn" id="tb-open">📂 Open<span class="sc"> (F3)</span></button>
       <button type="button" class="touch-btn" id="tb-clear">🧹 Clear<span class="sc"> (Ctrl+Del)</span></button>
+      <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
+      <button type="button" class="touch-btn" id="tb-download">⬇️ Download</button>
+      <button type="button" class="touch-btn" id="tb-open">📂 Open<span class="sc"> (F3)</span></button>
       <button type="button" class="touch-btn" id="tb-esc">Esc</button>
     </div>
   </div>
@@ -1666,6 +1670,48 @@ void main() {
     </div>
   </div>
 
+    <!-- Download Code Modal Dialog -->
+  <div class="modal-backdrop" id="download-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">⬇️ Download Code</h3>
+        <button type="button" class="modal-close-btn" id="dl-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-filename-group">
+        <div>
+          <div class="filename-label">Source file:</div>
+          <div style="font-size: 0.7rem; color: #8c979a;">Saved files on the virtual DOS disk</div>
+        </div>
+        <select id="dl-source" class="filename-input"></select>
+      </div>
+
+      <textarea id="dl-code" class="code-textarea" spellcheck="false"></textarea>
+
+      <div class="modal-filename-group">
+        <div>
+          <div class="filename-label">Download as:</div>
+          <div style="font-size: 0.7rem; color: #8c979a;">File name and format (you can change both)</div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <input type="text" id="dl-filename" class="filename-input" value="code" autocomplete="off" spellcheck="false">
+          <select id="dl-ext" class="filename-input">
+            <option value=".c">.c</option>
+            <option value=".cpp">.cpp</option>
+            <option value=".h">.h</option>
+            <option value=".hpp">.hpp</option>
+            <option value=".txt">.txt</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="dl-cancel-btn">Cancel</button>
+        <button type="button" class="btn-inject" id="dl-confirm-btn">⬇️ <span>Download</span></button>
+      </div>
+    </div>
+  </div>
+  
   <!-- Toast Notification Box -->
   <div id="toast" class="toast-box">Ready</div>
 
@@ -2120,6 +2166,7 @@ async function injectCodeIntoDos() {
   }
 
   const dosFilename = getSanitizedFilename(injectFilenameInput.value);
+  lastDosFilename = dosFilename;
   const fullPath = "TURBOC3/BIN/" + dosFilename;
 
   try {
@@ -2346,6 +2393,132 @@ if (tbClear) {
     showToast("Editor cleared (Alt+Backspace to undo)");
   });
 }
+
+// ============================================================================
+// DOWNLOAD CODE FROM THE COMPILER (button + confirmation dialog)
+// ============================================================================
+let lastDosFilename = null;   // last file inserted through the Paste dialog
+
+const tbDownload = document.getElementById("tb-download");
+const downloadModal = document.getElementById("download-modal");
+const dlSource = document.getElementById("dl-source");
+const dlCode = document.getElementById("dl-code");
+const dlFilename = document.getElementById("dl-filename");
+const dlExt = document.getElementById("dl-ext");
+const dlCloseBtn = document.getElementById("dl-close-btn");
+const dlCancelBtn = document.getElementById("dl-cancel-btn");
+const dlConfirmBtn = document.getElementById("dl-confirm-btn");
+
+// Collect user source files from the virtual DOS disk (skips Turbo C++'s own INCLUDE/LIB folders)
+function listDosSources(node, prefix = "", out = {}) {
+  if (!node) return out;
+  let path = node.name ? (prefix ? prefix + "/" + node.name : node.name) : prefix;
+  path = path.replace(/^[.\/]+/, "").replace(/\/{2,}/g, "/");
+  if (node.nodes) {
+    node.nodes.forEach(n => listDosSources(n, path, out));
+  } else if (/\.(c|cpp|cc|cxx|h|hpp|txt)$/i.test(node.name) &&
+             !/\/(include|lib|classlib)\//i.test("/" + path)) {
+    out[path] = node.size;
+  }
+  return out;
+}
+
+async function snapshotSources() {
+  return listDosSources(await dosCi.fsTree());
+}
+
+async function loadDownloadSource(path) {
+  try {
+    const bytes = await dosCi.fsReadFile(path);
+    dlCode.value = new TextDecoder("utf-8").decode(bytes);
+  } catch (err) {
+    console.error("Read error:", err);
+    dlCode.value = "";
+    showToast("Could not read " + path);
+  }
+  const base = path.split("/").pop();
+  const dot = base.lastIndexOf(".");
+  const stem = dot > 0 ? base.slice(0, dot) : base;
+  const ext = dot > 0 ? base.slice(dot + 1).toLowerCase() : "";
+  dlFilename.value = stem.toLowerCase();
+  dlExt.value = ["c", "cpp", "h", "hpp", "txt"].includes(ext) ? "." + ext : ".cpp";
+}
+
+async function openDownloadDialog() {
+  if (!ensureCompilerStarted()) return;
+  showToast("Saving current file...");
+
+  let before = {}, after = {};
+  try { before = await snapshotSources(); } catch (e) {}
+  clearKeyMatrix();
+  await pressDosKey(KBD.ESC, false, 20, 80);
+  await pressDosKey(KBD.F2, false, 25, 400);        // save the file open in the editor
+  try { after = await snapshotSources(); } catch (e) { console.error(e); }
+
+  const paths = Object.keys(after).sort();
+  if (!paths.length) {
+    showToast("No saved .C/.CPP file yet. Save it in Turbo C++ (F2) and try again.", 4500);
+    return;
+  }
+
+  // Prefer the file that F2 just changed, then the last pasted file, then the first one
+  let pick = paths.find(p => !(p in before) || before[p] !== after[p]);
+  if (!pick && lastDosFilename) {
+    pick = paths.find(p => p.toUpperCase().endsWith(lastDosFilename.toUpperCase()));
+  }
+  if (!pick) pick = paths[0];
+
+  dlSource.innerHTML = "";
+  paths.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p;
+    o.textContent = p.replace(/^TURBOC3\/BIN\//i, "");
+    dlSource.appendChild(o);
+  });
+  dlSource.value = pick;
+  await loadDownloadSource(pick);
+
+  downloadModal.classList.add("visible");
+  dlFilename.focus();
+}
+
+function closeDownloadModal() {
+  if (downloadModal) {
+    downloadModal.classList.remove("visible");
+    clearKeyMatrix();
+  }
+}
+
+function confirmDownload() {
+  const name = dlFilename.value.trim()
+    .replace(/[\\\/:*?"<>|]+/g, "_")
+    .replace(/\.(c|cpp|cc|cxx|h|hpp|txt)$/i, "") || "code";
+  const fullName = name + dlExt.value;
+
+  const blob = new Blob([dlCode.value], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fullName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+  closeDownloadModal();
+  showToast("Downloaded " + fullName);
+}
+
+if (tbDownload) tbDownload.addEventListener("click", openDownloadDialog);
+if (dlSource) dlSource.addEventListener("change", () => loadDownloadSource(dlSource.value));
+if (dlCloseBtn) dlCloseBtn.addEventListener("click", closeDownloadModal);
+if (dlCancelBtn) dlCancelBtn.addEventListener("click", closeDownloadModal);
+if (dlConfirmBtn) dlConfirmBtn.addEventListener("click", confirmDownload);
+if (downloadModal) {
+  downloadModal.addEventListener("click", (e) => {
+    if (e.target === downloadModal) closeDownloadModal();
+  });
+}
   
 if (tbSave) {
   tbSave.addEventListener("click", async () => {
@@ -2389,12 +2562,17 @@ window.addEventListener("keydown", (e) => {
     (e.altKey && (e.key === "V" || e.key === "v"));
 
   if (isPaste) {
-    if (e.target && (e.target.id === "paste-code-input" || e.target.id === "inject-filename")) return;
+    if (e.target && e.target.closest && e.target.closest(".modal-dialog")) return;
     e.preventDefault();
     openModal();
     return;
   }
   if (e.key === "Escape") {
+    if (downloadModal && downloadModal.classList.contains("visible")) {
+      e.preventDefault();
+      closeDownloadModal();
+      return;
+    }
     if (pasteModal && pasteModal.classList.contains("visible")) {
       e.preventDefault();
       closeModal();
