@@ -1472,6 +1472,85 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     border-radius: 6px;
     cursor: pointer;
   }
+
+  /* Stop background scrolling when any modal is open */
+  body.modal-open {
+    overflow: hidden !important;
+  }
+
+  /* Top Right Saved Programs Button */
+  .saved-programs-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--teal-accent);
+    color: var(--cyan-accent);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 1000;
+    transition: all 0.2s;
+  }
+  .saved-programs-btn:hover {
+    background: var(--teal-accent);
+    color: #000;
+  }
+  @media (max-width: 1080px) {
+    .saved-programs-btn {
+      top: 110px; /* Push below mobile ad */
+      padding: 6px 10px;
+      font-size: 0.75rem;
+    }
+  }
+
+  /* Ready-Made Program Direct Download Icon */
+  .prog-item {
+    position: relative; 
+  }
+  .prog-dl-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--cyan-accent);
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .prog-dl-btn:hover {
+    background: var(--teal-accent);
+    color: #000;
+  }
+
+  /* Saved Programs List Modal */
+  .saved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  .saved-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .saved-item:hover { border-color: var(--cyan-accent); }
+  .saved-item-name { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); }
   
 </style>
 </head>
@@ -1589,6 +1668,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <div class="panel-backdrop" id="panel-backdrop"></div>
 
 <main class="main-wrapper">
+  <!-- Top Right Saved Programs -->
+  <button type="button" class="saved-programs-btn" id="btn-open-saved">💾 My Saved Programs</button>
   <!-- Header 3-Line Titles -->
   <h1>Turbo C++ Online Compiler (Upgrade)</h1>
   <div class="author-line">Created by Sankalp Singh (Lucky Institute, Jodhpur)</div>
@@ -1682,7 +1763,7 @@ void main() {
     </div>
   </div>
 
-    <!-- Download Code Modal Dialog -->
+  <!-- Download Code Modal Dialog -->
   <div class="modal-backdrop" id="download-modal">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -1690,20 +1771,15 @@ void main() {
         <button type="button" class="modal-close-btn" id="dl-close-btn">&times;</button>
       </div>
 
-      <div class="modal-filename-group">
-        <div>
-          <div class="filename-label">Source file:</div>
-          <div style="font-size: 0.7rem; color: #8c979a;">Saved files on the virtual DOS disk</div>
-        </div>
-        <select id="dl-source" class="filename-input"></select>
+      <div style="font-size: 0.8rem; color: var(--cyan-accent); margin-bottom: -4px;">
+        ✏️ You can edit your code here before downloading:
       </div>
-
       <textarea id="dl-code" class="code-textarea" spellcheck="false"></textarea>
 
       <div class="modal-filename-group">
         <div>
           <div class="filename-label">Download as:</div>
-          <div style="font-size: 0.7rem; color: #8c979a;">File name and format (you can change both)</div>
+          <div style="font-size: 0.7rem; color: #8c979a;">File name and format</div>
         </div>
         <div style="display: flex; gap: 6px;">
           <input type="text" id="dl-filename" class="filename-input" value="code" autocomplete="off" spellcheck="false">
@@ -1723,6 +1799,52 @@ void main() {
       </div>
     </div>
   </div>
+
+  <!-- Save to List Modal Dialog -->
+  <div class="modal-backdrop" id="save-list-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">💾 Save Program to List</h3>
+        <button type="button" class="modal-close-btn" id="save-close-btn">&times;</button>
+      </div>
+      <div class="modal-filename-group">
+        <div>
+          <div class="filename-label">Program Name:</div>
+          <div style="font-size: 0.7rem; color: #8c979a;">Name and extension to save in your browser list</div>
+        </div>
+        <input type="text" id="save-list-filename" class="filename-input" value="MYPROG.CPP" style="width:160px;">
+      </div>
+      <textarea id="save-list-code" style="display:none;"></textarea>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="save-cancel-btn">Cancel</button>
+        <button type="button" class="btn-inject" id="save-confirm-btn">💾 <span>Save Program</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View/Inject Saved Programs Modal -->
+  <div class="modal-backdrop" id="view-saved-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">📂 My Saved Programs</h3>
+        <button type="button" class="modal-close-btn" id="view-saved-close-btn">&times;</button>
+      </div>
+      <div id="saved-programs-list" class="saved-list">
+        <!-- List injected by JS -->
+      </div>
+      <div id="saved-preview-area" style="display: none; flex-direction: column; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span id="saved-preview-name" style="color: var(--cyan-accent); font-family: var(--font-mono); font-weight: bold;"></span>
+          <button type="button" id="btn-back-to-list" class="btn-cancel" style="padding: 4px 10px;">⬅ Back to List</button>
+        </div>
+        <textarea id="saved-preview-code" class="code-textarea" readonly></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="saved-delete-btn" style="border-color: #ff3333; color: #ff3333;">🗑️ Delete</button>
+          <button type="button" class="btn-inject" id="saved-inject-btn">⚡ <span>Open in Turbo C++</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
   
   <!-- Toast Notification Box -->
   <div id="toast" class="toast-box">Ready</div>
@@ -1731,12 +1853,12 @@ void main() {
   <section class="doc-section">
     <div class="doc-card">
       <h2>About Turbo C++ Online IDE</h2>
-      <p>You can run Turbo C and C++ directly in your browser using this <strong> Turbo C++ Online Compiler</strong>. Turbo C++ Online | turbo c compiler online | compilation with standard DOS libraries including <code>&lt;conio.h&gt;</code> and <code>&lt;graphics.h&gt;</code> without complex local installation.</p>
+      <p>You can run Turbo C and C++ directly in your browser without installation and configuration, using this <strong> Turbo C++ Online Compiler</strong>. Turbo C++ Online | turbo c compiler online | compilation with standard DOS libraries including <code>&lt;conio.h&gt;</code> and <code>&lt;graphics.h&gt;</code> without complex local installation.</p>
     </div>
 
     <!-- Essential Keyboard Shortcuts -->
     <div class="doc-card">
-      <h2>⌨️ Borland Turbo C++ Essential Shortcuts</h2>
+      <h2>Borland Turbo C++ Essential Shortcuts</h2>
       <table class="shortcuts-table">
         <thead>
           <tr>
@@ -2020,10 +2142,16 @@ function getSanitizedFilename(input) {
   return base + "." + ext;
 }
 
+function toggleModalScroll(isOpen) {
+  if(isOpen) document.body.classList.add("modal-open");
+  else document.body.classList.remove("modal-open");
+}
+
 function openModal() {
   if (!ensureCompilerStarted()) return;
   if (pasteModal) {
     pasteModal.classList.add("visible");
+    toggleModalScroll(true);
     if (pasteCodeInput) pasteCodeInput.focus();
   }
 }
@@ -2031,6 +2159,7 @@ function openModal() {
 function closeModal() {
   if (pasteModal) {
     pasteModal.classList.remove("visible");
+    toggleModalScroll(false);
     clearKeyMatrix();
   }
 }
@@ -2391,18 +2520,32 @@ if (tbClear) {
   tbClear.addEventListener("click", async () => {
     if (!ensureCompilerStarted()) return;
 
-    // press a key while holding modifier keys (e.g. Ctrl+Shift+End)
-    const combo = async (mods, key) => {
-      for (const m of mods) { dosCi.sendKeyEvent(m, true); await delay(15); }
-      await pressDosKey(key, false, 25, 40);
-      for (const m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(15); }
-    };
-
-    await pressDosKey(KBD.ESC, false, 25, 60);        // close any open menu/dialog
-    await combo([KBD.LCTRL], 268);                    // Ctrl+Home        -> top of file
-    await combo([KBD.LCTRL, KBD.LSHIFT], 269);        // Ctrl+Shift+End   -> select everything
-    await combo([KBD.LCTRL], 261);                    // Ctrl+Delete      -> Edit > Clear
-    showToast("Editor cleared (Alt+Backspace to undo)");
+    clearKeyMatrix(); 
+    // 1. Esc a few times to close any stray menus
+    await pressDosKey(KBD.ESC, false, 30, 80);
+    await pressDosKey(KBD.ESC, false, 30, 80);
+    
+    // 2. Ctrl+Home to top of file
+    dosCi.sendKeyEvent(KBD.LCTRL, true); await delay(40);
+    dosCi.sendKeyEvent(268, true); await delay(40); // 268 = Home
+    dosCi.sendKeyEvent(268, false); await delay(40);
+    dosCi.sendKeyEvent(KBD.LCTRL, false); await delay(100);
+    
+    // 3. Ctrl+Shift+End to select everything to bottom
+    dosCi.sendKeyEvent(KBD.LCTRL, true);
+    dosCi.sendKeyEvent(KBD.LSHIFT, true); await delay(40);
+    dosCi.sendKeyEvent(269, true); await delay(40); // 269 = End
+    dosCi.sendKeyEvent(269, false); await delay(40);
+    dosCi.sendKeyEvent(KBD.LSHIFT, false);
+    dosCi.sendKeyEvent(KBD.LCTRL, false); await delay(100);
+    
+    // 4. Ctrl+Del to clear selection (Edit > Clear shortcut)
+    dosCi.sendKeyEvent(KBD.LCTRL, true); await delay(40);
+    dosCi.sendKeyEvent(261, true); await delay(40); // 261 = Del
+    dosCi.sendKeyEvent(261, false); await delay(40);
+    dosCi.sendKeyEvent(KBD.LCTRL, false);
+    
+    showToast("Workspace strictly cleared");
   });
 }
 
@@ -2458,49 +2601,41 @@ async function loadDownloadSource(path) {
 
 async function openDownloadDialog() {
   if (!ensureCompilerStarted()) return;
-  showToast("Saving current file...");
+  showToast("Grabbing code from compiler...");
 
   let before = {}, after = {};
   try { before = await snapshotSources(); } catch (e) {}
   clearKeyMatrix();
   await pressDosKey(KBD.ESC, false, 20, 80);
-  await pressDosKey(KBD.F2, false, 25, 400);        // save the file open in the editor
+  await pressDosKey(KBD.F2, false, 25, 400); // Trigger save inside TC
   try { after = await snapshotSources(); } catch (e) { console.error(e); }
 
   const paths = Object.keys(after).sort();
   if (!paths.length) {
-    showToast("No saved .C/.CPP file yet. Save it in Turbo C++ (F2) and try again.", 4500);
+    showToast("No file active. Write some code first!", 3000);
     return;
   }
 
-  // Prefer the file that F2 just changed, then the last pasted file, then the first one
+  // Grab most recently modified/saved file
   let pick = paths.find(p => !(p in before) || before[p] !== after[p]);
-  if (!pick && lastDosFilename) {
-    pick = paths.find(p => p.toUpperCase().endsWith(lastDosFilename.toUpperCase()));
-  }
-  if (!pick) pick = paths[0];
+  if (!pick && lastDosFilename) pick = paths.find(p => p.toUpperCase().endsWith(lastDosFilename.toUpperCase()));
+  if (!pick) pick = paths[paths.length - 1];
 
-  dlSource.innerHTML = "";
-  paths.forEach(p => {
-    const o = document.createElement("option");
-    o.value = p;
-    o.textContent = p.replace(/^TURBOC3\/BIN\//i, "");
-    dlSource.appendChild(o);
-  });
-  dlSource.value = pick;
   await loadDownloadSource(pick);
-
+  
   downloadModal.classList.add("visible");
+  toggleModalScroll(true);
   dlFilename.focus();
 }
 
 function closeDownloadModal() {
   if (downloadModal) {
     downloadModal.classList.remove("visible");
+    toggleModalScroll(false);
     clearKeyMatrix();
   }
 }
-
+  
 function confirmDownload() {
   const name = dlFilename.value.trim()
     .replace(/[\\\/:*?"<>|]+/g, "_")
@@ -2522,7 +2657,6 @@ function confirmDownload() {
 }
 
 if (tbDownload) tbDownload.addEventListener("click", openDownloadDialog);
-if (dlSource) dlSource.addEventListener("change", () => loadDownloadSource(dlSource.value));
 if (dlCloseBtn) dlCloseBtn.addEventListener("click", closeDownloadModal);
 if (dlCancelBtn) dlCancelBtn.addEventListener("click", closeDownloadModal);
 if (dlConfirmBtn) dlConfirmBtn.addEventListener("click", confirmDownload);
@@ -2532,13 +2666,123 @@ if (downloadModal) {
   });
 }
   
+// --- NEW: SAVE TO CUSTOM LIST ---
+const saveListModal = document.getElementById("save-list-modal");
+const saveListFilename = document.getElementById("save-list-filename");
+const saveListCode = document.getElementById("save-list-code");
+const viewSavedModal = document.getElementById("view-saved-modal");
+const savedProgramsList = document.getElementById("saved-programs-list");
+const savedPreviewArea = document.getElementById("saved-preview-area");
+const savedPreviewCode = document.getElementById("saved-preview-code");
+const savedPreviewName = document.getElementById("saved-preview-name");
+
+function closeSaveModals() {
+  saveListModal.classList.remove("visible");
+  viewSavedModal.classList.remove("visible");
+  toggleModalScroll(false);
+  clearKeyMatrix();
+}
+
+document.getElementById("save-close-btn").addEventListener("click", closeSaveModals);
+document.getElementById("save-cancel-btn").addEventListener("click", closeSaveModals);
+document.getElementById("view-saved-close-btn").addEventListener("click", closeSaveModals);
+
 if (tbSave) {
   tbSave.addEventListener("click", async () => {
     if (!ensureCompilerStarted()) return;
-    await pressDosKey(KBD.F2, false, 25, 40);
-    showToast("Saved (F2)");
+    showToast("Reading current workspace...");
+
+    let before = {}, after = {};
+    try { before = await snapshotSources(); } catch (e) {}
+    clearKeyMatrix();
+    await pressDosKey(KBD.ESC, false, 20, 80);
+    await pressDosKey(KBD.F2, false, 25, 400); // Save inside Turbo C++
+    try { after = await snapshotSources(); } catch (e) {}
+
+    const paths = Object.keys(after).sort();
+    if (!paths.length) { showToast("No code to save!"); return; }
+
+    let pick = paths.find(p => !(p in before) || before[p] !== after[p]);
+    if (!pick && lastDosFilename) pick = paths.find(p => p.toUpperCase().endsWith(lastDosFilename.toUpperCase()));
+    if (!pick) pick = paths[paths.length - 1];
+
+    try {
+      const bytes = await dosCi.fsReadFile(pick);
+      saveListCode.value = new TextDecoder("utf-8").decode(bytes);
+      const base = pick.split("/").pop();
+      saveListFilename.value = base;
+      saveListModal.classList.add("visible");
+      toggleModalScroll(true);
+    } catch (e) {
+      showToast("Error reading file to save");
+    }
   });
 }
+
+document.getElementById("save-confirm-btn").addEventListener("click", () => {
+  const fName = getSanitizedFilename(saveListFilename.value);
+  let saved = JSON.parse(localStorage.getItem("tc_saved_programs") || "[]");
+  
+  // Update if exists, otherwise push new
+  const existIdx = saved.findIndex(x => x.name === fName);
+  if(existIdx >= 0) saved[existIdx].code = saveListCode.value;
+  else saved.push({ name: fName, code: saveListCode.value });
+  
+  localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
+  closeSaveModals();
+  showToast("Saved " + fName + " to your personal list!");
+});
+
+// View Saved Programs
+let currentPreviewingProgram = null;
+
+document.getElementById("btn-open-saved").addEventListener("click", () => {
+  const saved = JSON.parse(localStorage.getItem("tc_saved_programs") || "[]");
+  savedProgramsList.innerHTML = "";
+  savedProgramsList.style.display = "flex";
+  savedPreviewArea.style.display = "none";
+
+  if(saved.length === 0) {
+    savedProgramsList.innerHTML = "<div style='color:#8c979a; font-size:0.85rem; text-align:center;'>No programs saved yet. Use the Save button in IDE.</div>";
+  } else {
+    saved.forEach((prog, index) => {
+      const item = document.createElement("div");
+      item.className = "saved-item";
+      item.innerHTML = `<span class="saved-item-name">📄 ${prog.name}</span> <span style="font-size:0.7rem;color:#8c979a;">Click to view</span>`;
+      item.addEventListener("click", () => {
+        currentPreviewingProgram = prog;
+        savedProgramsList.style.display = "none";
+        savedPreviewArea.style.display = "flex";
+        savedPreviewName.textContent = prog.name;
+        savedPreviewCode.value = prog.code;
+      });
+      savedProgramsList.appendChild(item);
+    });
+  }
+  viewSavedModal.classList.add("visible");
+  toggleModalScroll(true);
+});
+
+document.getElementById("btn-back-to-list").addEventListener("click", () => {
+  savedProgramsList.style.display = "flex";
+  savedPreviewArea.style.display = "none";
+});
+
+document.getElementById("saved-delete-btn").addEventListener("click", () => {
+  if(!confirm("Delete this saved program permanently?")) return;
+  let saved = JSON.parse(localStorage.getItem("tc_saved_programs") || "[]");
+  saved = saved.filter(x => x.name !== currentPreviewingProgram.name);
+  localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
+  document.getElementById("btn-open-saved").click(); // Refresh list
+});
+
+document.getElementById("saved-inject-btn").addEventListener("click", async () => {
+  closeSaveModals();
+  if (!ensureCompilerStarted()) return;
+  pasteCodeInput.value = currentPreviewingProgram.code;
+  injectFilenameInput.value = currentPreviewingProgram.name;
+  await injectCodeIntoDos();
+});
 
 if (tbOpen) {
   tbOpen.addEventListener("click", async () => {
@@ -2647,14 +2891,42 @@ if ("serviceWorker" in navigator) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "prog-item" + (p.f === activeFile ? " active" : "");
+      
+      const textWrap = document.createElement("div");
+      textWrap.style.display = "flex";
+      textWrap.style.flexDirection = "column";
+      
       const n = document.createElement("span");
       n.className = "prog-name";
       n.textContent = p.t;
+      
       const f = document.createElement("span");
       f.className = "prog-file";
       f.textContent = p.f;
-      b.appendChild(n);
-      b.appendChild(f);
+      
+      textWrap.appendChild(n);
+      textWrap.appendChild(f);
+      b.appendChild(textWrap);
+
+      // Download Button
+      const dlBtn = document.createElement("button");
+      dlBtn.className = "prog-dl-btn";
+      dlBtn.innerHTML = "⬇️";
+      dlBtn.title = "Download " + p.f;
+      dlBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevents loading into editor
+        const blob = new Blob([p.code], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = p.f;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+      b.appendChild(dlBtn);
+
       b.addEventListener("click", () => loadProgram(p));
       listEl.appendChild(b);
     });
