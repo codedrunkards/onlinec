@@ -3241,11 +3241,10 @@ if ("serviceWorker" in navigator) {
     return wrap;
   }
 
-  messagesRef.limitToLast(50).on("child_added", (snap) => {
+ messagesRef.on("child_added", (snap) => {
     const m = snap.val();
     if (!m || !m.text) return;
     msgBox.appendChild(createMsgElement(m, snap.key, messagesRef));
-    while (msgBox.children.length > 100) msgBox.removeChild(msgBox.children[1]);
     msgBox.scrollTop = msgBox.scrollHeight;
 
     if (activeTab === "general") {
@@ -3287,7 +3286,7 @@ if ("serviceWorker" in navigator) {
   function loadTab(tab) {
     fullMsgBox.innerHTML = "";
     const targetRef = (tab === "general") ? messagesRef : problemsRef;
-    targetRef.limitToLast(50).once("value", (snap) => {
+    targetRef.once("value", (snap) => {
       snap.forEach((child) => {
         fullMsgBox.appendChild(createMsgElement(child.val(), child.key, targetRef));
       });
