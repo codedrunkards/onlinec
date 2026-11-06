@@ -2831,7 +2831,7 @@ async function extractWorkspaceText() {
   // Wait for the temp file to appear, then read it
   let foundPath = null;
   for (let i = 0; i < 15 && !foundPath; i++) {
-    await delay(200);
+    await delay(60);
     try { foundPath = findFileInTree(await dosCi.fsTree(), tmpName); } catch (e) {}
   }
   if (!foundPath) return null;   // editor was empty (nothing to write)
