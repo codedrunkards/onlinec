@@ -516,6 +516,51 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     padding: 16px;
   }
 
+    /* ---- Freeze + "please wait" popup while code is being injected ---- */
+  .busy-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000100;                 /* above every dialog, the action bar and the toast */
+    background-color: rgba(5, 7, 10, 0.78);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    cursor: wait;
+    touch-action: none;
+    overscroll-behavior: contain;
+  }
+  .busy-overlay.show { display: flex; }
+  .busy-card {
+    background-color: #14181f;
+    border: 2px solid var(--teal-accent);
+    border-radius: 12px;
+    padding: 26px 30px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .busy-spinner {
+    width: 46px;
+    height: 46px;
+    border: 5px solid var(--border-color);
+    border-top-color: var(--cyan-accent);
+    border-radius: 50%;
+    animation: busySpin 0.8s linear infinite;
+  }
+  @keyframes busySpin { to { transform: rotate(360deg); } }
+  .busy-title { font-size: 1.1rem; font-weight: 700; color: var(--cyan-accent); }
+  .busy-text { font-size: 0.85rem; color: var(--text-bright); font-family: var(--font-mono); min-height: 1.2em; }
+  .busy-note { font-size: 0.75rem; color: #8c979a; line-height: 1.4; }
+  html.is-busy, body.is-busy { overflow: hidden !important; }
+
   #download-modal { z-index: 1000010; }
   #download-modal .filename-input { text-transform: none; width: auto; max-width: 100%; }
   
@@ -1893,6 +1938,16 @@ void main() {
       </div>
     </div>
   </div>
+
+    <!-- Freeze overlay shown while code is injected into Turbo C++ -->
+  <div class="busy-overlay" id="busy-overlay" role="alertdialog" aria-modal="true" aria-live="polite">
+    <div class="busy-card">
+      <div class="busy-spinner"></div>
+      <div class="busy-title">Please wait...</div>
+      <div class="busy-text" id="busy-text">Preparing...</div>
+      <div class="busy-note">Your code is being placed in the workspace. Please don't tap or type until this finishes.</div>
+    </div>
+  </div>
   
   <!-- Toast Notification Box -->
   <div id="toast" class="toast-box">Ready</div>
@@ -2432,6 +2487,53 @@ async function readFileIntoEditor(name) {
   await pressDosKey(KBD.ENTER, false, 25, 600);
   await dosCombo([KBD.LCTRL], 266);                                     // cursor back to top
 }  
+
+// ----------------------------------------------------------------------------
+// Freeze the whole page (with a popup in the middle) while code is being injected
+// ----------------------------------------------------------------------------
+const busyOverlay = document.getElementById("busy-overlay");
+const busyTextEl = document.getElementById("busy-text");
+let busyTimer = null;
+
+function isBusy() {
+  return !!busyOverlay && busyOverlay.classList.contains("show");
+}
+
+function setBusyText(msg) {
+  if (busyTextEl) busyTextEl.textContent = msg;
+}
+
+function showBusy(msg) {
+  if (!busyOverlay) return;
+  setBusyText(msg || "Preparing...");
+  busyOverlay.classList.add("show");
+  document.documentElement.classList.add("is-busy");
+  document.body.classList.add("is-busy");
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();  // closes the phone keyboard
+  clearTimeout(busyTimer);
+  busyTimer = setTimeout(hideBusy, 90000);     // safety net: never stay frozen forever
+}
+
+function hideBusy() {
+  clearTimeout(busyTimer);
+  if (!busyOverlay) return;
+  busyOverlay.classList.remove("show");
+  document.documentElement.classList.remove("is-busy");
+  document.body.classList.remove("is-busy");
+}
+
+// While frozen, physical / on-screen keyboard input must not reach DOS or the page
+["keydown", "keyup", "keypress", "beforeinput"].forEach(type => {
+  window.addEventListener(type, (e) => {
+    if (isBusy()) e.stopImmediatePropagation();
+  }, true);
+});
+if (busyOverlay) {
+  ["wheel", "touchmove"].forEach(type => {
+    busyOverlay.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+  });
+}
+  
   
 // ============================================================================
 // 3. LIVE CODE INSERTION INTO TURBO C++
@@ -2449,6 +2551,7 @@ async function injectCodeIntoDos() {
   lastDosFilename = dosFilename;
   const fullPath = "TURBOC3/BIN/" + dosFilename;
 
+  showBusy("Preparing " + dosFilename + "...");            // freeze the site + show the popup
   try {
     const encoder = new TextEncoder();
     const uint8 = encoder.encode(code);
@@ -2463,20 +2566,24 @@ async function injectCodeIntoDos() {
       await delay(60);
 
       await dosEscapeAll();
-      
+
       const alreadyOpen = openedInEditor.has(dosFilename);
 
       // Switches to the window if it is open, otherwise loads it from disk
+      setBusyText("Opening " + dosFilename + " in Turbo C++...");
       await openFileInEditor(dosFilename);
 
       if (alreadyOpen) {
         // Window may be empty/old/edited: wipe it and read the fresh code from disk
         await delay(100);
+        setBusyText("Clearing the old code...");
         await clearEditorWindow();
+        setBusyText("Loading the new code into the workspace...");
         await readFileIntoEditor(dosFilename);
       } else {
         // First time: zoom the new window (F5 toggles, so only do it once)
         await delay(100);
+        setBusyText("Setting up the workspace...");
         await pressDosKey(KBD.F5, false, 25, 80);
       }
       openedInEditor.add(dosFilename);
@@ -2489,6 +2596,8 @@ async function injectCodeIntoDos() {
   } catch (err) {
     console.error("Injection error:", err);
     showToast("Failed to inject code: " + err.message);
+  } finally {
+    hideBusy();                                            // unfreeze, whatever happened
   }
 }
 
