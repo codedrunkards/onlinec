@@ -18,8 +18,8 @@
 
 <!-- SEO Metadata -->
 <meta name="title" content="Turbo C++ Online Compiler | Turbo CPP by Sankalp Singh">
-<meta name="description" content="Run authentic Borland Turbo C &amp; Turbo C++ 3.2 online in browser. Instant code paste, .CPP file upload, graphics.h and conio.h support. Mobile-friendly C/C++ IDE.">
-<meta name="keywords" content="turbo c, turboc, turboc++, turbo c online, turbo c compiler, turbo c++ online, online c compiler, online c++ compiler, turbo c simulator, borland turbo c 3.2, copy paste turbo c, import cpp file, graphics.h online, conio.h online, turbo c for android, mobile turbo c, sankalp singh, tc online">
+<meta name="description" content="Run Turbo C and Turbo C++ 3.2 online free in your browser. Ready-made C/C++ programs, paste or import code, save and download files, graphics.h and conio.h support. Mobile compatible.">
+<meta name="keywords" content="turbo c++, turbo c++ online compiler, turbo c online compiler, turboc++, turbo c++ online, turbo c compiler, turbo c++ online, online c compiler, online c++ compiler, turbo c simulator, borland turbo c 3.2, copy paste turbo c, import cpp file, graphics.h online, conio.h online, turbo c for android, mobile turbo c, sankalp singh, tc online">
 <meta name="author" content="Sankalp Singh">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 
@@ -87,7 +87,7 @@
       "softwareVersion": "3.2",
       "keywords": "Turbo C++, Turbo C++ Compiler, Online Turbo C++, Turbo C Compiler, Turbo C Online Compiler, conio.h online, graphics.h online, copy paste turbo c",
       "datePublished": "2024-01-15",
-      "dateModified": "2026-09-15",
+      "dateModified": "2026-11-06",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -113,7 +113,11 @@
         "Upload and run local .C and .CPP source files",
         "Touch-friendly controls and mobile keyboard helper",
         "Full support for conio.h (getch, clrscr) and graphics.h",
-        "Fullscreen immersive mode with 100% screen cover"
+        "Fullscreen immersive mode with 100% screen cover",
+        "Ready-made C and C++ practical programs with one-tap load and download",
+        "Direct action buttons: Paste, Run, Output, Clear, Save, Download, Saved Programs",
+        "Save programs in browser and download as .c, .cpp, .h, .hpp or .txt",
+        "Live community chat for students"
       ]
     },
     {
@@ -158,6 +162,22 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Yes, full Borland BGI graphics (initgraph, circle, line) and conio.h console functions (clrscr, getch, gotoxy) are supported via WebAssembly DOSBox emulation."
+                    }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I run a ready-made C or C++ program in Turbo C++ online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Open the Ready-made Programs panel, choose the C or C++ tab and tap a program. It loads into Turbo C++ with its file name. Then tap Run (Ctrl+F9) and Output (Alt+F5) to see the result. You can also tap the green download icon to save the program file."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I save, download or clear code in Turbo C++ online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use the direct action buttons under the compiler. Save stores the code in My Saved Programs in your browser, Download saves it as a .c, .cpp, .h, .hpp or .txt file, and Clear wipes the whole editor file in one tap."
           }
         }
       ]
@@ -1881,7 +1901,8 @@ void main() {
   <section class="doc-section">
     <div class="doc-card">
       <h2>About Turbo C++ Online IDE</h2>
-      <p>You can run Turbo C and C++ directly in your browser without installation and configuration, using this <strong> Turbo C++ Online Compiler</strong>. Turbo C++ Online | turbo c compiler online | compilation with standard DOS libraries including <code>&lt;conio.h&gt;</code> and <code>&lt;graphics.h&gt;</code> without complex local installation.</p>
+      <p>You can run Turbo C and C++ directly in your browser without installation and configuration, using this <strong> Turbo C++ Online Compiler</strong>. turbo c++ online | turbo c compiler online | compilation with standard DOS libraries including <code>&lt;conio.h&gt;</code> and <code>&lt;graphics.h&gt;</code> without complex local installation.</p>
+      <p>This online Turbo C/C++ Compiler also lets you <strong>copy and paste code, import .C and .CPP files, save programs in your browser, download your code, and chat live with other learners</strong>.</p>
     </div>
 
     <!-- Essential Keyboard Shortcuts -->
@@ -1971,6 +1992,20 @@ void main() {
         <summary class="faq-question">How do I use this on Android or iPhone?</summary>
         <div class="faq-answer">
           Our online compiler includes a mobile-optimized touch bar located directly beneath the screen. Tap <strong>Keyboard</strong> to bring up your phone's virtual keyboard, and use the dedicated buttons for <strong>Run</strong>, <strong>Output</strong>, <strong>Save</strong>, and <strong>Zoom</strong>.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">How do I run a ready-made program in Turbo C++ online?</summary>
+        <div class="faq-answer">
+          Open the <strong>Ready-made Programs</strong> panel, select <strong>C</strong> or <strong>C++</strong>, and tap a program. It loads into Turbo C++ with its file name. Press the <strong>Run (Ctrl+F9)</strong> button, then <strong>Output (Alt+F5)</strong> to see the result.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">How do I save, download or clear my code?</summary>
+        <div class="faq-answer">
+          Tap <strong>Save</strong> to keep the code in <strong>My Saved Programs</strong>, <strong>Download</strong> to get it as a file, and <strong>Clear</strong> to wipe the editor in one tap. All three work on whatever is in the editor, including unnamed <code>NONAME00.CPP</code> files.
         </div>
       </details>
     </div>
@@ -2334,7 +2369,6 @@ startBtn.addEventListener("click", () => {
   });
 });
 
-
 // Files we have already opened in the Turbo C++ editor during this session
 const openedInEditor = new Set();
 
@@ -2345,25 +2379,59 @@ async function typeDosText(text) {
   }
 }
 
-// F3 -> type name -> Enter
-async function openFileInEditor(name) {
-  await pressDosKey(KBD.F3, false, 25, 250);
-  await typeDosText(name);
-  await delay(120);
-  await pressDosKey(KBD.ENTER, false, 25, 300);
+// Press a key while holding modifiers (Ctrl, etc.)
+async function dosCombo(mods, key) {
+  for (const m of mods) { dosCi.sendKeyEvent(m, true); await delay(30); }
+  dosCi.sendKeyEvent(key, true); await delay(40);
+  dosCi.sendKeyEvent(key, false); await delay(40);
+  for (const m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(30); }
+  await delay(90);
 }
 
-// Closes the active editor window WITHOUT saving
-async function closeActiveWindowDiscard() {
-  await pressDosKey(88, false, 20, 80);            // type "x" so the window is always "modified"
-  dosCi.sendKeyEvent(KBD.LALT, true);  await delay(25);
-  dosCi.sendKeyEvent(KBD.F3, true);    await delay(40);   // Alt+F3 = Close window
-  dosCi.sendKeyEvent(KBD.F3, false);   await delay(25);
-  dosCi.sendKeyEvent(KBD.LALT, false);
-  await delay(350);
-  await pressDosKey(78, false, 25, 300);           // "N" = don't save changes
+// Close any menu or dialog that might be open
+async function dosEscapeAll() {
+  for (let i = 0; i < 3; i++) await pressDosKey(KBD.ESC, false, 30, 70);
 }
-  
+
+// F3 -> type name -> Enter (loads from disk, or switches to the window if already open)
+async function openFileInEditor(name) {
+  await pressDosKey(KBD.F3, false, 25, 300);
+  await typeDosText(name);
+  await delay(150);
+  await pressDosKey(KBD.ENTER, false, 25, 400);
+}
+
+// Deletes the ENTIRE content of the active editor window (whole file, not just the screen)
+async function clearEditorWindow() {
+  dosBox.focus();
+  const canvas = dosBox.querySelector("canvas");
+  if (canvas) canvas.focus();
+  clearKeyMatrix();
+  await delay(50);
+  await dosEscapeAll();
+
+  const K = 75, B = 66, Y = 89;
+  for (let pass = 0; pass < 2; pass++) {
+    await dosCombo([KBD.LCTRL], 266);                                   // Ctrl+PgUp  top of file
+    await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], B);     // Ctrl+K B   block start
+    await dosCombo([KBD.LCTRL], 267);                                   // Ctrl+PgDn  bottom of file
+    await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], K);     // Ctrl+K K   block end
+    await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], Y);     // Ctrl+K Y   delete block
+  }
+  clearKeyMatrix();
+}
+
+// Reads a file from disk into the active (empty) editor window: Ctrl+K R
+async function readFileIntoEditor(name) {
+  const K = 75, R = 82;
+  await dosCombo([KBD.LCTRL], 266);                                     // cursor to top
+  await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], R);       // Ctrl+K R
+  await delay(500);
+  await typeDosText(name);
+  await delay(150);
+  await pressDosKey(KBD.ENTER, false, 25, 600);
+  await dosCombo([KBD.LCTRL], 266);                                     // cursor back to top
+}  
   
 // ============================================================================
 // 3. LIVE CODE INSERTION INTO TURBO C++
@@ -2394,21 +2462,24 @@ async function injectCodeIntoDos() {
       clearKeyMatrix();
       await delay(200);
 
-      await pressDosKey(KBD.ESC, false, 20, 100);
-      await pressDosKey(KBD.ESC, false, 20, 100);
+      await dosEscapeAll();
+      
+      const alreadyOpen = openedInEditor.has(dosFilename);
 
-      // If this file is already open (e.g. cleared or edited), close the old copy first
-      if (openedInEditor.has(dosFilename)) {
-        await openFileInEditor(dosFilename);   // brings that window to front
-        await closeActiveWindowDiscard();      // closes it without saving
-        await delay(200);
+      // Switches to the window if it is open, otherwise loads it from disk
+      await openFileInEditor(dosFilename);
+
+      if (alreadyOpen) {
+        // Window may be empty/old/edited: wipe it and read the fresh code from disk
+        await delay(300);
+        await clearEditorWindow();
+        await readFileIntoEditor(dosFilename);
+      } else {
+        // First time: zoom the new window (F5 toggles, so only do it once)
+        await delay(180);
+        await pressDosKey(KBD.F5, false, 25, 80);
       }
-
-      await openFileInEditor(dosFilename);     // opens fresh from disk with the new code
       openedInEditor.add(dosFilename);
-
-      await delay(180);
-      await pressDosKey(KBD.F5, false, 25, 80);
       clearKeyMatrix();
 
       showToast(`Loaded ${dosFilename} into Turbo C++!`);
@@ -2587,39 +2658,7 @@ if (tbUserscreen) {
 if (tbClear) {
   tbClear.addEventListener("click", async () => {
     if (!ensureCompilerStarted()) return;
-
-    dosBox.focus();
-    const canvas = dosBox.querySelector("canvas");
-    if (canvas) canvas.focus();
-
-    clearKeyMatrix();
-    await delay(50);
-
-    // Presses a key with Ctrl held down
-    const pressCombo = async (mods, key) => {
-      for (let m of mods) { dosCi.sendKeyEvent(m, true); await delay(30); }
-      dosCi.sendKeyEvent(key, true); await delay(40);
-      dosCi.sendKeyEvent(key, false); await delay(40);
-      for (let m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(30); }
-      await delay(90);
-    };
-
-    const K = 75, B = 66, Y = 89;   // letter keys
-
-    // Close any open menus
-    await pressDosKey(KBD.ESC, false, 30, 60);
-    await pressDosKey(KBD.ESC, false, 30, 60);
-
-    // Run the clear twice so nothing is left behind
-    for (let pass = 0; pass < 2; pass++) {
-      await pressCombo([KBD.LCTRL], 266);                                   // Ctrl+PgUp: top of FILE
-      await pressCombo([KBD.LCTRL], K); await pressCombo([KBD.LCTRL], B);   // Ctrl+K B: start selection
-      await pressCombo([KBD.LCTRL], 267);                                   // Ctrl+PgDn: bottom of FILE
-      await pressCombo([KBD.LCTRL], K); await pressCombo([KBD.LCTRL], K);   // Ctrl+K K: end selection
-      await pressCombo([KBD.LCTRL], K); await pressCombo([KBD.LCTRL], Y);   // Ctrl+K Y: delete selection
-    }
-
-    clearKeyMatrix();
+    await clearEditorWindow();
     showToast("Workspace cleared");
   });
 }
