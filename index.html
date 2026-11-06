@@ -1503,25 +1503,48 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   .prog-item {
     position: relative; 
   }
+  
+  .prog-item { padding-right: 56px; }
+  .prog-item > div { width: 100%; min-width: 0; }
+  .prog-name {
+    display: block;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+  }
+  .prog-file { display: block; margin-top: 2px; }
+
   .prog-dl-btn {
     position: absolute;
-    right: 8px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--cyan-accent);
-    border-radius: 4px;
-    padding: 4px;
-    font-size: 0.8rem;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(34, 224, 122, 0.12);
+    border: 1px solid #22e07a;
+    border-radius: 7px;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .prog-dl-btn:hover {
-    background: var(--teal-accent);
-    color: #000;
-  }
+  .prog-dl-btn:hover { background: #22e07a; }
 
+  .dl-icon {
+    width: 18px;
+    height: 18px;
+    stroke: #22e07a;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .prog-dl-btn:hover .dl-icon,
+  .touch-btn:hover .dl-icon { stroke: #0b0c10; }
+  .touch-btn .dl-icon { width: 15px; height: 15px; margin-right: 3px; }
+  
   /* Saved Programs List Modal */
   .saved-list {
     display: flex;
@@ -1700,8 +1723,8 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
       <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output<span class="sc"> (Alt+F5)</span></button>
       <button type="button" class="touch-btn" id="tb-clear">🧹 Clear<span class="sc"> (Ctrl+Del)</span></button>
       <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
-      <button type="button" class="touch-btn" id="tb-download">⬇️ Download</button>
-      <button type="button" class="touch-btn" id="btn-open-saved">💾 My Saved Programs</button>
+      <button type="button" class="touch-btn" id="tb-download"><svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg> Download</button>
+      <button type="button" class="touch-btn" id="tb-saved">💾 My Saved Programs</button>
       <button type="button" class="touch-btn" id="tb-esc">Esc</button>
     </div>
   </div>
@@ -2297,6 +2320,36 @@ startBtn.addEventListener("click", () => {
   });
 });
 
+
+// Files we have already opened in the Turbo C++ editor during this session
+const openedInEditor = new Set();
+
+async function typeDosText(text) {
+  for (const ch of text) {
+    const kInfo = charToDosKeys(ch);
+    if (kInfo) for (const k of kInfo) await pressDosKey(k.keyCode, k.shift, 14, 12);
+  }
+}
+
+// F3 -> type name -> Enter
+async function openFileInEditor(name) {
+  await pressDosKey(KBD.F3, false, 25, 250);
+  await typeDosText(name);
+  await delay(120);
+  await pressDosKey(KBD.ENTER, false, 25, 300);
+}
+
+// Closes the active editor window WITHOUT saving
+async function closeActiveWindowDiscard() {
+  await pressDosKey(88, false, 20, 80);            // type "x" so the window is always "modified"
+  dosCi.sendKeyEvent(KBD.LALT, true);  await delay(25);
+  dosCi.sendKeyEvent(KBD.F3, true);    await delay(40);   // Alt+F3 = Close window
+  dosCi.sendKeyEvent(KBD.F3, false);   await delay(25);
+  dosCi.sendKeyEvent(KBD.LALT, false);
+  await delay(350);
+  await pressDosKey(78, false, 25, 300);           // "N" = don't save changes
+}
+  
   
 // ============================================================================
 // 3. LIVE CODE INSERTION INTO TURBO C++
@@ -2328,20 +2381,17 @@ async function injectCodeIntoDos() {
       await delay(200);
 
       await pressDosKey(KBD.ESC, false, 20, 100);
-      await pressDosKey(KBD.F3, false, 25, 200);
+      await pressDosKey(KBD.ESC, false, 20, 100);
 
-      for (let i = 0; i < dosFilename.length; i++) {
-        const ch = dosFilename[i];
-        const kInfo = charToDosKeys(ch);
-        if (kInfo) {
-          for (const k of kInfo) {
-            await pressDosKey(k.keyCode, k.shift, 14, 12);
-          }
-        }
+      // If this file is already open (e.g. cleared or edited), close the old copy first
+      if (openedInEditor.has(dosFilename)) {
+        await openFileInEditor(dosFilename);   // brings that window to front
+        await closeActiveWindowDiscard();      // closes it without saving
+        await delay(200);
       }
 
-      await delay(120);
-      await pressDosKey(KBD.ENTER, false, 25, 120);
+      await openFileInEditor(dosFilename);     // opens fresh from disk with the new code
+      openedInEditor.add(dosFilename);
 
       await delay(180);
       await pressDosKey(KBD.F5, false, 25, 80);
@@ -2823,6 +2873,11 @@ document.getElementById("btn-open-saved").addEventListener("click", () => {
   toggleModalScroll(true);
 });
 
+// Direct Actions "My Saved Programs" button -> same action as the top button
+document.getElementById("tb-saved").addEventListener("click", () => {
+  document.getElementById("btn-open-saved").click();
+});
+  
 document.getElementById("btn-back-to-list").addEventListener("click", () => {
   savedProgramsList.style.display = "flex";
   savedPreviewArea.style.display = "none";
@@ -2971,7 +3026,7 @@ if ("serviceWorker" in navigator) {
       // Download Button
       const dlBtn = document.createElement("button");
       dlBtn.className = "prog-dl-btn";
-      dlBtn.innerHTML = "⬇️";
+      dlBtn.innerHTML = '<svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>';
       dlBtn.title = "Download " + p.f;
       dlBtn.addEventListener("click", (e) => {
         e.stopPropagation(); // Prevents loading into editor
