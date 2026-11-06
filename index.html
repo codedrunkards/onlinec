@@ -2372,36 +2372,33 @@ startBtn.addEventListener("click", () => {
 // Files we have already opened in the Turbo C++ editor during this session
 const openedInEditor = new Set();
 
-// Key timing in milliseconds. If a key is ever skipped, raise these numbers a little.
-const T = { modHold: 12, keyHold: 20, keyUp: 15, modUp: 10, after: 25 };
-
 async function typeDosText(text) {
   for (const ch of text) {
     const kInfo = charToDosKeys(ch);
-    if (kInfo) for (const k of kInfo) await pressDosKey(k.keyCode, k.shift, 12, 8);
+    if (kInfo) for (const k of kInfo) await pressDosKey(k.keyCode, k.shift, 14, 12);
   }
 }
 
 // Press a key while holding modifiers (Ctrl, etc.)
 async function dosCombo(mods, key) {
-  for (const m of mods) { dosCi.sendKeyEvent(m, true); await delay(T.modHold); }
-  dosCi.sendKeyEvent(key, true);  await delay(T.keyHold);
-  dosCi.sendKeyEvent(key, false); await delay(T.keyUp);
-  for (const m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(T.modUp); }
-  await delay(T.after);
+  for (const m of mods) { dosCi.sendKeyEvent(m, true); await delay(30); }
+  dosCi.sendKeyEvent(key, true); await delay(40);
+  dosCi.sendKeyEvent(key, false); await delay(40);
+  for (const m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(30); }
+  await delay(90);
 }
 
 // Close any menu or dialog that might be open
 async function dosEscapeAll() {
-  for (let i = 0; i < 2; i++) await pressDosKey(KBD.ESC, false, 20, 40);
+  for (let i = 0; i < 3; i++) await pressDosKey(KBD.ESC, false, 30, 70);
 }
 
 // F3 -> type name -> Enter (loads from disk, or switches to the window if already open)
 async function openFileInEditor(name) {
-  await pressDosKey(KBD.F3, false, 20, 200);   // wait for the Open dialog
+  await pressDosKey(KBD.F3, false, 25, 300);
   await typeDosText(name);
-  await delay(60);
-  await pressDosKey(KBD.ENTER, false, 20, 220);
+  await delay(150);
+  await pressDosKey(KBD.ENTER, false, 25, 400);
 }
 
 // Deletes the ENTIRE content of the active editor window (whole file, not just the screen)
@@ -2410,27 +2407,30 @@ async function clearEditorWindow() {
   const canvas = dosBox.querySelector("canvas");
   if (canvas) canvas.focus();
   clearKeyMatrix();
-  await delay(20);
+  await delay(50);
   await dosEscapeAll();
 
   const K = 75, B = 66, Y = 89;
-  await dosCombo([KBD.LCTRL], 266);                                   // Ctrl+PgUp  top of file
-  await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], B);     // Ctrl+K B   block start
-  await dosCombo([KBD.LCTRL], 267);                                   // Ctrl+PgDn  bottom of file
-  await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], K);     // Ctrl+K K   block end
-  await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], Y);     // Ctrl+K Y   delete block
+  for (let pass = 0; pass < 2; pass++) {
+    await dosCombo([KBD.LCTRL], 266);                                   // Ctrl+PgUp  top of file
+    await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], B);     // Ctrl+K B   block start
+    await dosCombo([KBD.LCTRL], 267);                                   // Ctrl+PgDn  bottom of file
+    await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], K);     // Ctrl+K K   block end
+    await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], Y);     // Ctrl+K Y   delete block
+  }
   clearKeyMatrix();
 }
 
-// Reads a file from disk into the active (now empty) editor window: Ctrl+K R
+// Reads a file from disk into the active (empty) editor window: Ctrl+K R
 async function readFileIntoEditor(name) {
   const K = 75, R = 82;
-  await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], R);     // Ctrl+K R
-  await delay(250);                                                   // wait for the prompt
+  await dosCombo([KBD.LCTRL], 266);                                     // cursor to top
+  await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], R);       // Ctrl+K R
+  await delay(500);
   await typeDosText(name);
-  await delay(60);
-  await pressDosKey(KBD.ENTER, false, 20, 250);
-  await dosCombo([KBD.LCTRL], 266);                                   // cursor to top
+  await delay(150);
+  await pressDosKey(KBD.ENTER, false, 25, 600);
+  await dosCombo([KBD.LCTRL], 266);                                     // cursor back to top
 }  
   
 // ============================================================================
