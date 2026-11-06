@@ -1543,7 +1543,21 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   }
   .prog-dl-btn:hover .dl-icon,
   .touch-btn:hover .dl-icon { stroke: #0b0c10; }
-  .touch-btn .dl-icon { width: 15px; height: 15px; margin-right: 3px; }
+
+  #tb-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  #tb-download .dl-icon {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    flex-shrink: 0;
+    display: block;
+  }
   
   /* Saved Programs List Modal */
   .saved-list {
