@@ -48,8 +48,9 @@
 <!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  
 <!-- JSON-LD Structured Data: WebApplication + FAQPage for Top Google Ranking -->
 <script type="application/ld+json">
 {
@@ -186,31 +187,46 @@
 }
 </script>
 
-<!-- Deferred Analytics & Ads for Performance Optimization -->
-<script async defer src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4518793325867602" crossorigin="anonymous"></script>
-
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PSG23F75');</script>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9K4J2B06HE"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-9K4J2B06HE');
+window.dataLayer = window.dataLayer || [];
+function gtag(){ dataLayer.push(arguments); }
+gtag('js', new Date());
+gtag('config', 'G-9K4J2B06HE');
+
+// Helper: load a script later, returns a Promise
+window.addScript = function (src, attrs) {
+  return new Promise(function (resolve, reject) {
+    var s = document.createElement('script');
+    s.src = src; s.async = true;
+    if (attrs) for (var k in attrs) s.setAttribute(k, attrs[k]);
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+};
+
+(function () {
+  var started = false;
+  function loadThirdParty() {
+    if (started) return; started = true;
+    dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+    addScript('https://www.googletagmanager.com/gtm.js?id=GTM-PSG23F75');
+    addScript('https://www.googletagmanager.com/gtag/js?id=G-9K4J2B06HE');
+  }
+  // 4 seconds after the page finishes loading, or on the first touch/scroll/key
+  window.addEventListener('load', function () { setTimeout(loadThirdParty, 4000); });
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (ev) {
+    window.addEventListener(ev, loadThirdParty, { once: true, passive: true });
+  });
+})();
 </script>
+
 
 <!-- js-dos v8 styles -->
 <link rel="stylesheet" href="js-dos.css">
   
 <!-- Firebase App & Realtime Database SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
   :root {
@@ -2324,14 +2340,26 @@ function triggerAutoPlayOverlay() {
   return false;
 }
 
-
 // ============================================================================
 // 2. START DOSBOX EMULATOR (Bulletproof Launch with Canvas Render Loop)
 // ============================================================================
-startBtn.addEventListener("click", () => {
+let jsdosPromise = null;
+function ensureJsDos() {
+  if (window.Dos && window.emulators) return Promise.resolve();
+  if (!jsdosPromise) jsdosPromise = addScript("js-dos.js").then(() => addScript("emulators.js"));
+  return jsdosPromise;
+}
+// Start downloading as soon as the user hovers over or touches Start
+["pointerenter", "touchstart"].forEach(ev =>
+  startBtn.addEventListener(ev, ensureJsDos, { once: true, passive: true })
+);
+  
+startBtn.addEventListener("click", async () => {
   startBtn.style.display = "none";
   if (emulatorCard) emulatorCard.style.display = "block";
   dosBox.style.display = "block";
+  showToast("Loading Turbo C++...", 4000);
+  await ensureJsDos();
   emulators.pathPrefix = "./";
 
   // Watch for internal play overlay button and click it immediately
@@ -3256,7 +3284,7 @@ if ("serviceWorker" in navigator) {
 // ============================================================================
 // 9. LIVE CHAT (Multiline Auto-wrap, Admin DM & Global Visitor Popups)
 // ============================================================================
-(function () {
+window.addEventListener("DOMContentLoaded", function () {
   const firebaseConfig = {
     apiKey: "AIzaSyASkYqRf1HheRldg-s5YaPwIuZt_9VOmiM",
     authDomain: "turboc-compiler.firebaseapp.com",
@@ -3624,7 +3652,7 @@ if ("serviceWorker" in navigator) {
       displayCenterPopup(title, data.text, data.id);
     }
   });
-})();
+});
 </script>
 
 <!-- ==========================================================================
