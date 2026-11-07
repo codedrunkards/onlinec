@@ -3284,7 +3284,7 @@ if ("serviceWorker" in navigator) {
 // ============================================================================
 // 9. LIVE CHAT (Multiline Auto-wrap, Admin DM & Global Visitor Popups)
 // ============================================================================
-window.addEventListener("DOMContentLoaded", function () {
+(function () {
   const firebaseConfig = {
     apiKey: "AIzaSyASkYqRf1HheRldg-s5YaPwIuZt_9VOmiM",
     authDomain: "turboc-compiler.firebaseapp.com",
@@ -3652,7 +3652,7 @@ window.addEventListener("DOMContentLoaded", function () {
       displayCenterPopup(title, data.text, data.id);
     }
   });
-});
+})();
 </script>
 
 <!-- ==========================================================================
