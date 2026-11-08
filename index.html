@@ -989,9 +989,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     color: var(--text-primary);
   }
 
-  #keyboard-helper {
-    position: absolute;
+    #keyboard-helper {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
     opacity: 0;
+    font-size: 16px;
+    pointer-events: none;
     z-index: -1;
   }
 
@@ -1844,7 +1852,7 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   <input type="file" id="file-importer" accept=".cpp,.c,.cc,.cxx,.h,.hpp,.txt" style="display: none;">
 
   <!-- Hidden input for mobile keyboard -->
-  <input id="keyboard-helper" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <input id="keyboard-helper" type="text" inputmode="text" enterkeyhint="enter" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-hidden="true" tabindex="-1">
 
   <!-- Paste Code Modal Dialog -->
   <div class="modal-backdrop" id="paste-modal">
@@ -2424,36 +2432,10 @@ startBtn.addEventListener("click", () => {
         const canvas = dosBox.querySelector("canvas");
         if (canvas) canvas.focus();
       }
-      if (nudges >= 10) clearInterval(nudgeTimer);
+        if (canvas && document.activeElement !== hiddenInput) canvas.focus();
     }, 1000);
   }
-
-  // Tap canvas to focus
-  dosBox.addEventListener("touchstart", () => {
-    const canvas = dosBox.querySelector("canvas");
-    if (canvas) canvas.focus();
-  });
-  dosBox.addEventListener("click", () => {
-    const canvas = dosBox.querySelector("canvas");
-    if (canvas) canvas.focus();
-  });
-
-  hiddenInput.addEventListener("beforeinput", (e) => {
-    try {
-      if (!keyboard) return;
-      const val = e.data;
-      if (val) {
-        if (val.length > 256) return;
-        const code = val.toUpperCase().charCodeAt(0);
-        if (!isNaN(code)) keyboard.keyPress(code);
-      }
-    } catch (err) {}
-    finally { hiddenInput.value = ""; }
-  });
-
-  hiddenInput.addEventListener("input", () => {
-    hiddenInput.value = "";
-  });
+  
 });
 
 // Files we have already opened in the Turbo C++ editor during this session
@@ -3108,6 +3090,117 @@ if (tbEsc) {
   });
 }
 
+// ============================================================================
+// MOBILE / TABLET SOFT KEYBOARD: tap the emulator -> keyboard opens and types into Turbo C++
+// ============================================================================
+(function () {
+  const SENT = "        ";                 // 8-space buffer so Backspace always produces an input event
+  let prev = SENT, composing = false, lastOpen = 0, q = Promise.resolve();
+
+  function enqueue(fn) { q = q.then(fn).catch(() => {}); }       // keeps keys in order
+
+  function resetBuffer() {
+    hiddenInput.value = SENT; prev = SENT;
+    try { hiddenInput.setSelectionRange(SENT.length, SENT.length); } catch (e) {}
+  }
+
+  function isTouch(e) {
+    if (e && e.pointerType) return e.pointerType === "touch" || e.pointerType === "pen";
+    return !!(window.matchMedia && matchMedia("(pointer: coarse)").matches);
+  }
+
+  function keyboardLooksOpen() {
+    return document.activeElement === hiddenInput &&
+           window.visualViewport && (window.innerHeight - window.visualViewport.height > 120);
+  }
+
+  function openKeyboard() {
+    if (!dosCi || isBusy()) return;
+    const now = Date.now();
+    if (now - lastOpen < 400) return;               // touchend + click both fire; use only one
+    lastOpen = now;
+    if (keyboardLooksOpen()) return;
+    if (document.activeElement === hiddenInput) hiddenInput.blur();
+    resetBuffer();
+    hiddenInput.focus({ preventScroll: true });
+    resetBuffer();
+    if (!document.body.classList.contains("is-fullscreen") && emulatorCard) {
+      setTimeout(() => emulatorCard.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+    }
+  }
+
+  // ---- Detect a real tap (not a scroll) on the emulator ----
+  let sx = 0, sy = 0, moved = false;
+  dosBox.addEventListener("touchstart", (e) => {
+    const t = e.touches[0]; if (!t) return;
+    sx = t.clientX; sy = t.clientY; moved = false;
+  }, { passive: true, capture: true });
+  dosBox.addEventListener("touchmove", (e) => {
+    const t = e.touches[0]; if (!t) return;
+    if (Math.abs(t.clientX - sx) > 12 || Math.abs(t.clientY - sy) > 12) moved = true;
+  }, { passive: true, capture: true });
+  dosBox.addEventListener("touchend", () => { if (!moved) openKeyboard(); }, { capture: true });
+  dosBox.addEventListener("click", (e) => {
+    if (isTouch(e)) openKeyboard();
+    else { const c = dosBox.querySelector("canvas"); if (c) c.focus(); }   // PC/laptop: unchanged
+  }, true);
+
+  // ---- Letters, numbers, symbols and Backspace from the soft keyboard ----
+  hiddenInput.addEventListener("compositionstart", () => { composing = true; });
+  hiddenInput.addEventListener("compositionend", () => {
+    composing = false;
+    if (hiddenInput.value.length > SENT.length + 40) resetBuffer();
+  });
+
+  hiddenInput.addEventListener("input", () => {
+    if (!dosCi) return;
+    const cur = hiddenInput.value;
+    let i = 0;
+    while (i < prev.length && i < cur.length && prev[i] === cur[i]) i++;
+    const dels = prev.length - i;
+    const added = cur.slice(i);
+    prev = cur;
+    if (dels || added) {
+      enqueue(async () => {
+        for (let n = 0; n < dels; n++) await pressDosKey(KBD.BACKSPACE, false, 15, 15);
+        for (const ch of added) {
+          const ks = charToDosKeys(ch);
+          if (ks) for (const k of ks) await pressDosKey(k.keyCode, k.shift, 14, 12);
+        }
+      });
+    }
+    if (!composing && (cur.length < SENT.length || cur.length > SENT.length + 40)) resetBuffer();
+  });
+
+  // ---- Enter, arrows, Tab, F-keys and Ctrl/Alt combos (also works with a Bluetooth keyboard) ----
+  const SPECIAL = { Enter: 257, Tab: 258, Escape: 256, Delete: 261, ArrowRight: 262, ArrowLeft: 263,
+                    ArrowDown: 264, ArrowUp: 265, PageUp: 266, PageDown: 267, Home: 268, End: 269 };
+  for (let n = 1; n <= 10; n++) if (n !== 5) SPECIAL["F" + n] = 289 + n;   // F5 is handled by the page already
+
+  hiddenInput.addEventListener("keydown", (e) => {
+    if (!dosCi || e.isComposing || e.keyCode === 229) return;
+    const mods = [];
+    if (e.ctrlKey) mods.push(KBD.LCTRL);
+    if (e.altKey) mods.push(KBD.LALT);
+    if (e.shiftKey && Object.prototype.hasOwnProperty.call(SPECIAL, e.key)) mods.push(KBD.LSHIFT);
+    const code = SPECIAL[e.key];
+    if (code !== undefined) {
+      e.preventDefault();
+      enqueue(() => mods.length ? dosCombo(mods, code) : pressDosKey(code, false, 20, 20));
+      return;
+    }
+    if ((e.ctrlKey || e.altKey) && !e.metaKey && e.key && e.key.length === 1) {
+      e.preventDefault();
+      const letter = e.key.toUpperCase().charCodeAt(0);
+      enqueue(() => dosCombo(mods, letter));
+    }
+  });
+
+  // Keep these key events away from any other listener on the page
+  ["keydown", "keyup", "keypress"].forEach((t) => hiddenInput.addEventListener(t, (e) => e.stopPropagation()));
+})();
+  
+  
 // ============================================================================
 // 6. GLOBAL SHORTCUTS
 // ============================================================================
