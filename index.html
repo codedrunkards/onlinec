@@ -186,8 +186,14 @@
 }
 </script>
 
-<!-- Deferred Analytics & Ads for Performance Optimization -->
-<script async defer src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4518793325867602" crossorigin="anonymous"></script>
+<!-- Microsoft Clarity Script -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "zae6p8l3ok");
+</script>
 
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -3822,6 +3828,135 @@ if ("serviceWorker" in navigator) {
   });
 
   console.log("⚡ Turbo C++ WebMCP Tools Registered:", Object.keys(TurboCTools));
+})();
+</script>
+
+<script>
+// ===== Activity tracker (per user, free-tier friendly: batched + capped) =====
+(function () {
+  var MAX_EVENTS = 200;     // per visit, keeps Firebase storage tiny
+  var FLUSH_MS = 20000;     // send to Firebase every 20 s
+  var sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  var vid = "novid";
+  try {
+    vid = localStorage.getItem("tc_vid");
+    if (!vid) { vid = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); localStorage.setItem("tc_vid", vid); }
+  } catch (e) {}
+  var t0 = Date.now(), buf = [], sent = 0, metaSent = false, seen = {};
+
+  function user() { try { return (localStorage.getItem("tc_chat_username") || "").trim().toLowerCase(); } catch (e) { return ""; } }
+  function key()  { var u = user(); return u ? u : "guest_" + vid; }
+  function isAdmin() { return user() === "sankalpsingh"; }
+
+  var FEATURE = {
+    "tb-paste": "paste_code", "tb-run": "run", "tb-userscreen": "output", "tb-clear": "clear",
+    "tb-save": "save", "tb-download": "download", "tb-saved": "saved_programs",
+    "btn-open-saved": "saved_programs_top", "btn-open-paste": "paste_import_top",
+    "btn-toggle-fs": "fullscreen", "start-btn": "start_compiler", "tb-esc": "esc",
+    "programs-toggle": "open_programs_drawer", "chat-toggle": "open_chat_drawer",
+    "btn-open-fullchat": "expand_chat", "chat-send": "chat_send",
+    "btn-inject-code": "insert_into_turboc", "dl-confirm-btn": "download_confirm",
+    "save-confirm-btn": "save_confirm", "saved-inject-btn": "open_saved_in_turboc"
+  };
+
+  function log(type, name, extra) {
+    if (isAdmin() || sent + buf.length >= MAX_EVENTS) return;
+    name = String(name || "").replace(/\s+/g, " ").trim().slice(0, 60);
+    buf.push({ t: Date.now() - t0, y: type, n: name, x: extra || null });
+    try { if (window.gtag) gtag("event", type, { event_label: name }); } catch (e) {}
+  }
+
+  // --- Clicks / taps ---
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest && e.target.closest("button, a, summary, .prog-item, .lang-tab");
+    if (!el) return;
+    var id = el.id || "", type = "ui_click", name;
+    if (el.classList.contains("prog-dl-btn")) {
+      type = "feature_use";
+      name = "program_download:" + ((el.parentNode.querySelector(".prog-file") || {}).textContent || "");
+    } else if (el.classList.contains("prog-item")) {
+      type = "feature_use";
+      name = "program_open:" + ((el.querySelector(".prog-file") || {}).textContent || "");
+    } else if (el.classList.contains("lang-tab")) {
+      name = "program_tab:" + (el.dataset.lang || "");
+    } else if (el.tagName === "SUMMARY") {
+      name = "faq:" + el.textContent;
+    } else if (el.tagName === "A") {
+      name = "link:" + (el.hostname || "");
+    } else if (FEATURE[id]) {
+      type = "feature_use"; name = FEATURE[id];
+    } else {
+      name = id || el.textContent;
+    }
+    log(type, name);
+  }, true);
+
+  // --- Scroll depth (25/50/75/100 %) ---
+  var marks = { 25: 0, 50: 0, 75: 0, 100: 0 }, scrollTimer = null;
+  window.addEventListener("scroll", function () {
+    if (scrollTimer) return;
+    scrollTimer = setTimeout(function () {
+      scrollTimer = null;
+      var h = document.documentElement.scrollHeight;
+      if (h <= window.innerHeight + 20) return;
+      var pct = ((window.scrollY + window.innerHeight) / h) * 100;
+      [25, 50, 75, 100].forEach(function (m) {
+        if (pct >= m - 1 && !marks[m]) { marks[m] = 1; log("scroll_depth", m + "%"); }
+      });
+    }, 400);
+  }, { passive: true });
+
+  // --- Which sections were actually seen ---
+  function watchSections() {
+    if (!("IntersectionObserver" in window)) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var el = en.target;
+        var nm = el.id || ((el.querySelector("h2") || {}).textContent) || el.tagName;
+        if (seen[nm]) return; seen[nm] = 1;
+        log("section_view", nm);
+      });
+    }, { threshold: 0.5 });
+    ["#emulator-card", "#direct-actions-panel", ".doc-card", "footer"].forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (n) { io.observe(n); });
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watchSections);
+  else watchSections();
+
+  // --- Scrolling inside the side panels (once each) ---
+  [["prog-list", "programs_list"], ["chat-messages", "chat_list"]].forEach(function (p) {
+    var n = document.getElementById(p[0]); if (!n) return;
+    n.addEventListener("scroll", function () { if (!seen[p[1]]) { seen[p[1]] = 1; log("scroll_panel", p[1]); } }, { passive: true });
+  });
+
+  // --- Send to Firebase in batches ---
+  function fbReady() { return window.firebase && firebase.apps && firebase.apps.length; }
+  function flush() {
+    if (isAdmin() || !buf.length || !fbReady()) return;
+    try {
+      var base = firebase.database().ref("activity/" + key() + "/" + sid);
+      if (!metaSent) {
+        metaSent = true;
+        base.child("meta").set({
+          vid: vid, start: firebase.database.ServerValue.TIMESTAMP,
+          screen: screen.width + "x" + screen.height, lang: navigator.language || "",
+          mobile: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent), ref: (document.referrer || "").split("/")[2] || ""
+        });
+      }
+      var batch = buf.splice(0, buf.length);
+      sent += batch.length;
+      base.child("events").push(batch);
+    } catch (e) {}
+    try { if (window.clarity && user()) clarity("identify", user()); } catch (e) {}
+  }
+  setInterval(flush, FLUSH_MS);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flush(); });
+  window.addEventListener("pagehide", function () {
+    log("session_end", Math.round((Date.now() - t0) / 1000) + "s");
+    flush();
+  });
 })();
 </script>
 
