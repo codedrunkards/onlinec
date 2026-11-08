@@ -1,20 +1,17 @@
 // service-worker.js
 
-const CACHE_NAME = "turboc-cache-v7";
+const CACHE_NAME = "turboc-cache-v8";
 
+// Only small files are pre-cached. Big files (js-dos, emulators, TURBOC3.zip, turboc.jsdos)
+// are cached automatically the first time they are used, by the fetch handler below.
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./turboc.jsdos",
-  "./TURBOC3.zip",
   "/online-c/icon-1-48.png",
   "/online-c/icon-1-96.png",
   "/online-c/icon-1-144.png",
-  "/online-c/icon-1-192.png",
-  "https://cdn.jsdelivr.net/npm/js-dos@8.4.1/dist/js-dos.js",
-  "https://cdn.jsdelivr.net/npm/emulators@8.4.1/dist/emulators.js",
-  "https://cdn.jsdelivr.net/npm/js-dos@8.4.1/dist/js-dos.css"
+  "/online-c/icon-1-192.png"
 ];
 
 // Helper to prevent caching non-OK or uncacheable responses (e.g., Cache-Control: no-store, no-cache, private)
