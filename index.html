@@ -989,18 +989,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     color: var(--text-primary);
   }
 
-    #keyboard-helper {
-    position: fixed;
+   #keyboard-helper {
+    position: absolute;
+    top: 0;
     left: 0;
-    bottom: 0;
     width: 1px;
     height: 1px;
+    margin: 0;
     padding: 0;
     border: 0;
     opacity: 0;
     font-size: 16px;
     pointer-events: none;
-    z-index: -1;
+    z-index: 1;
   }
 
   footer {
@@ -2411,17 +2412,13 @@ startBtn.addEventListener("click", () => {
   });
   dosboxInstance = dosPlayer;
 
-  function onEmulatorReady(ci) {
-    // Mobile keyboard helper (the old `keyboard` object never existed in js-dos 8).
+ function onEmulatorReady(ci) {
     keyboard = { keyPress: (code) => ci.simulateKeyPress(code) };
 
-    // Switching tabs "fixes" the screen because js-dos calls ci.pause() when the tab is
-    // hidden and ci.resume() when it is shown again. Do the same pair ourselves a few times
-    // while TC.EXE is booting, without the user having to leave the tab.
     let nudges = 0;
     const nudgeTimer = setInterval(() => {
       nudges++;
-      if (!document.hidden) {
+      if (!document.hidden && document.activeElement !== hiddenInput) {
         try {
           ci.pause();
           setTimeout(() => {
@@ -2432,7 +2429,7 @@ startBtn.addEventListener("click", () => {
         const canvas = dosBox.querySelector("canvas");
         if (canvas) canvas.focus();
       }
-        if (canvas && document.activeElement !== hiddenInput) canvas.focus();
+      if (nudges >= 10) clearInterval(nudgeTimer);
     }, 1000);
   }
   
@@ -3091,13 +3088,32 @@ if (tbEsc) {
 }
 
 // ============================================================================
-// MOBILE / TABLET SOFT KEYBOARD: tap the emulator -> keyboard opens and types into Turbo C++
+// MOBILE / TABLET SOFT KEYBOARD: one tap opens it, no page jumping
 // ============================================================================
 (function () {
   const SENT = "        ";                 // 8-space buffer so Backspace always produces an input event
-  let prev = SENT, composing = false, lastOpen = 0, q = Promise.resolve();
+  let prev = SENT, composing = false, lastOpen = 0, kbHeld = false, vvTimer = null;
+  let q = Promise.resolve();
+  const enqueue = (fn) => { q = q.then(fn).catch(() => {}); };   // keeps keys in order
 
-  function enqueue(fn) { q = q.then(fn).catch(() => {}); }       // keeps keys in order
+  // 1) Keep the hidden input INSIDE the workspace, so the browser never scrolls away from it
+  if (emulatorCard && hiddenInput.parentNode !== emulatorCard) emulatorCard.appendChild(hiddenInput);
+
+  // 2) While the keyboard is open, nothing inside the emulator may pull focus away from the hidden input
+  const realFocus = HTMLElement.prototype.focus;
+  HTMLElement.prototype.focus = function (opts) {
+    if (kbHeld && this !== hiddenInput && dosBox.contains(this)) return;
+    return realFocus.call(this, opts);
+  };
+  hiddenInput.addEventListener("focus", () => { kbHeld = true; });
+  hiddenInput.addEventListener("blur", (e) => {
+    const to = e.relatedTarget;
+    if (kbHeld && Date.now() - lastOpen < 800 && to && dosBox.contains(to)) {
+      realFocus.call(hiddenInput, { preventScroll: true });     // focus stolen right after the tap: take it back
+      return;
+    }
+    kbHeld = false;
+  });
 
   function resetBuffer() {
     hiddenInput.value = SENT; prev = SENT;
@@ -3114,19 +3130,37 @@ if (tbEsc) {
            window.visualViewport && (window.innerHeight - window.visualViewport.height > 120);
   }
 
+  // 3) Scroll ONCE (instantly) so the whole workspace sits at the top of the visible area
+  function fitWorkspace() {
+    if (!emulatorCard || document.body.classList.contains("is-fullscreen")) return;
+    const vv = window.visualViewport;
+    const top = vv ? vv.offsetTop : 0;
+    const h = vv ? vv.height : window.innerHeight;
+    const r = emulatorCard.getBoundingClientRect();
+    if (r.top < top + 2 || r.bottom > top + h + 2) {
+      window.scrollBy(0, r.top - top - 6);
+    }
+  }
+
   function openKeyboard() {
     if (!dosCi || isBusy()) return;
     const now = Date.now();
-    if (now - lastOpen < 400) return;               // touchend + click both fire; use only one
+    if (now - lastOpen < 400) return;
     lastOpen = now;
     if (keyboardLooksOpen()) return;
     if (document.activeElement === hiddenInput) hiddenInput.blur();
     resetBuffer();
-    hiddenInput.focus({ preventScroll: true });
+    realFocus.call(hiddenInput, { preventScroll: true });
     resetBuffer();
-    if (!document.body.classList.contains("is-fullscreen") && emulatorCard) {
-      setTimeout(() => emulatorCard.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
-    }
+    setTimeout(fitWorkspace, 350);
+  }
+
+  if (window.visualViewport) {
+    visualViewport.addEventListener("resize", () => {
+      if (!kbHeld || Date.now() - lastOpen > 1500) return;      // only right after the keyboard opens
+      clearTimeout(vvTimer);
+      vvTimer = setTimeout(fitWorkspace, 120);
+    });
   }
 
   // ---- Detect a real tap (not a scroll) on the emulator ----
@@ -3139,10 +3173,14 @@ if (tbEsc) {
     const t = e.touches[0]; if (!t) return;
     if (Math.abs(t.clientX - sx) > 12 || Math.abs(t.clientY - sy) > 12) moved = true;
   }, { passive: true, capture: true });
-  dosBox.addEventListener("touchend", () => { if (!moved) openKeyboard(); }, { capture: true });
+  dosBox.addEventListener("touchend", (e) => {
+    if (moved || !dosCi || isBusy()) return;
+    if (e.cancelable) e.preventDefault();     // cancels the fake click that used to close the keyboard
+    openKeyboard();
+  }, { passive: false, capture: true });
   dosBox.addEventListener("click", (e) => {
-    if (isTouch(e)) openKeyboard();
-    else { const c = dosBox.querySelector("canvas"); if (c) c.focus(); }   // PC/laptop: unchanged
+    if (isTouch(e)) { openKeyboard(); return; }
+    if (!kbHeld) { const c = dosBox.querySelector("canvas"); if (c) c.focus(); }   // PC/laptop: unchanged
   }, true);
 
   // ---- Letters, numbers, symbols and Backspace from the soft keyboard ----
@@ -3175,7 +3213,7 @@ if (tbEsc) {
   // ---- Enter, arrows, Tab, F-keys and Ctrl/Alt combos (also works with a Bluetooth keyboard) ----
   const SPECIAL = { Enter: 257, Tab: 258, Escape: 256, Delete: 261, ArrowRight: 262, ArrowLeft: 263,
                     ArrowDown: 264, ArrowUp: 265, PageUp: 266, PageDown: 267, Home: 268, End: 269 };
-  for (let n = 1; n <= 10; n++) if (n !== 5) SPECIAL["F" + n] = 289 + n;   // F5 is handled by the page already
+  for (let n = 1; n <= 10; n++) if (n !== 5) SPECIAL["F" + n] = 289 + n;
 
   hiddenInput.addEventListener("keydown", (e) => {
     if (!dosCi || e.isComposing || e.keyCode === 229) return;
@@ -3196,7 +3234,6 @@ if (tbEsc) {
     }
   });
 
-  // Keep these key events away from any other listener on the page
   ["keydown", "keyup", "keypress"].forEach((t) => hiddenInput.addEventListener(t, (e) => e.stopPropagation()));
 })();
   
