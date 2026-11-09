@@ -476,6 +476,40 @@ void main()
 }
 ` },
 
+{ t:"Check Prefix of a String", f:"PREFIX.C", code:String.raw`#include <stdio.h>
+#include <string.h>
+#include <conio.h>
+
+void main()
+{
+    char str[100], prefix[100];
+    int i, flag = 1;
+    clrscr();
+
+    printf("Enter the main string: ");
+    gets(str);
+
+    printf("Enter the prefix to check: ");
+    gets(prefix);
+
+    for (i = 0; prefix[i] != '\0'; i++)
+    {
+        if (str[i] != prefix[i])
+        {
+            flag = 0;
+            break;
+        }
+    }
+
+    if (flag)
+        printf("\"%s\" is a prefix of \"%s\"", prefix, str);
+    else
+        printf("\"%s\" is NOT a prefix of \"%s\"", prefix, str);
+
+    getch();
+}
+` },
+
 { t:"Matrix Transpose (3x3)", f:"TRANSPOSE.C", code:String.raw`#include <stdio.h>
 #include <conio.h>
 
@@ -799,6 +833,398 @@ void main()
         default:
             printf("Invalid day number!");
     }
+
+    getch();
+}
+` },
+
+{ t:"Binary to Decimal Conversion", f:"BINDEC.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    long bin;
+    int dec = 0, base = 1, rem;
+    clrscr();
+
+    printf("Enter a binary number: ");
+    scanf("%ld", &bin);
+
+    while (bin > 0)
+    {
+        rem = bin % 10;
+
+        if (rem > 1)
+        {
+            printf("Invalid binary number!");
+            getch();
+            return;
+        }
+
+        dec = dec + rem * base;
+        base = base * 2;
+        bin = bin / 10;
+    }
+
+    printf("Decimal number = %d", dec);
+    getch();
+}
+` },
+
+{ t:"Decimal to Binary Conversion", f:"DECBIN.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int n, binary[32], i = 0, j;
+    clrscr();
+
+    printf("Enter a decimal number: ");
+    scanf("%d", &n);
+
+    if (n < 0)
+    {
+        printf("Enter a non-negative number.");
+        getch();
+        return;
+    }
+
+    if (n == 0)
+        binary[i++] = 0;
+
+    while (n > 0)
+    {
+        binary[i] = n % 2;
+        n = n / 2;
+        i++;
+    }
+
+    printf("Binary number = ");
+
+    for (j = i - 1; j >= 0; j--)
+        printf("%d", binary[j]);
+
+    getch();
+}
+` },
+
+{ t:"Selection Sort", f:"SELECT.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a[20], n, i, j, min, temp;
+    clrscr();
+
+    printf("Enter number of elements (max 20): ");
+    scanf("%d", &n);
+
+    for (i = 0; i < n; i++)
+    {
+        printf("Enter element %d: ", i + 1);
+        scanf("%d", &a[i]);
+    }
+
+    for (i = 0; i < n - 1; i++)
+    {
+        min = i;
+
+        for (j = i + 1; j < n; j++)
+        {
+            if (a[j] < a[min])
+                min = j;
+        }
+
+        temp = a[i];
+        a[i] = a[min];
+        a[min] = temp;
+    }
+
+    printf("\nSorted array: ");
+
+    for (i = 0; i < n; i++)
+        printf("%d ", a[i]);
+
+    getch();
+}
+` },
+
+{ t:"Binary Search", f:"BINARY.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a[20], n, i, key;
+    int low, high, mid, found = 0;
+    clrscr();
+
+    printf("Enter number of elements (max 20): ");
+    scanf("%d", &n);
+
+    printf("Enter elements in ascending order:\n");
+
+    for (i = 0; i < n; i++)
+        scanf("%d", &a[i]);
+
+    printf("Enter element to search: ");
+    scanf("%d", &key);
+
+    low = 0;
+    high = n - 1;
+
+    while (low <= high)
+    {
+        mid = (low + high) / 2;
+
+        if (a[mid] == key)
+        {
+            found = 1;
+            break;
+        }
+        else if (a[mid] < key)
+            low = mid + 1;
+        else
+            high = mid - 1;
+    }
+
+    if (found)
+        printf("%d found at position %d", key, mid + 1);
+    else
+        printf("Element not found!");
+
+    getch();
+}
+` },
+
+{ t:"Count Vowels and Consonants", f:"VOWEL.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+#include <ctype.h>
+
+void main()
+{
+    char str[100];
+    int i, vowels = 0, consonants = 0;
+    clrscr();
+
+    printf("Enter a string: ");
+    gets(str);
+
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        char ch = tolower(str[i]);
+
+        if (ch >= 'a' && ch <= 'z')
+        {
+            if (ch == 'a' || ch == 'e' ||
+                ch == 'i' || ch == 'o' || ch == 'u')
+                vowels++;
+            else
+                consonants++;
+        }
+    }
+
+    printf("Vowels = %d\n", vowels);
+    printf("Consonants = %d", consonants);
+
+    getch();
+}
+` },
+
+{ t:"Count Words in a String", f:"WORDCNT.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    char str[100];
+    int i, words = 0, inWord = 0;
+    clrscr();
+
+    printf("Enter a sentence: ");
+    gets(str);
+
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        if (str[i] != ' ' && str[i] != '\t')
+        {
+            if (inWord == 0)
+            {
+                words++;
+                inWord = 1;
+            }
+        }
+        else
+            inWord = 0;
+    }
+
+    printf("Total words = %d", words);
+
+    getch();
+}
+` },
+
+{ t:"Matrix Multiplication (3x3)", f:"MATMUL.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a[3][3], b[3][3], c[3][3];
+    int i, j, k;
+    clrscr();
+
+    printf("Enter elements of Matrix A:\n");
+
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
+            scanf("%d", &a[i][j]);
+
+    printf("Enter elements of Matrix B:\n");
+
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
+            scanf("%d", &b[i][j]);
+
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 3; j++)
+        {
+            c[i][j] = 0;
+
+            for (k = 0; k < 3; k++)
+                c[i][j] += a[i][k] * b[k][j];
+        }
+    }
+
+    printf("\nProduct of Matrices:\n");
+
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 3; j++)
+            printf("%4d", c[i][j]);
+
+        printf("\n");
+    }
+
+    getch();
+}
+` },
+
+{ t:"Check Perfect Number", f:"PERFECT.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int n, i, sum = 0;
+    clrscr();
+
+    printf("Enter a number: ");
+    scanf("%d", &n);
+
+    for (i = 1; i <= n / 2; i++)
+    {
+        if (n % i == 0)
+            sum = sum + i;
+    }
+
+    if (n > 1 && sum == n)
+        printf("%d is a Perfect Number", n);
+    else
+        printf("%d is NOT a Perfect Number", n);
+
+    getch();
+}
+` },
+
+{ t:"Check Strong Number", f:"STRONG.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int n, temp, digit, i, fact, sum = 0;
+    clrscr();
+
+    printf("Enter a number: ");
+    scanf("%d", &n);
+
+    if (n < 0)
+    {
+        printf("Enter a non-negative number.");
+        getch();
+        return;
+    }
+
+    temp = n;
+
+    do
+    {
+        digit = temp % 10;
+        fact = 1;
+
+        for (i = 1; i <= digit; i++)
+            fact = fact * i;
+
+        sum = sum + fact;
+        temp = temp / 10;
+
+    } while (temp > 0);
+
+    if (sum == n)
+        printf("%d is a Strong Number", n);
+    else
+        printf("%d is NOT a Strong Number", n);
+
+    getch();
+}
+` },
+
+{ t:"Find Second Largest Element", f:"SECLARGE.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a[20], n, i;
+    int largest, second, found = 0;
+    clrscr();
+
+    printf("Enter number of elements (max 20): ");
+    scanf("%d", &n);
+
+    if (n < 2 || n > 20)
+    {
+        printf("Enter between 2 and 20 elements.");
+        getch();
+        return;
+    }
+
+    for (i = 0; i < n; i++)
+    {
+        printf("Enter element %d: ", i + 1);
+        scanf("%d", &a[i]);
+    }
+
+    largest = a[0];
+
+    for (i = 1; i < n; i++)
+    {
+        if (a[i] > largest)
+            largest = a[i];
+    }
+
+    for (i = 0; i < n; i++)
+    {
+        if (a[i] < largest)
+        {
+            if (found == 0 || a[i] > second)
+            {
+                second = a[i];
+                found = 1;
+            }
+        }
+    }
+
+    if (found)
+        printf("Second largest distinct element = %d", second);
+    else
+        printf("No second largest distinct element.");
 
     getch();
 }
@@ -1851,6 +2277,481 @@ void main()
 
     fin.getline(text, 100);
     cout << text;
+
+    fin.close();
+
+    getch();
+}
+` },
+
+{ t:"Unary Operator Overloading (++ Operator)", f:"UNARY.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Number
+{
+    int x;
+
+public:
+    Number(int n)
+    {
+        x = n;
+    }
+
+    void operator++()
+    {
+        ++x;
+    }
+
+    void display()
+    {
+        cout << "Value = " << x << endl;
+    }
+};
+
+void main()
+{
+    Number n(10);
+    clrscr();
+
+    cout << "Before increment:" << endl;
+    n.display();
+
+    ++n;
+
+    cout << "After increment:" << endl;
+    n.display();
+
+    getch();
+}
+` },
+
+{ t:"Hierarchical Inheritance", f:"HIERARCH.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Animal
+{
+public:
+    void eat()
+    {
+        cout << "Animals can eat." << endl;
+    }
+};
+
+class Dog : public Animal
+{
+public:
+    void bark()
+    {
+        cout << "Dog barks." << endl;
+    }
+};
+
+class Cat : public Animal
+{
+public:
+    void meow()
+    {
+        cout << "Cat meows." << endl;
+    }
+};
+
+void main()
+{
+    Dog d;
+    Cat c;
+    clrscr();
+
+    cout << "Dog:" << endl;
+    d.eat();
+    d.bark();
+
+    cout << "\nCat:" << endl;
+    c.eat();
+    c.meow();
+
+    getch();
+}
+` },
+
+{ t:"Parameterized Constructor", f:"PARAMCON.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Rectangle
+{
+    int length, breadth;
+
+public:
+    Rectangle(int l, int b)
+    {
+        length = l;
+        breadth = b;
+    }
+
+    void display()
+    {
+        cout << "Length = " << length << endl;
+        cout << "Breadth = " << breadth << endl;
+        cout << "Area = " << length * breadth << endl;
+    }
+};
+
+void main()
+{
+    Rectangle r(10, 5);
+    clrscr();
+
+    r.display();
+
+    getch();
+}
+` },
+
+{ t:"Dynamic Constructor", f:"DYNCON.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+#include <stdlib.h>
+
+class Array
+{
+    int *p, size;
+
+public:
+    Array(int n)
+    {
+        size = n;
+        p = new int[size];
+    }
+
+    void getdata()
+    {
+        int i;
+        for (i = 0; i < size; i++)
+        {
+            cout << "Enter element " << i + 1 << ": ";
+            cin >> p[i];
+        }
+    }
+
+    void display()
+    {
+        int i;
+        cout << "\nArray elements: ";
+
+        for (i = 0; i < size; i++)
+            cout << p[i] << " ";
+    }
+
+    ~Array()
+    {
+        delete[] p;
+    }
+};
+
+void main()
+{
+    int n;
+    clrscr();
+
+    cout << "Enter array size: ";
+    cin >> n;
+
+    if (n <= 0)
+    {
+        cout << "Invalid size!";
+        getch();
+        return;
+    }
+
+    Array a(n);
+    a.getdata();
+    a.display();
+
+    getch();
+}
+` },
+
+{ t:"Function Overriding", f:"OVERRIDE.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Base
+{
+public:
+    void display()
+    {
+        cout << "Base class display function." << endl;
+    }
+};
+
+class Derived : public Base
+{
+public:
+    void display()
+    {
+        cout << "Derived class display function." << endl;
+    }
+};
+
+void main()
+{
+    Base b;
+    Derived d;
+    clrscr();
+
+    cout << "Base Class:" << endl;
+    b.display();
+
+    cout << "\nDerived Class:" << endl;
+    d.display();
+
+    getch();
+}
+` },
+
+{ t:"Pure Virtual Function with Shape", f:"PUREVIRT.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Shape
+{
+public:
+    virtual void area() = 0;
+};
+
+class Square : public Shape
+{
+    int side;
+
+public:
+    Square(int s)
+    {
+        side = s;
+    }
+
+    void area()
+    {
+        cout << "Area of Square = "
+             << side * side << endl;
+    }
+};
+
+class Triangle : public Shape
+{
+    float base, height;
+
+public:
+    Triangle(float b, float h)
+    {
+        base = b;
+        height = h;
+    }
+
+    void area()
+    {
+        cout << "Area of Triangle = "
+             << 0.5 * base * height << endl;
+    }
+};
+
+void main()
+{
+    Square s(5);
+    Triangle t(10, 6);
+    clrscr();
+
+    s.area();
+    t.area();
+
+    getch();
+}
+` },
+
+{ t:"Friend Class", f:"FRIENDCL.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class B;
+
+class A
+{
+    int x;
+
+public:
+    A(int n)
+    {
+        x = n;
+    }
+
+    friend class B;
+};
+
+class B
+{
+public:
+    void display(A obj)
+    {
+        cout << "Value of A = " << obj.x << endl;
+    }
+};
+
+void main()
+{
+    A a(100);
+    B b;
+    clrscr();
+
+    b.display(a);
+
+    getch();
+}
+` },
+
+{ t:"Overloading Insertion and Extraction Operators", f:"STREAMOP.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Student
+{
+    int roll;
+    char name[30];
+
+public:
+    friend istream& operator>>(istream &in, Student &s)
+    {
+        cout << "Enter roll number: ";
+        in >> s.roll;
+
+        cout << "Enter name: ";
+        in >> s.name;
+
+        return in;
+    }
+
+    friend ostream& operator<<(ostream &out, Student &s)
+    {
+        out << "\nRoll Number: " << s.roll;
+        out << "\nName: " << s.name;
+        return out;
+    }
+};
+
+void main()
+{
+    Student s;
+    clrscr();
+
+    cin >> s;
+
+    cout << "\nStudent Details:";
+    cout << s;
+
+    getch();
+}
+` },
+
+{ t:"Function Template (Multiple Data Types)", f:"MULTTEMP.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+template <class T>
+T add(T a, T b)
+{
+    return a + b;
+}
+
+void main()
+{
+    clrscr();
+
+    cout << "Integer Addition: "
+         << add(10, 20) << endl;
+
+    cout << "Float Addition: "
+         << add(2.5, 3.5) << endl;
+
+    cout << "Character Addition: "
+         << add('A', 'B') << endl;
+
+    getch();
+}
+` },
+
+{ t:"Dynamic Memory Allocation Using new and delete", f:"NEWDELETE.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+void main()
+{
+    int *p, n, i, sum = 0;
+    clrscr();
+
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    if (n <= 0)
+    {
+        cout << "Invalid size!";
+        getch();
+        return;
+    }
+
+    p = new int[n];
+
+    if (p == NULL)
+    {
+        cout << "Memory allocation failed!";
+        getch();
+        return;
+    }
+
+    for (i = 0; i < n; i++)
+    {
+        cout << "Enter element " << i + 1 << ": ";
+        cin >> p[i];
+        sum = sum + p[i];
+    }
+
+    cout << "\nSum = " << sum;
+    cout << "\nAverage = " << (float)sum / n;
+
+    delete[] p;
+
+    getch();
+}
+` },
+
+{ t:"Sequential File Operations (Append Mode)", f:"APPEND.CPP", code:String.raw`#include <iostream.h>
+#include <fstream.h>
+#include <conio.h>
+
+void main()
+{
+    ofstream fout;
+    ifstream fin;
+    char text[100];
+    clrscr();
+
+    fout.open("RECORD.TXT", ios::app);
+
+    if (!fout)
+    {
+        cout << "Unable to open file!";
+        getch();
+        return;
+    }
+
+    cout << "Enter text to append: ";
+    cin.getline(text, 100);
+
+    fout << text << endl;
+    fout.close();
+
+    fin.open("RECORD.TXT");
+
+    if (!fin)
+    {
+        cout << "Unable to read file!";
+        getch();
+        return;
+    }
+
+    cout << "\nComplete File Contents:\n";
+
+    while (fin.getline(text, 100))
+        cout << text << endl;
 
     fin.close();
 
