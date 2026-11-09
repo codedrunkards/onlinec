@@ -3624,6 +3624,23 @@ if ("serviceWorker" in navigator) {
           return;
         }
 
+        // Move all old messages to the new name (they stay yours, with the delete button)
+        setMsg("Updating your old messages...");
+        try {
+          const updates = {};
+          for (const refName of ["messages", "problems"]) {
+            const snap = await db.ref(refName).orderByChild("name").equalTo(oldName).once("value");
+            snap.forEach((c) => { updates[refName + "/" + c.key + "/name"] = clean; });
+          }
+          if (Object.keys(updates).length) await db.ref().update(updates);
+        } catch (e) {
+          // Undo the new-name claim so nothing is left half-done
+          try { await usersRef.child(clean).remove(); } catch (e2) {}
+          setMsg("Could not update your old messages. Nothing was changed. Try again.", true);
+          btnSave.disabled = false;
+          return;
+        }
+
         // Release the old name so someone else can use it
         try { await usersRef.child(oldName).remove(); } catch (e) {}
 
