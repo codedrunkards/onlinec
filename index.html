@@ -1620,6 +1620,89 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   .change-name-msg { font-size: 0.70rem; font-family: var(--font-mono); line-height: 1.3; }
   .change-name-msg:empty { display: none; }
 
+
+    /* ===== Anniversary decoration ===== */
+  #anniv-lights {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 40px;
+    z-index: 999;                 /* under the side panels and popups, above the page */
+    pointer-events: none;         /* never blocks a tap */
+    overflow: hidden;
+  }
+  #anniv-lights::before {         /* the wire */
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 2px;
+    height: 2px;
+    background: #3a3f47;
+  }
+  body.anniv-on #anniv-lights { display: block; }
+
+  .anniv-bulb {
+    position: absolute;
+    width: 9px; height: 13px;
+    margin-left: -4px;
+    border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%;
+    background: currentColor;
+    box-shadow: 0 0 8px 2px currentColor, 0 0 18px 4px currentColor;
+    animation: annivFlicker 1.8s infinite ease-in-out;
+  }
+  .anniv-bulb::before {           /* the little stem to the wire */
+    content: "";
+    position: absolute;
+    left: 50%; top: -10px;
+    width: 2px; height: 11px;
+    background: #3a3f47;
+    transform: translateX(-50%);
+  }
+  @keyframes annivFlicker {
+    0%, 100% { opacity: 1;    filter: brightness(1.3); }
+    40%      { opacity: 0.35; filter: brightness(0.6); }
+    48%      { opacity: 1;    filter: brightness(1.4); }
+    60%      { opacity: 0.55; filter: brightness(0.8); }
+    75%      { opacity: 1;    filter: brightness(1.2); }
+  }
+
+  .anniv-banner {
+    display: none;
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    margin: 6px 0 16px 0;
+    padding: 16px 18px 14px 18px;
+    text-align: center;
+    background: linear-gradient(135deg, #1b2330 0%, #14171d 100%);
+    border: 2px solid var(--cyan-accent);
+    border-radius: 12px;
+    animation: annivGlow 2.4s infinite ease-in-out;
+  }
+  body.anniv-on .anniv-banner { display: block; }
+  @keyframes annivGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(102, 252, 241, 0.35); }
+    50%      { box-shadow: 0 0 26px rgba(255, 215, 77, 0.6); border-color: #ffd24d; }
+  }
+  .anniv-emoji { font-size: 1.5rem; letter-spacing: 6px; }
+  .anniv-title { font-size: 1.3rem; font-weight: 700; color: #ffd24d; margin: 4px 0; }
+  .anniv-sub { font-size: 0.98rem; color: var(--text-bright); line-height: 1.5; }
+  .anniv-sub b { color: var(--cyan-accent); }
+  .anniv-thanks { font-size: 0.8rem; color: #8c979a; margin-top: 4px; }
+  .anniv-x {
+    position: absolute; top: 6px; right: 8px;
+    background: none; border: none;
+    color: #8c979a; font-size: 1.3rem; line-height: 1; cursor: pointer;
+  }
+  .anniv-x:hover { color: #ffffff; }
+
+  @media (min-width: 1081px) { body.anniv-on .main-wrapper { padding-top: 34px; } }
+  body.is-fullscreen #anniv-lights,
+  body.is-fullscreen .anniv-banner { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .anniv-bulb, .anniv-banner { animation: none; }
+  }
+  
+  
   /* Stop background scrolling when any modal is open */
   body.modal-open {
     overflow: hidden !important;
@@ -1711,6 +1794,8 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
 <body>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSG23F75" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<div id="anniv-lights" aria-hidden="true"></div>  
   
 <!-- LEFT: Ready-made programs -->
 <aside class="side-panel" id="programs-panel" aria-label="Ready-made programs">
@@ -1829,6 +1914,14 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
 <div class="panel-backdrop" id="panel-backdrop"></div>
 
 <main class="main-wrapper">
+    <div class="anniv-banner" id="anniv-banner">
+    <button type="button" class="anniv-x" id="anniv-x" aria-label="Close">&times;</button>
+    <div class="anniv-emoji">🎉🎂🎉</div>
+    <div class="anniv-title">Happy 1st Anniversary!</div>
+    <div class="anniv-sub">This website was made on <b>10 NOV, 2025</b></div>
+    <div class="anniv-thanks">Thank you for being part of this journey 💙</div>
+  </div>
+  
   <!-- Header 3-Line Titles -->
   <h1>Turbo C++ Online Compiler (Upgrade)</h1>
   <div class="author-line">Created by Sankalp Singh (Lucky Institute, Jodhpur)</div>
@@ -4199,5 +4292,48 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+<script>
+// ===== Anniversary decoration: turns itself on for the anniversary week =====
+(function () {
+  var START = "2026-11-09", END = "2026-11-16";      // inclusive, edit if you want a longer or shorter run
+  var qs = location.search;
+  var force = /[?&]anniv=1/.test(qs), off = /[?&]anniv=0/.test(qs);
+  var d = new Date();
+  var today = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  if (off || !(force || (today >= START && today <= END))) return;
+
+  document.body.classList.add("anniv-on");
+
+  // Lights
+  var box = document.getElementById("anniv-lights");
+  var COLORS = ["#ff4d4d", "#ffd24d", "#3ddc84", "#4da6ff", "#ff6bd6"];
+  function build() {
+    if (!box) return;
+    box.innerHTML = "";
+    var w = window.innerWidth, gap = w < 600 ? 30 : 38, n = Math.ceil(w / gap) + 1;
+    for (var i = 0; i < n; i++) {
+      var b = document.createElement("i");
+      b.className = "anniv-bulb";
+      b.style.left = (i * gap + gap / 2) + "px";
+      b.style.top = (4 + (i % 2) * 6) + "px";
+      b.style.color = COLORS[i % COLORS.length];
+      b.style.animationDelay = (-Math.random() * 2).toFixed(2) + "s";
+      b.style.animationDuration = (1.2 + Math.random() * 1.6).toFixed(2) + "s";
+      box.appendChild(b);
+    }
+  }
+  build();
+  var t; window.addEventListener("resize", function () { clearTimeout(t); t = setTimeout(build, 200); });
+
+  // Banner close button (comes back on the next visit)
+  var banner = document.getElementById("anniv-banner"), x = document.getElementById("anniv-x");
+  try { if (sessionStorage.getItem("tc_anniv_closed") === "1" && banner) banner.style.display = "none"; } catch (e) {}
+  if (x) x.addEventListener("click", function () {
+    if (banner) banner.style.display = "none";
+    try { sessionStorage.setItem("tc_anniv_closed", "1"); } catch (e) {}
+  });
+})();
+</script>
+  
 </body>
 </html>
