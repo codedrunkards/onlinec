@@ -2806,6 +2806,29 @@ if (pasteCodeInput) {
   });
 }
 
+// ============================================================================
+// MOUSE WHEEL SCROLLING INSIDE EMULATOR
+// ============================================================================
+dosBox.addEventListener("wheel", async (e) => {
+  // Only trigger if compiler is running and not currently frozen
+  if (!dosCi || (typeof isBusy === "function" && isBusy())) return;
+  
+  // 1. Stop the main website from scrolling!
+  e.preventDefault();
+  
+  // 2. Figure out if user scrolled UP or DOWN
+  const isDown = e.deltaY > 0;
+  const keyCode = isDown ? 264 : 265; // 264 = ArrowDown, 265 = ArrowUp
+  
+  // 3. Send 3 arrow key presses per wheel tick for a smooth scroll feel
+  for (let i = 0; i < 3; i++) {
+    dosCi.sendKeyEvent(keyCode, true);
+    await delay(12);
+    dosCi.sendKeyEvent(keyCode, false);
+    await delay(12);
+  }
+}, { passive: false });
+  
 // Zoom active window
 async function triggerZoom() {
   if (!ensureCompilerStarted()) return;
