@@ -422,6 +422,7 @@ void main()
     getch();
 }
 ` },
+    
 { t:"Graphics: Circle, Line, Rectangle", f:"GRAPH.C", code:String.raw`#include <graphics.h>
 #include <conio.h>
 
@@ -436,8 +437,375 @@ void main()
     getch();
     closegraph();
 }
+` },
+
+{ t:"Linear Search", f:"LINEAR.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a[20], n, i, key, found = 0;
+    clrscr();
+    printf("How many elements (max 20)? ");
+    scanf("%d", &n);
+
+    for (i = 0; i < n; i++)
+    {
+        printf("Enter element %d: ", i + 1);
+        scanf("%d", &a[i]);
+    }
+
+    printf("Enter element to search: ");
+    scanf("%d", &key);
+
+    for (i = 0; i < n; i++)
+    {
+        if (a[i] == key)
+        {
+            found = 1;
+            break;
+        }
+    }
+
+    if (found)
+        printf("%d found at position %d\n", key, i + 1);
+    else
+        printf("%d not found in the array\n", key);
+
+    getch();
+}
+` },
+
+{ t:"Matrix Transpose (3x3)", f:"TRANSPOSE.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a[3][3], i, j;
+    clrscr();
+
+    printf("Enter elements of 3x3 matrix:\n");
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
+            scanf("%d", &a[i][j]);
+
+    printf("\nOriginal Matrix:\n");
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 3; j++)
+            printf("%4d", a[i][j]);
+        printf("\n");
+    }
+
+    printf("\nTranspose of Matrix:\n");
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 3; j++)
+            printf("%4d", a[j][i]);
+        printf("\n");
+    }
+
+    getch();
+}
+` },
+
+{ t:"String Palindrome", f:"STRPALIN.C", code:String.raw`#include <stdio.h>
+#include <string.h>
+#include <conio.h>
+
+void main()
+{
+    char str[50];
+    int i, len, flag = 1;
+    clrscr();
+
+    printf("Enter a string: ");
+    gets(str);
+
+    len = strlen(str);
+
+    for (i = 0; i < len / 2; i++)
+    {
+        if (str[i] != str[len - i - 1])
+        {
+            flag = 0;
+            break;
+        }
+    }
+
+    if (flag)
+        printf("The string is a Palindrome\n");
+    else
+        printf("The string is NOT a Palindrome\n");
+
+    getch();
+}
+` },
+
+{ t:"Student Record Using Structure", f:"STRUCT.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+struct Student
+{
+    int roll;
+    char name[30];
+    float marks;
+};
+
+void main()
+{
+    struct Student s;
+    clrscr();
+
+    printf("Enter roll number: ");
+    scanf("%d", &s.roll);
+
+    printf("Enter name: ");
+    scanf("%s", s.name);
+
+    printf("Enter marks: ");
+    scanf("%f", &s.marks);
+
+    printf("\n----- Student Record -----\n");
+    printf("Roll Number : %d\n", s.roll);
+    printf("Name        : %s\n", s.name);
+    printf("Marks       : %.2f\n", s.marks);
+
+    getch();
+}
+` },
+
+{ t:"File Handling (Write and Read)", f:"FILEIO.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    FILE *fp;
+    char text[100];
+    clrscr();
+
+    fp = fopen("MESSAGE.TXT", "w");
+
+    if (fp == NULL)
+    {
+        printf("Unable to create file.\n");
+        getch();
+        return;
+    }
+
+    printf("Enter a line of text: ");
+    gets(text);
+
+    fprintf(fp, "%s", text);
+    fclose(fp);
+
+    fp = fopen("MESSAGE.TXT", "r");
+
+    if (fp == NULL)
+    {
+        printf("Unable to open file.\n");
+        getch();
+        return;
+    }
+
+    printf("\nContent read from file:\n");
+    while (fgets(text, sizeof(text), fp) != NULL)
+        printf("%s\n", text);
+
+    fclose(fp);
+    getch();
+}
+` },
+
+{ t:"Swap Two Numbers Using Pointers", f:"PTRSWAP.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void swap(int *x, int *y)
+{
+    int temp;
+    temp = *x;
+    *x = *y;
+    *y = temp;
+}
+
+void main()
+{
+    int a, b;
+    clrscr();
+
+    printf("Enter two numbers: ");
+    scanf("%d %d", &a, &b);
+
+    printf("\nBefore swapping:");
+    printf("\na = %d, b = %d", a, b);
+
+    swap(&a, &b);
+
+    printf("\n\nAfter swapping:");
+    printf("\na = %d, b = %d", a, b);
+
+    getch();
+}
+` },
+
+{ t:"Factorial Using Recursion", f:"FACTREC.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+long factorial(int n)
+{
+    if (n <= 1)
+        return 1;
+
+    return n * factorial(n - 1);
+}
+
+void main()
+{
+    int n;
+    clrscr();
+
+    printf("Enter a number: ");
+    scanf("%d", &n);
+
+    if (n < 0)
+        printf("Factorial is not defined for negative numbers.");
+    else
+        printf("Factorial of %d = %ld", n, factorial(n));
+
+    getch();
+}
+` },
+
+{ t:"Bitwise Operators Demonstration", f:"BITWISE.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a, b;
+    clrscr();
+
+    printf("Enter two integers: ");
+    scanf("%d %d", &a, &b);
+
+    printf("\nBitwise AND (a & b) = %d", a & b);
+    printf("\nBitwise OR (a | b) = %d", a | b);
+    printf("\nBitwise XOR (a ^ b) = %d", a ^ b);
+    printf("\nBitwise NOT (~a) = %d", ~a);
+    printf("\nLeft Shift (a << 1) = %d", a << 1);
+    printf("\nRight Shift (a >> 1) = %d", a >> 1);
+
+    getch();
+}
+` },
+
+{ t:"Dynamic Memory Allocation (malloc)", f:"DYNAMIC.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+#include <stdlib.h>
+
+void main()
+{
+    int *a, n, i, sum = 0;
+    float avg;
+    clrscr();
+
+    printf("Enter number of elements: ");
+    scanf("%d", &n);
+
+    if (n <= 0)
+    {
+        printf("Invalid number of elements.");
+        getch();
+        return;
+    }
+
+    a = (int *)malloc(n * sizeof(int));
+
+    if (a == NULL)
+    {
+        printf("Memory allocation failed!");
+        getch();
+        return;
+    }
+
+    for (i = 0; i < n; i++)
+    {
+        printf("Enter element %d: ", i + 1);
+        scanf("%d", &a[i]);
+        sum = sum + a[i];
+    }
+
+    avg = (float)sum / n;
+
+    printf("\nSum = %d", sum);
+    printf("\nAverage = %.2f", avg);
+
+    free(a);
+    getch();
+}
+` },
+
+{ t:"Enumeration (Days of the Week)", f:"ENUM.C", code:String.raw`#include <stdio.h>
+#include <conio.h>
+
+enum Days
+{
+    MONDAY = 1,
+    TUESDAY,
+    WEDNESDAY,
+    THURSDAY,
+    FRIDAY,
+    SATURDAY,
+    SUNDAY
+};
+
+void main()
+{
+    int day;
+    clrscr();
+
+    printf("Enter day number (1-7): ");
+    scanf("%d", &day);
+
+    switch (day)
+    {
+        case MONDAY:
+            printf("Monday");
+            break;
+
+        case TUESDAY:
+            printf("Tuesday");
+            break;
+
+        case WEDNESDAY:
+            printf("Wednesday");
+            break;
+
+        case THURSDAY:
+            printf("Thursday");
+            break;
+
+        case FRIDAY:
+            printf("Friday");
+            break;
+
+        case SATURDAY:
+            printf("Saturday");
+            break;
+
+        case SUNDAY:
+            printf("Sunday");
+            break;
+
+        default:
+            printf("Invalid day number!");
+    }
+
+    getch();
+}
 ` }
+    
 ],
+    
 cpp: [
 { t:"Hello World", f:"HELLO.CPP", code:String.raw`#include <iostream.h>
 #include <conio.h>
@@ -1017,6 +1385,478 @@ void main()
     a.show();
     getch();
 }
+` },
+
+{ t:"Multilevel Inheritance", f:"MULTILEVEL.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Student
+{
+protected:
+    int roll;
+public:
+    void getroll()
+    {
+        cout << "Enter roll number: ";
+        cin >> roll;
+    }
+};
+
+class Test : public Student
+{
+protected:
+    float marks1, marks2;
+public:
+    void getmarks()
+    {
+        cout << "Enter marks of two subjects: ";
+        cin >> marks1 >> marks2;
+    }
+};
+
+class Result : public Test
+{
+public:
+    void display()
+    {
+        cout << "\nRoll Number: " << roll;
+        cout << "\nTotal Marks: " << marks1 + marks2;
+        cout << "\nPercentage: " << (marks1 + marks2) / 2 << "%";
+    }
+};
+
+void main()
+{
+    Result r;
+    clrscr();
+
+    r.getroll();
+    r.getmarks();
+    r.display();
+
+    getch();
+}
+` },
+
+{ t:"Multiple Inheritance", f:"MULTIPLE.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Internal
+{
+protected:
+    int internalMarks;
+public:
+    void getinternal()
+    {
+        cout << "Enter internal marks: ";
+        cin >> internalMarks;
+    }
+};
+
+class External
+{
+protected:
+    int externalMarks;
+public:
+    void getexternal()
+    {
+        cout << "Enter external marks: ";
+        cin >> externalMarks;
+    }
+};
+
+class Result : public Internal, public External
+{
+public:
+    void display()
+    {
+        cout << "\nInternal Marks: " << internalMarks;
+        cout << "\nExternal Marks: " << externalMarks;
+        cout << "\nTotal Marks: " << internalMarks + externalMarks;
+    }
+};
+
+void main()
+{
+    Result r;
+    clrscr();
+
+    r.getinternal();
+    r.getexternal();
+    r.display();
+
+    getch();
+}
+` },
+
+{ t:"Encapsulation (Bank Account)", f:"ENCAPSUL.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class BankAccount
+{
+private:
+    float balance;
+
+public:
+    void setBalance(float b)
+    {
+        if (b >= 0)
+            balance = b;
+        else
+            balance = 0;
+    }
+
+    void deposit(float amount)
+    {
+        if (amount > 0)
+            balance = balance + amount;
+        else
+            cout << "\nInvalid deposit amount!";
+    }
+
+    void withdraw(float amount)
+    {
+        if (amount <= 0)
+            cout << "\nInvalid withdrawal amount!";
+        else if (amount > balance)
+            cout << "\nInsufficient balance!";
+        else
+            balance = balance - amount;
+    }
+
+    void display()
+    {
+        cout << "\nCurrent Balance: " << balance;
+    }
+};
+
+void main()
+{
+    BankAccount account;
+    clrscr();
+
+    account.setBalance(1000);
+
+    cout << "Initial Balance: ";
+    account.display();
+
+    account.deposit(500);
+    cout << "\nAfter Deposit: ";
+    account.display();
+
+    account.withdraw(200);
+    cout << "\nAfter Withdrawal: ";
+    account.display();
+
+    getch();
+}
+` },
+
+{ t:"Abstraction Using Pure Virtual Function", f:"ABSTRACT.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Shape
+{
+public:
+    virtual void area() = 0;
+};
+
+class Rectangle : public Shape
+{
+    float length, breadth;
+
+public:
+    Rectangle(float l, float b)
+    {
+        length = l;
+        breadth = b;
+    }
+
+    void area()
+    {
+        cout << "Area of Rectangle = "
+             << length * breadth << endl;
+    }
+};
+
+class Circle : public Shape
+{
+    float radius;
+
+public:
+    Circle(float r)
+    {
+        radius = r;
+    }
+
+    void area()
+    {
+        cout << "Area of Circle = "
+             << 3.14 * radius * radius << endl;
+    }
+};
+
+void main()
+{
+    Rectangle r(5, 4);
+    Circle c(3);
+
+    clrscr();
+
+    r.area();
+    c.area();
+
+    getch();
+}
+` },
+
+{ t:"Exception Handling (try-catch)", f:"EXCEPT.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+void main()
+{
+    int a, b;
+    clrscr();
+
+    cout << "Enter two numbers: ";
+    cin >> a >> b;
+
+    try
+    {
+        if (b == 0)
+            throw b;
+
+        cout << "\nDivision = " << (float)a / b;
+    }
+    catch (int x)
+    {
+        cout << "\nError: Division by zero is not allowed!";
+    }
+
+    getch();
+}
+` },
+
+{ t:"Copy Constructor", f:"COPYCONS.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Number
+{
+    int value;
+
+public:
+    Number(int x)
+    {
+        value = x;
+    }
+
+    Number(Number &n)
+    {
+        value = n.value;
+        cout << "Copy Constructor Called" << endl;
+    }
+
+    void display()
+    {
+        cout << "Value = " << value << endl;
+    }
+};
+
+void main()
+{
+    Number n1(100);
+    clrscr();
+
+    cout << "Original Object:" << endl;
+    n1.display();
+
+    Number n2(n1);
+
+    cout << "\nCopied Object:" << endl;
+    n2.display();
+
+    getch();
+}
+` },
+
+{ t:"Destructor Demonstration", f:"DESTRUCT.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Demo
+{
+public:
+    Demo()
+    {
+        cout << "Constructor Called" << endl;
+    }
+
+    ~Demo()
+    {
+        cout << "Destructor Called" << endl;
+    }
+
+    void display()
+    {
+        cout << "Inside Display Function" << endl;
+    }
+};
+
+void main()
+{
+    clrscr();
+
+    cout << "Entering Block" << endl;
+
+    {
+        Demo obj;
+        obj.display();
+    }
+
+    cout << "Outside Block" << endl;
+
+    getch();
+}
+` },
+
+{ t:"Array of Objects (Student)", f:"ARRSTUD.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Student
+{
+    int roll;
+    char name[20];
+    float marks;
+
+public:
+    void getdata()
+    {
+        cout << "Enter roll number: ";
+        cin >> roll;
+
+        cout << "Enter name: ";
+        cin >> name;
+
+        cout << "Enter marks: ";
+        cin >> marks;
+    }
+
+    void display()
+    {
+        cout << "\nRoll Number: " << roll;
+        cout << "\nName: " << name;
+        cout << "\nMarks: " << marks << endl;
+    }
+};
+
+void main()
+{
+    Student s[3];
+    int i;
+    clrscr();
+
+    for (i = 0; i < 3; i++)
+    {
+        cout << "\nEnter details of Student "
+             << i + 1 << endl;
+        s[i].getdata();
+    }
+
+    cout << "\n----- Student Records -----\n";
+
+    for (i = 0; i < 3; i++)
+    {
+        s[i].display();
+    }
+
+    getch();
+}
+` },
+
+{ t:"Pointer to Object", f:"OBJPOINTER.CPP", code:String.raw`#include <iostream.h>
+#include <conio.h>
+
+class Rectangle
+{
+    int length, breadth;
+
+public:
+    void getdata()
+    {
+        cout << "Enter length: ";
+        cin >> length;
+
+        cout << "Enter breadth: ";
+        cin >> breadth;
+    }
+
+    void area()
+    {
+        cout << "Area = " << length * breadth;
+    }
+};
+
+void main()
+{
+    Rectangle obj;
+    Rectangle *ptr;
+    clrscr();
+
+    ptr = &obj;
+
+    ptr->getdata();
+
+    cout << "\nUsing Pointer to Object:\n";
+    ptr->area();
+
+    getch();
+}
+` },
+
+{ t:"File Handling (Write and Read)", f:"FILECPP.CPP", code:String.raw`#include <iostream.h>
+#include <fstream.h>
+#include <conio.h>
+
+void main()
+{
+    ofstream fout;
+    ifstream fin;
+    char text[100];
+    clrscr();
+
+    fout.open("DATA.TXT");
+
+    if (!fout)
+    {
+        cout << "Unable to create file!";
+        getch();
+        return;
+    }
+
+    cout << "Enter a line of text: ";
+    cin.getline(text, 100);
+
+    fout << text;
+    fout.close();
+
+    fin.open("DATA.TXT");
+
+    if (!fin)
+    {
+        cout << "Unable to open file!";
+        getch();
+        return;
+    }
+
+    cout << "\nContent of File:\n";
+
+    fin.getline(text, 100);
+    cout << text;
+
+    fin.close();
+
+    getch();
+}
 ` }
+    
 ]
 };
