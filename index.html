@@ -2806,9 +2806,9 @@ if (pasteCodeInput) {
   });
 }
 
-// ============================================================================
+// ==========================================================================
 // MOUSE WHEEL SCROLLING INSIDE EMULATOR
-// ============================================================================
+// ==========================================================================
 dosBox.addEventListener("wheel", async (e) => {
   // Only trigger if compiler is running and not currently frozen
   if (!dosCi || (typeof isBusy === "function" && isBusy())) return;
