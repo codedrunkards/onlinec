@@ -5,5 +5,5 @@
     <br />
     <b>ISM-Philippines</b>
   </a>
-  <p><i>Special thanks to ISM-Philippines for sponsoring this project.</i></p>
+  <p><i>Special thanks to ISM-Philippines for sponsoring this project</i></p>
 </div>
