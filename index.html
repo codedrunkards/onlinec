@@ -1781,6 +1781,37 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   }
   .saved-item:hover { border-color: var(--cyan-accent); }
   .saved-item-name { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); }
+
+  /* Sleek blocker that permanently hides and locks out Turbo C++'s row 0 menu */
+  .dos-top-bar-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4.2%;
+    min-height: 24px;
+    background: #14171d;
+    border-bottom: 2px solid var(--teal-accent);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    color: var(--cyan-accent);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    pointer-events: all; /* Blocks all clicks from ever touching the DOS menu */
+    user-select: none;
+  }
+  body.is-fullscreen .dos-top-bar-cover {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 24px;
+    z-index: 100010;
+  }
   
 </style>
 </head>
@@ -1938,22 +1969,30 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   <!-- Emulator Display Card -->
   <div id="emulator-card">
     <div id="dos-wrapper">
+      <!-- Permanent cover over row 0 menu bar -->
+      <div class="dos-top-bar-cover">⚡ Turbo C++ 3.2 Workspace</div>
       <div id="dos" tabindex="0"></div>
     </div>
   </div>
 
   <!-- Direct Actions Horizontal Panel -->
   <div class="direct-actions-card" id="direct-actions-panel">
-    <div class="direct-actions-title">⚡ Use these buttons for direct actions:</div>
+    <div class="direct-actions-title">⚡ Direct Actions:</div>
     <div class="direct-actions-buttons">
-      <button type="button" class="touch-btn" id="tb-paste">📋 Paste Code</button>
+      <button type="button" class="touch-btn" id="tb-paste">📋 Paste</button>
+      <button type="button" class="touch-btn" id="tb-new">📄 New</button>
+      <button type="button" class="touch-btn" id="tb-open">📂 Open<span class="sc"> (F3)</span></button>
+      <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
+      <button type="button" class="touch-btn" id="tb-saveas">💾 Save As</button>
+      <button type="button" class="touch-btn" id="tb-compile">⚙️ Compile<span class="sc"> (Alt+F9)</span></button>
       <button type="button" class="touch-btn" id="tb-run">▶️ Run<span class="sc"> (Ctrl+F9)</span></button>
       <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output<span class="sc"> (Alt+F5)</span></button>
-      <button type="button" class="touch-btn" id="tb-clear">🧹 Clear<span class="sc"> (Ctrl+Del)</span></button>
-      <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
+      <button type="button" class="touch-btn" id="tb-undo">↩️ Undo</button>
+      <button type="button" class="touch-btn" id="tb-redo">↪️ Redo</button>
+      <button type="button" class="touch-btn" id="tb-clear">🧹 Clear</button>
       <button type="button" class="touch-btn" id="tb-download"><svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg> Download</button>
-      <button type="button" class="touch-btn" id="tb-saved">💾 My Saved Programs</button>
-      <button type="button" class="touch-btn" id="tb-fixmouse">🖱️ Fix Mouse</button>
+      <button type="button" class="touch-btn" id="tb-saved">💾 My Saved</button>
+      <button type="button" class="touch-btn" id="tb-esc">Esc</button>
     </div>
   </div>
 
@@ -2240,13 +2279,6 @@ void main() {
     console.warn("Storage access restricted:", e);
   }
 })();
-</script>
-
-<script>
-  // Never let the emulator lock the mouse (this is what freezes clicks)
-  try {
-    Element.prototype.requestPointerLock = function () { return Promise.resolve(); };
-  } catch (e) {}
 </script>
   
 <!-- js-dos scripts -->
@@ -2643,25 +2675,6 @@ function startAutoSave() {
     autoSaving = false;
   }, 4000);
 }
-
-
-// DOSBox caches folder listings, so files written from the browser stay hidden
-// until the cache is rescanned. File > DOS shell > RESCAN > EXIT does that.
-async function refreshDosDirCache() {
-  if (!dosCi) return;
-  dosBox.focus();
-  clearKeyMatrix();
-  await dosEscapeAll();
-  await dosCombo([KBD.LALT], 70);            // Alt+F  (File menu)
-  await delay(200);
-  await pressDosKey(68, false, 25, 1000);    // D      (DOS shell)
-  await typeDosText("z:\\rescan");
-  await pressDosKey(KBD.ENTER, false, 25, 600);
-  await typeDosText("exit");
-  await pressDosKey(KBD.ENTER, false, 25, 1000);
-  await dosEscapeAll();
-}
-
   
 // Files we have already opened in the Turbo C++ editor during this session
 const openedInEditor = new Set();
@@ -2970,48 +2983,245 @@ document.addEventListener("fullscreenchange", () => {
   }
 });
 
+  
 // ============================================================================
-// 5. DIRECT ACTION BUTTONS (With compiler status check)
+// 5. DIRECT ACTION BUTTONS (Clean, Native & Reliable)
 // ============================================================================
-if (tbPaste) {
-  tbPaste.addEventListener("click", () => {
-    if (!ensureCompilerStarted()) return;
-    openModal();
-  });
+async function runCompilerAction(actionFn) {
+  if (!ensureCompilerStarted()) return;
+  dosBox.focus();
+  const canvas = dosBox.querySelector("canvas");
+  if (canvas) canvas.focus();
+  clearKeyMatrix();
+  await delay(20);
+  await actionFn();
+  clearKeyMatrix();
 }
 
+if (tbPaste) tbPaste.addEventListener("click", () => { if (ensureCompilerStarted()) openModal(); });
+
+// New File (Alt + F -> N)
+const tbNew = document.getElementById("tb-new");
+if (tbNew) {
+  tbNew.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], 70); // Alt+F
+    await delay(120);
+    await pressDosKey(78, false, 25, 40); // N (New)
+    showToast("Created New File");
+  }));
+}
+
+// Open File (F3)
+const tbOpenBtn = document.getElementById("tb-open");
+if (tbOpenBtn) {
+  tbOpenBtn.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await pressDosKey(KBD.F3, false, 25, 40);
+    showToast("Open File Dialog (F3)");
+  }));
+}
+
+// Save File (F2)
+if (tbSave) {
+  tbSave.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await pressDosKey(KBD.F2, false, 25, 40);
+    showToast("File Saved (F2)");
+  }));
+}
+
+// Save File As (Alt + F -> A)
+const tbSaveAs = document.getElementById("tb-saveas");
+if (tbSaveAs) {
+  tbSaveAs.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], 70); // Alt+F
+    await delay(120);
+    await pressDosKey(65, false, 25, 40); // A (Save As)
+    showToast("Save File As Dialog");
+  }));
+}
+
+// Compile (Alt + F9)
+const tbCompile = document.getElementById("tb-compile");
+if (tbCompile) {
+  tbCompile.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], KBD.F9);
+    showToast("Compiling (Alt+F9)...");
+  }));
+}
+
+// Run (Ctrl + F9)
 if (tbRun) {
-  tbRun.addEventListener("click", async () => {
-    if (!ensureCompilerStarted()) return;
-    dosCi.sendKeyEvent(KBD.LCTRL, true);
-    await delay(10);
-    dosCi.sendKeyEvent(KBD.F9, true);
-    await delay(30);
-    dosCi.sendKeyEvent(KBD.F9, false);
-    dosCi.sendKeyEvent(KBD.LCTRL, false);
+  tbRun.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LCTRL], KBD.F9);
     showToast("Running Program (Ctrl+F9)...");
-  });
+  }));
 }
 
+// Output Screen (Alt + F5)
 if (tbUserscreen) {
-  tbUserscreen.addEventListener("click", async () => {
-    if (!ensureCompilerStarted()) return;
-    dosCi.sendKeyEvent(KBD.LALT, true);
-    await delay(10);
-    dosCi.sendKeyEvent(KBD.F5, true);
-    await delay(30);
-    dosCi.sendKeyEvent(KBD.F5, false);
-    dosCi.sendKeyEvent(KBD.LALT, false);
-    showToast("Toggled Output Screen (Alt+F5)");
-  });
+  tbUserscreen.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], KBD.F5);
+    showToast("Output Screen (Alt+F5)");
+  }));
 }
 
+// Undo (Alt + Backspace)
+const tbUndo = document.getElementById("tb-undo");
+if (tbUndo) {
+  tbUndo.addEventListener("click", () => runCompilerAction(async () => {
+    await dosCombo([KBD.LALT], KBD.BACKSPACE);
+    showToast("Undo (Alt+Bksp)");
+  }));
+}
+
+// Redo (Shift + Alt + Backspace)
+const tbRedo = document.getElementById("tb-redo");
+if (tbRedo) {
+  tbRedo.addEventListener("click", () => runCompilerAction(async () => {
+    await dosCombo([KBD.LSHIFT, KBD.LALT], KBD.BACKSPACE);
+    showToast("Redo");
+  }));
+}
+
+// Clear Entire Workspace
 if (tbClear) {
-  tbClear.addEventListener("click", async () => {
-    if (!ensureCompilerStarted()) return;
+  tbClear.addEventListener("click", () => runCompilerAction(async () => {
     await clearEditorWindow();
     showToast("Workspace cleared");
-  });
+  }));
+}
+
+// Esc Key
+if (tbEsc) {
+  tbEsc.addEventListener("click", () => runCompilerAction(async () => {
+    await pressDosKey(KBD.ESC, false, 25, 40);
+  }));
+}
+
+// ============================================================================
+// 5. DIRECT ACTION BUTTONS (Clean, Native & Reliable)
+// ============================================================================
+async function runCompilerAction(actionFn) {
+  if (!ensureCompilerStarted()) return;
+  dosBox.focus();
+  const canvas = dosBox.querySelector("canvas");
+  if (canvas) canvas.focus();
+  clearKeyMatrix();
+  await delay(20);
+  await actionFn();
+  clearKeyMatrix();
+}
+
+if (tbPaste) tbPaste.addEventListener("click", () => { if (ensureCompilerStarted()) openModal(); });
+
+// New File (Alt + F -> N)
+const tbNew = document.getElementById("tb-new");
+if (tbNew) {
+  tbNew.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], 70); // Alt+F
+    await delay(120);
+    await pressDosKey(78, false, 25, 40); // N (New)
+    showToast("Created New File");
+  }));
+}
+
+// Open File (F3)
+const tbOpenBtn = document.getElementById("tb-open");
+if (tbOpenBtn) {
+  tbOpenBtn.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await pressDosKey(KBD.F3, false, 25, 40);
+    showToast("Open File Dialog (F3)");
+  }));
+}
+
+// Save File (F2)
+if (tbSave) {
+  tbSave.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await pressDosKey(KBD.F2, false, 25, 40);
+    showToast("File Saved (F2)");
+  }));
+}
+
+// Save File As (Alt + F -> A)
+const tbSaveAs = document.getElementById("tb-saveas");
+if (tbSaveAs) {
+  tbSaveAs.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], 70); // Alt+F
+    await delay(120);
+    await pressDosKey(65, false, 25, 40); // A (Save As)
+    showToast("Save File As Dialog");
+  }));
+}
+
+// Compile (Alt + F9)
+const tbCompile = document.getElementById("tb-compile");
+if (tbCompile) {
+  tbCompile.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], KBD.F9);
+    showToast("Compiling (Alt+F9)...");
+  }));
+}
+
+// Run (Ctrl + F9)
+if (tbRun) {
+  tbRun.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LCTRL], KBD.F9);
+    showToast("Running Program (Ctrl+F9)...");
+  }));
+}
+
+// Output Screen (Alt + F5)
+if (tbUserscreen) {
+  tbUserscreen.addEventListener("click", () => runCompilerAction(async () => {
+    await dosEscapeAll();
+    await dosCombo([KBD.LALT], KBD.F5);
+    showToast("Output Screen (Alt+F5)");
+  }));
+}
+
+// Undo (Alt + Backspace)
+const tbUndo = document.getElementById("tb-undo");
+if (tbUndo) {
+  tbUndo.addEventListener("click", () => runCompilerAction(async () => {
+    await dosCombo([KBD.LALT], KBD.BACKSPACE);
+    showToast("Undo (Alt+Bksp)");
+  }));
+}
+
+// Redo (Shift + Alt + Backspace)
+const tbRedo = document.getElementById("tb-redo");
+if (tbRedo) {
+  tbRedo.addEventListener("click", () => runCompilerAction(async () => {
+    await dosCombo([KBD.LSHIFT, KBD.LALT], KBD.BACKSPACE);
+    showToast("Redo");
+  }));
+}
+
+// Clear Entire Workspace
+if (tbClear) {
+  tbClear.addEventListener("click", () => runCompilerAction(async () => {
+    await clearEditorWindow();
+    showToast("Workspace cleared");
+  }));
+}
+
+// Esc Key
+if (tbEsc) {
+  tbEsc.addEventListener("click", () => runCompilerAction(async () => {
+    await pressDosKey(KBD.ESC, false, 25, 40);
+  }));
 }
   
 // ============================================================================
@@ -3485,191 +3695,7 @@ document.getElementById("saved-inject-btn").addEventListener("click", async () =
 
   dosBox.addEventListener("contextmenu", (e) => e.preventDefault());
 })();
-
-
-// ============================================================================
-// INPUT RECOVERY: frees a stuck mouse / keys after output screen or fullscreen
-// ============================================================================
-function recoverInput() {
-  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
-  try {
-    if (dosCi) {
-      for (let b = 0; b < 3; b++) { try { dosCi.sendMouseButton(b, false); } catch (e) {} }
-      clearKeyMatrix();
-      [KBD.LSHIFT, KBD.RSHIFT, KBD.LCTRL, KBD.RCTRL, KBD.LALT, KBD.RALT].forEach(k => {
-        try { dosCi.sendKeyEvent(k, false); } catch (e) {}
-      });
-    }
-  } catch (e) {}
-  const c = dosBox.querySelector("canvas");
-  if (c) c.style.pointerEvents = "auto";
-}
-["fullscreenchange", "webkitfullscreenchange", "pointerlockchange", "focus", "visibilitychange"]
-  .forEach(ev => (ev === "focus" ? window : document).addEventListener(ev, () => setTimeout(recoverInput, 50)));
-document.addEventListener("pointerdown", (e) => {
-  if (document.pointerLockElement) recoverInput();
-}, true);
-// After switching to/from the output screen, release everything
-["tb-userscreen", "tb-run"].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener("click", () => setTimeout(recoverInput, 300));
-});
-
-
-// ============================================================================
-// MOUSE GUARD + FIX MOUSE
-// ============================================================================
-function releaseBrowserMouse() {
-  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
-  if (dosCi) { try { dosCi.sendMouseButton(0, false); } catch (e) {} }
-}
-
-(function () {
-  let downInDos = false;
-
-  window.addEventListener("pointerdown", (e) => {
-    downInDos = !!(e.target && e.target.closest && e.target.closest("#dos"));
-  }, true);
-
-  function endPointer(e) {
-    // free any pointer capture, so page buttons can be clicked again
-    try {
-      const el = e.target;
-      if (el && el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
-    } catch (x) {}
-    // make sure DOS never keeps thinking a button is held down
-    if (downInDos) {
-      downInDos = false;
-      setTimeout(releaseBrowserMouse, 150);
-    }
-  }
-  window.addEventListener("pointerup", endPointer, true);
-  window.addEventListener("pointercancel", endPointer, true);
-  window.addEventListener("lostpointercapture", endPointer, true);
-
-  async function fixMouse() {
-    if (!ensureCompilerStarted()) return;
-    showBusy("Resetting the mouse...");
-    try {
-      releaseBrowserMouse();
-      await delay(100);
-      await refreshDosDirCache();     // DOS shell round trip makes Turbo C++ re-initialise its mouse
-      releaseBrowserMouse();
-      showToast("Mouse reset done");
-    } catch (e) {
-      console.error("Fix mouse failed:", e);
-    } finally {
-      hideBusy();
-    }
-  }
-  window.fixMouse = fixMouse;
-
-  const btn = document.getElementById("tb-fixmouse");
-  if (btn) btn.addEventListener("click", fixMouse);
-
-  // Keyboard backup (works even if mouse clicks are dead): Ctrl+Alt+M
-  window.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.altKey && (e.key === "m" || e.key === "M")) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      fixMouse();
-    }
-  }, true);
-})();
-
-// ============================================================================
-// INTERNAL MENU CLICKS -> EXTERNAL FUNCTIONS
-// ============================================================================
-const MENU_DEBUG = /[?&]debugmenu=1/.test(location.search);
-
-const MENU_BAR = {
-  file:    { c1: 7,  c2: 12, left: 6,  right: 27, items: { 3: "open", 4: "save", 5: "save", 6: "save" } },
-  run:     { c1: 27, c2: 31, left: 26, right: 55, items: { 2: "run" } },
-  compile: { c1: 32, c2: 40, left: 31, right: 60, items: { 2: "run", 3: "run" } }
-};
-
-(function () {
-  let openMenu = null, swallow = false, swallowTimer = null, mouseWatchUntil = 0;
-
-  function cellOf(e) {
-    const c = dosBox.querySelector("canvas");
-    if (!c) return null;
-    const r = c.getBoundingClientRect();
-    if (e.clientX < r.left || e.clientX >= r.right || e.clientY < r.top || e.clientY >= r.bottom) return null;
-    return {
-      col: Math.floor((e.clientX - r.left) / r.width * 80),
-      row: Math.floor((e.clientY - r.top) / r.height * 25)
-    };
-  }
-
-  async function doAction(action) {
-    await delay(250);                                   // let the click finish first
-    for (let i = 0; i < 3; i++) await pressDosKey(KBD.ESC, false, 30, 120);   // make sure the native menu is closed
-    await delay(100);
-    releaseBrowserMouse();
-    if (action === "open") {
-      document.getElementById("btn-open-saved").click();
-    } else if (action === "save") {
-      if (tbSave) tbSave.click();
-    } else if (action === "run") {
-      mouseWatchUntil = Date.now() + 60000;             // free the mouse when a key is pressed to leave the output screen
-      if (tbRun) tbRun.click();
-      [500, 1500, 3000].forEach(t => setTimeout(releaseBrowserMouse, t));
-    }
-  }
-
-  window.addEventListener("pointerdown", (e) => {
-    if (!dosCi || isBusy()) return;
-    if (!(e.target && e.target.closest && e.target.closest("#dos"))) return;
-    const p = cellOf(e);
-    if (!p) return;
-    if (MENU_DEBUG) showToast("row " + p.row + ", col " + p.col, 1500);
-
-    // A menu title was clicked earlier: did this click land on one of its items?
-    if (openMenu) {
-      const m = MENU_BAR[openMenu];
-      const action = (p.col >= m.left && p.col <= m.right) ? m.items[p.row] : null;
-      if (action) {
-        openMenu = null;
-        swallow = true;
-        clearTimeout(swallowTimer);
-        swallowTimer = setTimeout(() => { swallow = false; }, 500);
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        doAction(action);
-        return;
-      }
-    }
-
-    // Did this click land on a menu title in the top bar?
-    openMenu = null;
-    if (p.row === 0) {
-      for (const key in MENU_BAR) {
-        const m = MENU_BAR[key];
-        if (p.col >= m.c1 && p.col <= m.c2) { openMenu = key; break; }
-      }
-    }
-  }, true);
-
-  // Hide the rest of that click from DOS
-  ["pointerup", "mousedown", "mouseup", "click"].forEach((t) => {
-    window.addEventListener(t, (e) => {
-      if (swallow && e.target && e.target.closest && e.target.closest("#dos")) {
-        e.stopImmediatePropagation();
-        if (e.cancelable) e.preventDefault();
-        if (t === "click") swallow = false;
-      }
-    }, true);
-  });
-
-  window.addEventListener("keydown", () => {
-    openMenu = null;
-    // after Run from the menu, the first key press (leaving the output screen) also frees the mouse
-    if (Date.now() < mouseWatchUntil) {
-      [300, 900].forEach(t => setTimeout(releaseBrowserMouse, t));
-    }
-  }, true);
-})();
+  
   
 // ============================================================================
 // 6. GLOBAL SHORTCUTS
