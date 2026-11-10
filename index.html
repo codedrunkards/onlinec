@@ -3578,10 +3578,7 @@ document.addEventListener("pointerdown", (e) => {
 // ============================================================================
 function releaseBrowserMouse() {
   try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
-  if (dosCi) {
-    for (let b = 0; b < 3; b++) { try { dosCi.sendMouseButton(b, false); } catch (e) {} }
-    try { dosCi.sendMouseSync(); } catch (e) {}
-  }
+  if (dosCi) { try { dosCi.sendMouseButton(0, false); } catch (e) {} }
 }
 
 (function () {
@@ -3600,7 +3597,7 @@ function releaseBrowserMouse() {
     // make sure DOS never keeps thinking a button is held down
     if (downInDos) {
       downInDos = false;
-      releaseBrowserMouse();
+      setTimeout(releaseBrowserMouse, 150);
     }
   }
   window.addEventListener("pointerup", endPointer, true);
@@ -3635,6 +3632,90 @@ function releaseBrowserMouse() {
       fixMouse();
     }
   }, true);
+})();
+
+// ============================================================================
+// INTERNAL MENU CLICKS -> EXTERNAL FUNCTIONS
+// ============================================================================
+const MENU_DEBUG = /[?&]debugmenu=1/.test(location.search);   // open the site with ?debugmenu=1 to see row/col of every click
+
+// Columns/rows are cell positions on the 80x25 screen. Adjust here if a click misses.
+const MENU_BAR = {
+  file:    { c1: 7,  c2: 12, left: 6,  right: 27, items: { 3: "open", 4: "save", 5: "save", 6: "save" } },
+  run:     { c1: 27, c2: 31, left: 26, right: 55, items: { 2: "run" } },
+  compile: { c1: 32, c2: 40, left: 31, right: 60, items: { 2: "run", 3: "run" } }
+};
+
+(function () {
+  let openMenu = null, swallow = false, swallowTimer = null;
+
+  function cellOf(e) {
+    const c = dosBox.querySelector("canvas");
+    if (!c) return null;
+    const r = c.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX >= r.right || e.clientY < r.top || e.clientY >= r.bottom) return null;
+    return {
+      col: Math.floor((e.clientX - r.left) / r.width * 80),
+      row: Math.floor((e.clientY - r.top) / r.height * 25)
+    };
+  }
+
+  async function doAction(action) {
+    await pressDosKey(KBD.ESC, false, 30, 80);      // close the native menu first
+    await pressDosKey(KBD.ESC, false, 30, 80);
+    await delay(100);
+    if (action === "open") document.getElementById("btn-open-saved").click();
+    else if (action === "save" && tbSave) tbSave.click();
+    else if (action === "run" && tbRun) tbRun.click();
+  }
+
+  window.addEventListener("pointerdown", (e) => {
+    if (!dosCi || isBusy()) return;
+    if (!(e.target && e.target.closest && e.target.closest("#dos"))) return;
+    const p = cellOf(e);
+    if (!p) return;
+    if (MENU_DEBUG) showToast("row " + p.row + ", col " + p.col, 1500);
+
+    // A menu is open: did this click land on one of its items?
+    if (openMenu) {
+      const m = MENU_BAR[openMenu];
+      const action = (p.col >= m.left && p.col <= m.right) ? m.items[p.row] : null;
+      if (action) {
+        openMenu = null;
+        swallow = true;
+        clearTimeout(swallowTimer);
+        swallowTimer = setTimeout(() => { swallow = false; }, 500);
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        setTimeout(() => doAction(action), 0);
+        return;
+      }
+    }
+
+    // Did this click land on a menu title in the top bar?
+    const prev = openMenu;
+    openMenu = null;
+    if (p.row === 0) {
+      for (const key in MENU_BAR) {
+        const m = MENU_BAR[key];
+        if (p.col >= m.c1 && p.col <= m.c2) { openMenu = (prev === key) ? null : key; break; }
+      }
+    }
+  }, true);
+
+  // Hide the rest of that click from DOS
+  ["pointerup", "mousedown", "mouseup", "click", "touchstart", "touchend"].forEach((t) => {
+    window.addEventListener(t, (e) => {
+      if (swallow && e.target && e.target.closest && e.target.closest("#dos")) {
+        e.stopImmediatePropagation();
+        if (e.cancelable) e.preventDefault();
+        if (t === "click") swallow = false;
+      }
+    }, true);
+  });
+
+  // Any key press (like Esc) may close the menu
+  window.addEventListener("keydown", () => { openMenu = null; }, true);
 })();
   
 // ============================================================================
