@@ -437,14 +437,35 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     background: #000000;
     display: block;
     outline: none;
-    clip-path: inset(4.2% 0 0 0); /* Permanently crops out the top menu bar */
-    margin-top: -3.8%;            /* Removes the gap */
   }
 
   #dos canvas {
     max-width: 100% !important;
     height: auto !important;
   }
+
+    /* Covers over the Turbo C++ menu bar, window title bar and status line (positioned by JS) */
+  .dos-shield {
+    position: absolute;
+    display: none;
+    z-index: 200;
+    box-sizing: border-box;
+    align-items: center;
+    padding: 0 12px;
+    background: transparent;
+    color: transparent;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(9px, 1.5vw, 13px);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+  }
+  .dos-shield.solid { background: #0b0c10; color: var(--cyan-accent); }
+  #dos-shield-top.solid { border-bottom: 1px solid var(--teal-accent); }
 
   /* Direct Action Buttons Panel */
   .direct-actions-card {
@@ -1783,37 +1804,6 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   }
   .saved-item:hover { border-color: var(--cyan-accent); }
   .saved-item-name { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); }
-
-  /* Sleek blocker that permanently hides and locks out Turbo C++'s row 0 menu */
-  .dos-top-bar-cover {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4.2%;
-    min-height: 24px;
-    background: #14171d;
-    border-bottom: 2px solid var(--teal-accent);
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    color: var(--cyan-accent);
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    pointer-events: all; /* Blocks all clicks from ever touching the DOS menu */
-    user-select: none;
-  }
-  body.is-fullscreen .dos-top-bar-cover {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 24px;
-    z-index: 100010;
-  }
   
 </style>
 </head>
@@ -1971,31 +1961,16 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   <!-- Emulator Display Card -->
   <div id="emulator-card">
     <div id="dos-wrapper">
-      <!-- Permanent cover over row 0 menu bar -->
-      <div class="dos-top-bar-cover">⚡ Turbo C++ 3.2 Workspace</div>
       <div id="dos" tabindex="0"></div>
+      <div class="dos-shield" id="dos-shield-top"><span id="dos-filename">TURBO C++ 3.2</span></div>
+      <div class="dos-shield" id="dos-shield-bottom"></div>
     </div>
   </div>
 
   <!-- Direct Actions Horizontal Panel -->
   <div class="direct-actions-card" id="direct-actions-panel">
-    <div class="direct-actions-title">⚡ Direct Actions:</div>
-    <div class="direct-actions-buttons">
-      <button type="button" class="touch-btn" id="tb-paste">📋 Paste</button>
-      <button type="button" class="touch-btn" id="tb-new">📄 New</button>
-      <button type="button" class="touch-btn" id="tb-open">📂 Open<span class="sc"> (F3)</span></button>
-      <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
-      <button type="button" class="touch-btn" id="tb-saveas">💾 Save As</button>
-      <button type="button" class="touch-btn" id="tb-compile">⚙️ Compile<span class="sc"> (Alt+F9)</span></button>
-      <button type="button" class="touch-btn" id="tb-run">▶️ Run<span class="sc"> (Ctrl+F9)</span></button>
-      <button type="button" class="touch-btn" id="tb-userscreen">🖥️ Output<span class="sc"> (Alt+F5)</span></button>
-      <button type="button" class="touch-btn" id="tb-undo">↩️ Undo</button>
-      <button type="button" class="touch-btn" id="tb-redo">↪️ Redo</button>
-      <button type="button" class="touch-btn" id="tb-clear">🧹 Clear</button>
-      <button type="button" class="touch-btn" id="tb-download"><svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg> Download</button>
-      <button type="button" class="touch-btn" id="tb-saved">💾 My Saved</button>
-      <button type="button" class="touch-btn" id="tb-esc">Esc</button>
-    </div>
+    <div class="direct-actions-title">⚡ Use these buttons for direct actions:</div>
+        <div class="direct-actions-buttons" id="action-bar"></div>
   </div>
 
   <!-- Hidden Native File Input for Import -->
@@ -2282,6 +2257,13 @@ void main() {
   }
 })();
 </script>
+
+<script>
+  // Never let the emulator lock the mouse (this is what freezes clicks)
+  try {
+    Element.prototype.requestPointerLock = function () { return Promise.resolve(); };
+  } catch (e) {}
+</script>
   
 <!-- js-dos scripts -->
 <script src="js-dos.js"></script>
@@ -2340,18 +2322,14 @@ const btnModalImport = document.getElementById("btn-modal-import");
 const btnModalClipboard = document.getElementById("btn-modal-clipboard");
 const btnInjectCode = document.getElementById("btn-inject-code");
 
-// Direct Action Buttons
-const tbPaste = document.getElementById("tb-paste");
-const tbRun = document.getElementById("tb-run");
-const tbUserscreen = document.getElementById("tb-userscreen");
-const tbClear = document.getElementById("tb-clear");
-const tbSave = document.getElementById("tb-save");
-
 // Global State
 let dosboxInstance = null;
 let dosCi = null;
 let keyboard = null;
 let toastTimer = null;
+let lastDosFilename = null;   // file that is open in the Turbo C++ editor right now
+let baselineCode = "";        // text we last loaded into it (to know if the user changed it)
+let actionBusy = false;       // true while a key macro runs (only one at a time)
 
 // DOS Scan Code Constants
 const KBD = {
@@ -2564,7 +2542,7 @@ startBtn.addEventListener("click", () => {
 
     // Prepare the workspace (restore saved files, set C:\ as folder) and start the browser auto-save
     emuReadyAt = Date.now();
-    ensureWorkspace().then(startAutoSave);
+    ensureWorkspace();
 
     let nudges = 0;
     const nudgeTimer = setInterval(() => {
@@ -2588,13 +2566,19 @@ startBtn.addEventListener("click", () => {
 });
 
 
+// Start Turbo C++ and prepare the workspace as soon as the page opens
+window.addEventListener("load", () => {
+  bootOverlay = true;
+  showBusy("Starting Turbo C++...");
+  setTimeout(() => startBtn.click(), 300);
+});
+
+
 // ============================================================================
 // WORKSPACE: restore browser-saved files, use C:\ as the folder, auto-save to the browser
 // ============================================================================
 const WS_BOOT_MS = 7000;            // how long to wait for Turbo C++ to finish starting
-let emuReadyAt = 0, wsPromise = null, autoSaveTimer = null, autoSaving = false;
-const knownContent = {};            // NAME.EXT -> last text we know about (so ready-made programs are not auto-saved)
-
+let emuReadyAt = 0, wsPromise = null;
 function readSavedList() {
   try { return JSON.parse(localStorage.getItem("tc_saved_programs") || "[]"); } catch (e) { return []; }
 }
@@ -2615,7 +2599,7 @@ function ensureWorkspace() {
       // Put saved programs on C:\
       const enc = new TextEncoder();
       for (const f of readSavedList()) {
-        try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); knownContent[f.name] = f.code; } catch (e) {}
+          try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); } catch (e) {}
       }
 
       // File > Change dir... > C:\
@@ -2635,39 +2619,10 @@ function ensureWorkspace() {
       console.error("Workspace setup failed:", e);
     } finally {
       bootOverlay = false;
-      if (ownBusy) hideBusy();
+      if (ownBusy && !actionBusy) hideBusy();
     }
   })();
   return wsPromise;
-}
-  
-// Every 4 seconds: copy new/changed programs from C:\ into the browser's saved list
-function startAutoSave() {
-  if (autoSaveTimer) return;
-  autoSaveTimer = setInterval(async () => {
-    if (autoSaving || !dosCi || document.hidden || isBusy()) return;
-    autoSaving = true;
-    try {
-      const tree = await dosCi.fsTree();
-      const files = ((tree && tree.nodes) || []).filter((n) => !n.nodes && /\.(c|cpp|cc|h|hpp)$/i.test(n.name));
-      for (const n of files) {
-        const name = n.name.toUpperCase();
-        const bytes = await dosCi.fsReadFile(n.name);
-        const text = new TextDecoder("utf-8").decode(bytes);
-        if (knownContent[name] === text) continue;     // unchanged, or a ready-made program we inserted
-        knownContent[name] = text;
-        if (!text.trim()) continue;
-        const list = readSavedList();
-        const i = list.findIndex((x) => x.name === name);
-        if (i >= 0) list[i].code = text; else list.push({ name: name, code: text });
-        try {
-          localStorage.setItem("tc_saved_programs", JSON.stringify(list));
-          showToast("Saved " + name + " in your browser");
-        } catch (e) {}
-      }
-    } catch (e) {}
-    autoSaving = false;
-  }, 4000);
 }
   
 // Files we have already opened in the Turbo C++ editor during this session
@@ -2780,10 +2735,148 @@ if (busyOverlay) {
   });
 }
   
+  
+// ============================================================================
+// 3. LIVE CODE INSERTION INTO TURBO C++
+// ============================================================================
 
-// ============================================================================
-// 3. LIVE CODE INSERTION INTO TURBO C++ (Bulletproof 0.3s)
-// ============================================================================
+// Runs ONE key macro at a time. Every action that sends keys to Turbo C++ goes
+// through here, so two macros can never mix. Pass a message to also freeze the
+// page with the "Please wait" popup (use it for anything longer than ~1 second).
+async function exclusive(message, fn) {
+  if (actionBusy) { showToast("Please wait, the previous action is still running..."); return false; }
+  actionBusy = true;
+  if (message) showBusy(message);
+  try {
+    await ensureWorkspace();
+    await fn();
+    return true;
+  } catch (err) {
+    console.error("Action failed:", err);
+    showToast("Something went wrong: " + (err && err.message ? err.message : err));
+    return false;
+  } finally {
+    actionBusy = false;
+    clearKeyMatrix();
+    if (message) hideBusy();
+  }
+}
+
+// Give the keyboard back to the emulator after a button was tapped
+function focusDos() {
+  try {
+    dosBox.focus({ preventScroll: true });
+    const c = dosBox.querySelector("canvas");
+    if (c) c.focus({ preventScroll: true });
+  } catch (e) {}
+}
+
+// Start of every key macro: focus the emulator, release stuck keys, close any dialog
+async function prepDos() {
+  focusDos();
+  clearKeyMatrix();
+  await delay(50);
+  await dosEscapeAll();
+}
+
+// ---- Saved list in the browser (localStorage) ----
+function saveToBrowserList(name, code) {
+  const list = readSavedList();
+  const i = list.findIndex((x) => x.name === name);
+  if (i >= 0) list[i].code = code; else list.push({ name: name, code: code });
+  try {
+    localStorage.setItem("tc_saved_programs", JSON.stringify(list));
+    return true;
+  } catch (e) {
+    showToast("Browser storage is full or blocked. Use Download to keep your code.", 5000);
+    return false;
+  }
+}
+
+function sameCode(a, b) {
+  const n = (s) => String(s || "").replace(/\r\n/g, "\n").trim();
+  return n(a) === n(b);
+}
+
+// ---- Reading the file that is open in the editor ----
+async function readDosFile(name) {
+  try { return await dosCi.fsReadFile(name); } catch (e) {}
+  // fallback: the file may be stored in another letter case
+  const tree = await dosCi.fsTree();
+  const hit = ((tree && tree.nodes) || []).find((n) => !n.nodes && n.name.toUpperCase() === name.toUpperCase());
+  if (!hit) throw new Error(name + " was not found");
+  return await dosCi.fsReadFile(hit.name);
+}
+
+// F2 saves the open window (it always has a name, so Turbo C++ never asks anything),
+// then we read the saved file from C:\. Returns null when no file is open.
+async function readCurrentFile() {
+  if (!lastDosFilename) return null;
+  await prepDos();
+  await pressDosKey(KBD.F2, false, 25, 500);
+  let bytes = null, lastErr = null;
+  for (let i = 0; i < 5 && !bytes; i++) {
+    try { bytes = await readDosFile(lastDosFilename); }
+    catch (e) { lastErr = e; await delay(200); }
+  }
+  if (!bytes) throw lastErr || new Error("Could not read " + lastDosFilename);
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+// Before another file replaces the open one, keep the user's edits in the browser list
+async function stashCurrentFile() {
+  if (!lastDosFilename) return;
+  try {
+    const text = await readCurrentFile();
+    if (text && text.trim() && !sameCode(text, baselineCode)) saveToBrowserList(lastDosFilename, text);
+  } catch (e) {
+    console.warn("Could not keep the open file:", e);
+  }
+}
+
+function nextNoname() {
+  const saved = readSavedList();
+  for (let i = 0; i < 100; i++) {
+    const n = "NONAME" + String(i).padStart(2, "0") + ".CPP";
+    if (!openedInEditor.has(n) && !saved.some((x) => x.name === n)) return n;
+  }
+  return "NONAME99.CPP";
+}
+
+// THE one function that puts a file into the Turbo C++ editor.
+//   code === null  -> brand-new empty file
+// Call it only inside exclusive(), so the page is frozen while keys are sent.
+async function openCodeInEditor(name, code) {
+  const isNew = code === null;
+  await stashCurrentFile();
+  if (!isNew) {
+    if (typeof dosCi.fsWriteFile !== "function") throw new Error("Filesystem write unavailable in this session.");
+    await dosCi.fsWriteFile(name, new TextEncoder().encode(code));
+  }
+  await prepDos();
+
+  const alreadyOpen = openedInEditor.has(name);
+  setBusyText("Opening " + name + " in Turbo C++...");
+  await openFileInEditor(name);              // F3: switches to the window if open, else loads / creates it
+
+  if (alreadyOpen && !isNew) {
+    // Window may be empty/old/edited: wipe it and read the fresh code from disk
+    await delay(100);
+    setBusyText("Loading the code...");
+    await clearEditorWindow();
+    await readFileIntoEditor(name);
+  } else {
+    // First time: zoom the new window (F5 toggles, so only do it once)
+    await delay(100);
+    await pressDosKey(KBD.F5, false, 25, 80);
+  }
+  openedInEditor.add(name);
+  setCurrentFile(name);
+  baselineCode = isNew ? "" : code;
+  clearKeyMatrix();
+}
+
+// Used by the Paste/Import dialog, the Ready-made Programs panel, My Saved Programs and WebMCP
 async function injectCodeIntoDos() {
   if (!ensureCompilerStarted()) return;
   const code = pasteCodeInput.value;
@@ -2792,54 +2885,13 @@ async function injectCodeIntoDos() {
     pasteCodeInput.focus();
     return;
   }
+  if (actionBusy) { showToast("Please wait, the previous action is still running..."); return; }
 
   const dosFilename = getSanitizedFilename(injectFilenameInput.value);
-  lastDosFilename = dosFilename;
-  const fullPath = "TURBOC3/BIN/" + dosFilename;
-
-  try {
-    const encoder = new TextEncoder();
-    const uint8 = encoder.encode(code);
-
-    if (typeof dosCi.fsWriteFile === "function") {
-      await dosCi.fsWriteFile(fullPath, uint8);
-      closeModal();
-      showToast(`Loading ${dosFilename}...`);
-
-      dosBox.focus();
-      clearKeyMatrix();
-      await delay(100);
-
-      await dosEscapeAll();
-      await pressDosKey(KBD.F3, false, 25, 180);
-
-      // Type the filename directly into the Turbo C++ Open dialog
-      for (let i = 0; i < dosFilename.length; i++) {
-        const ch = dosFilename[i];
-        const kInfo = charToDosKeys(ch);
-        if (kInfo) {
-          for (const k of kInfo) {
-            await pressDosKey(k.keyCode, k.shift, 14, 12);
-          }
-        }
-      }
-
-      await delay(100);
-      await pressDosKey(KBD.ENTER, false, 25, 180);
-      await delay(120);
-      await pressDosKey(KBD.F5, false, 25, 80); // Zoom editor window
-      clearKeyMatrix();
-
-      showToast(`Loaded ${dosFilename} into Turbo C++!`);
-    } else {
-      showToast("Filesystem write unavailable in this session.");
-    }
-  } catch (err) {
-    console.error("Injection error:", err);
-    showToast("Failed to inject code: " + err.message);
-  }
+  closeModal();
+  const ok = await exclusive("Preparing " + dosFilename + "...", () => openCodeInEditor(dosFilename, code));
+  if (ok) showToast("Loaded " + dosFilename + " into Turbo C++!");
 }
-  
 
 // Modal Buttons
 if (btnOpenPaste) btnOpenPaste.addEventListener("click", openModal);
@@ -2968,134 +3020,198 @@ document.addEventListener("fullscreenchange", () => {
   }
 });
 
-  
 // ============================================================================
-// 5. DIRECT ACTION BUTTONS (Native, Fast & Reliable)
+// 5. ACTION BAR - the ONLY way users control Turbo C++ (the native menu is locked)
+//    To add a button: write one  async function actXxx()  and add one line to ACTIONS.
 // ============================================================================
-async function runCompilerAction(actionFn) {
+async function actNew() {
+  await openCodeInEditor(nextNoname(), null);
+  showToast("New file " + lastDosFilename + " is ready");
+}
+
+function actOpen() {                        // opens "My Saved Programs"
+  document.getElementById("btn-open-saved").click();
+}
+
+async function actSave() {
+  const text = await readCurrentFile();
+  if (!text || !text.trim()) { showToast("Editor is empty, nothing to save!"); return; }
+  if (saveToBrowserList(lastDosFilename, text)) showToast("Saved " + lastDosFilename);
+}
+
+async function actSaveAs() {                // shows the name dialog; the copy is made when you confirm
+  const text = await readCurrentFile();
+  if (!text || !text.trim()) { showToast("Editor is empty, nothing to save!"); return; }
+  saveListCode.value = text;
+  saveListFilename.value = lastDosFilename;
+  saveListModal.classList.add("visible");
+  toggleModalScroll(true);
+}
+
+async function actRun() {
+  focusDos();
+  await dosCombo([KBD.LCTRL], KBD.F9);
+  showToast("Running program (Ctrl+F9)...");
+  setTimeout(recoverInput, 300);
+}
+
+async function actOutput() {
+  focusDos();
+  await dosCombo([KBD.LALT], KBD.F5);
+  showToast("Toggled Output Screen (Alt+F5)");
+  setTimeout(recoverInput, 300);
+}
+
+async function actClear() {
+  await clearEditorWindow();
+  focusDos();
+  showToast("Editor cleared");
+}
+
+async function actUndo() { focusDos(); await dosCombo([KBD.LALT], KBD.BACKSPACE); }                 // Alt+Backspace
+async function actRedo() { focusDos(); await dosCombo([KBD.LSHIFT, KBD.LALT], KBD.BACKSPACE); }     // Shift+Alt+Backspace
+
+async function actDownload() { await openDownloadDialog(); }
+
+// id      : button id is "tb-" + id (or "dom" if given)
+// busy    : text of the "Please wait" popup. Give it to anything that sends many keys.
+// needsFile: button does nothing until a file is open
+// hint    : shortcut shown on the button (hidden on small phones)
+const ACTIONS = [
+  { id: "new",      icon: "📄", label: "New",      busy: "Creating a new file...", run: actNew },
+  { id: "open",     icon: "📂", label: "Open",     run: actOpen },
+  { id: "save",     icon: "💾", label: "Save",     hint: "F2", needsFile: true, busy: "Saving...", run: actSave },
+  { id: "saveas",   icon: "📝", label: "Save As",  needsFile: true, busy: "Reading your code...", run: actSaveAs },
+  { id: "run",      icon: "▶️", label: "Run",      hint: "Ctrl+F9", needsFile: true, run: actRun },
+  { id: "output",   dom: "tb-userscreen", icon: "🖥️", label: "Output", hint: "Alt+F5", run: actOutput },
+  { id: "clear",    icon: "🧹", label: "Clear",    needsFile: true, busy: "Clearing the editor...", run: actClear },
+  { id: "undo",     icon: "↩️", label: "Undo",     needsFile: true, run: actUndo },
+  { id: "redo",     icon: "↪️", label: "Redo",     needsFile: true, run: actRedo },
+  { id: "download", icon: "⬇️", label: "Download", needsFile: true, busy: "Reading your code...", run: actDownload }
+];
+const ACTION_BY_ID = {};
+
+function runAction(a) {
   if (!ensureCompilerStarted()) return;
-  dosBox.focus();
-  const canvas = dosBox.querySelector("canvas");
-  if (canvas) canvas.focus();
-  clearKeyMatrix();
-  await delay(20);
-  await actionFn();
-  clearKeyMatrix();
+  if (a.needsFile && !lastDosFilename) { showToast("Tap New or Open first."); return; }
+  return exclusive(a.busy || null, a.run);
 }
 
-if (tbPaste) tbPaste.addEventListener("click", () => { if (ensureCompilerStarted()) openModal(); });
-
-// New File (Alt + F -> N)
-const tbNew = document.getElementById("tb-new");
-if (tbNew) {
-  tbNew.addEventListener("click", () => runCompilerAction(async () => {
-    await dosEscapeAll();
-    await dosCombo([KBD.LALT], 70); // Alt+F
-    await delay(120);
-    await pressDosKey(78, false, 25, 40); // N (New)
-    showToast("Created New File");
-  }));
-}
-
-// OPEN BUTTON -> Opens "My Saved Programs" browser dialog directly!
-const tbOpenBtn = document.getElementById("tb-open");
-if (tbOpenBtn) {
-  tbOpenBtn.addEventListener("click", () => {
-    document.getElementById("btn-open-saved").click();
+(function buildActionBar() {
+  const bar = document.getElementById("action-bar");
+  if (!bar) return;
+  ACTIONS.forEach((a) => {
+    ACTION_BY_ID[a.id] = a;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "touch-btn";
+    b.id = a.dom || "tb-" + a.id;
+    b.textContent = a.icon + " " + a.label;
+    if (a.hint) {
+      const s = document.createElement("span");
+      s.className = "sc";
+      s.textContent = " (" + a.hint + ")";
+      b.appendChild(s);
+    }
+    b.addEventListener("click", () => runAction(a));
+    bar.appendChild(b);
   });
+})();
+
+// ============================================================================
+// MENU LOCK: the native Turbo C++ menu can no longer be opened by keyboard or mouse
+// ============================================================================
+// Keys that open a menu, quit, or switch / close editor windows. (Our own buttons
+// still send some of them to Turbo C++ - those are sent by code, not by the keyboard.)
+function isLockedKey(e) {
+  const k = e.key;
+  if (k === "F10" || k === "F3" || k === "F6") return true;                // menu bar, Open dialog, next window
+  if (e.ctrlKey && k === "F4") return true;
+  if (e.altKey && !e.ctrlKey) {
+    if (k === "F3" || k === "0" || k === " ") return true;                  // close window, window list, system menu
+    if (/^Key[FESRCDPOWHX]$/.test(e.code || "")) return true;               // Alt+F/E/S/R/C/D/P/O/W/H menus, Alt+X = quit
+  }
+  return false;
 }
 
-// SAVE & SAVE AS BUTTONS -> Open the Save modal to save to browser & disk!
-if (tbSave) {
-  tbSave.addEventListener("click", () => {
-    if (!ensureCompilerStarted()) return;
-    saveListCode.value = pasteCodeInput.value || "";
-    saveListFilename.value = lastDosFilename || "MYPROG.CPP";
-    saveListModal.classList.add("visible");
-    toggleModalScroll(true);
-  });
+window.addEventListener("keydown", (e) => {
+  if (isLockedKey(e)) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+  // F2 (habit!) goes through our Save so the code is also kept in the browser
+  if (e.key === "F2" && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!e.repeat) runAction(ACTION_BY_ID.save);
+  }
+}, true);
+
+// ---- Covers over the menu bar (row 0), the window title bar (row 1) and the status line (row 24) ----
+// They ALWAYS block mouse/touch there. They only turn solid (hiding the picture) while the Turbo C++
+// editor is on screen, so the first lines of a program's output are never covered.
+const shieldTop = document.getElementById("dos-shield-top");
+const shieldBottom = document.getElementById("dos-shield-bottom");
+const fileLabel = document.getElementById("dos-filename");
+
+function setCurrentFile(name) {
+  lastDosFilename = name || null;
+  if (fileLabel) fileLabel.textContent = name ? "TURBO C++ 3.2  |  FILE: " + name : "TURBO C++ 3.2";
 }
 
-const tbSaveAs = document.getElementById("tb-saveas");
-if (tbSaveAs) {
-  tbSaveAs.addEventListener("click", () => {
-    if (!ensureCompilerStarted()) return;
-    saveListCode.value = pasteCodeInput.value || "";
-    saveListFilename.value = lastDosFilename || "MYPROG.CPP";
-    saveListModal.classList.add("visible");
-    toggleModalScroll(true);
-  });
+function layoutShields() {
+  const c = dosBox.querySelector("canvas");
+  const wrap = document.getElementById("dos-wrapper");
+  if (!c || !wrap || !shieldTop || !shieldBottom) return;
+  const r = c.getBoundingClientRect(), w = wrap.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const row = r.height / 25;
+  const place = (el, top, height) => {
+    el.style.left = (r.left - w.left) + "px";
+    el.style.width = r.width + "px";
+    el.style.top = (r.top - w.top + top) + "px";
+    el.style.height = height + "px";
+    el.style.display = "flex";
+  };
+  place(shieldTop, 0, row * 2);
+  place(shieldBottom, row * 24, row);
 }
 
-// Compile (Alt + F9)
-const tbCompile = document.getElementById("tb-compile");
-if (tbCompile) {
-  tbCompile.addEventListener("click", () => runCompilerAction(async () => {
-    await dosEscapeAll();
-    await dosCombo([KBD.LALT], KBD.F9);
-    showToast("Compiling (Alt+F9)...");
-  }));
+function setShieldsSolid(on) {
+  if (shieldTop) shieldTop.classList.toggle("solid", on);
+  if (shieldBottom) shieldBottom.classList.toggle("solid", on);
 }
 
-// Run (Ctrl + F9)
-if (tbRun) {
-  tbRun.addEventListener("click", () => runCompilerAction(async () => {
-    await dosEscapeAll();
-    await dosCombo([KBD.LCTRL], KBD.F9);
-    showToast("Running Program (Ctrl+F9)...");
-  }));
+// Is the Turbo C++ editor on screen? Its menu bar is a light-grey strip across row 0.
+let screenFails = 0, screenReading = false;
+async function lookForEditor() {
+  if (screenReading || actionBusy || !dosCi || document.hidden) return;
+  if (typeof dosCi.screenshot !== "function") { setShieldsSolid(false); return; }
+  screenReading = true;
+  try {
+    const img = await dosCi.screenshot();
+    if (!img || !img.data || !img.width || !img.height) throw new Error("no image");
+    const y = Math.floor(img.height / 25 * 0.5);
+    const step = Math.max(1, Math.floor(img.width / 60));
+    let grey = 0, total = 0;
+    for (let x = 2; x < img.width - 2; x += step) {
+      const i = (y * img.width + x) * 4;
+      total++;
+      if (Math.abs(img.data[i] - 170) < 30 && Math.abs(img.data[i + 1] - 170) < 30 && Math.abs(img.data[i + 2] - 170) < 30) grey++;
+    }
+    setShieldsSolid(total > 0 && grey / total > 0.5);
+    screenFails = 0;
+  } catch (e) {
+    setShieldsSolid(false);                     // when unsure, show the picture (the menu stays locked anyway)
+    if (++screenFails >= 3) clearInterval(editorWatch);
+  }
+  screenReading = false;
 }
-
-// Output Screen (Alt + F5)
-if (tbUserscreen) {
-  tbUserscreen.addEventListener("click", () => runCompilerAction(async () => {
-    await dosEscapeAll();
-    await dosCombo([KBD.LALT], KBD.F5);
-    showToast("Output Screen (Alt+F5)");
-  }));
-}
-
-// Undo (Alt + Backspace)
-const tbUndo = document.getElementById("tb-undo");
-if (tbUndo) {
-  tbUndo.addEventListener("click", () => runCompilerAction(async () => {
-    await dosCombo([KBD.LALT], KBD.BACKSPACE);
-    showToast("Undo (Alt+Bksp)");
-  }));
-}
-
-// Redo (Shift + Alt + Backspace)
-const tbRedo = document.getElementById("tb-redo");
-if (tbRedo) {
-  tbRedo.addEventListener("click", () => runCompilerAction(async () => {
-    await dosCombo([KBD.LSHIFT, KBD.LALT], KBD.BACKSPACE);
-    showToast("Redo");
-  }));
-}
-
-// Clear Workspace (Ctrl+Del)
-if (tbClear) {
-  tbClear.addEventListener("click", () => runCompilerAction(async () => {
-    await clearEditorWindow();
-    showToast("Workspace cleared");
-  }));
-}
-
-// Esc Key
-if (tbEsc) {
-  tbEsc.addEventListener("click", () => runCompilerAction(async () => {
-    await pressDosKey(KBD.ESC, false, 25, 40);
-  }));
-}
-
-
+const editorWatch = setInterval(lookForEditor, 800);
+setInterval(layoutShields, 500);
+window.addEventListener("resize", layoutShields);
+document.addEventListener("fullscreenchange", () => setTimeout(layoutShields, 100));
   
 // ============================================================================
 // DOWNLOAD CODE FROM THE COMPILER (button + confirmation dialog)
 // ============================================================================
-let lastDosFilename = null;   // last file inserted through the Paste dialog
-
-const tbDownload = document.getElementById("tb-download");
 const downloadModal = document.getElementById("download-modal");
 const dlSource = document.getElementById("dl-source");
 const dlCode = document.getElementById("dl-code");
@@ -3104,47 +3220,13 @@ const dlExt = document.getElementById("dl-ext");
 const dlCloseBtn = document.getElementById("dl-close-btn");
 const dlCancelBtn = document.getElementById("dl-cancel-btn");
 const dlConfirmBtn = document.getElementById("dl-confirm-btn");
-
-// Collect user source files from the virtual DOS disk (skips Turbo C++'s own INCLUDE/LIB folders)
-function listDosSources(node, prefix = "", out = {}) {
-  if (!node) return out;
-  let path = node.name ? (prefix ? prefix + "/" + node.name : node.name) : prefix;
-  path = path.replace(/^[.\/]+/, "").replace(/\/{2,}/g, "/");
-  if (node.nodes) {
-    node.nodes.forEach(n => listDosSources(n, path, out));
-  } else if (/\.(c|cpp|cc|cxx|h|hpp|txt)$/i.test(node.name) &&
-             !/\/(include|lib|classlib)\//i.test("/" + path)) {
-    out[path] = node.size;
-  }
-  return out;
-}
-
-async function snapshotSources() {
-  return listDosSources(await dosCi.fsTree());
-}
-
-async function loadDownloadSource(path) {
-  try {
-    const bytes = await dosCi.fsReadFile(path);
-    dlCode.value = new TextDecoder("utf-8").decode(bytes);
-  } catch (err) {
-    console.error("Read error:", err);
-    dlCode.value = "";
-    showToast("Could not read " + path);
-  }
-  const base = path.split("/").pop();
-  const dot = base.lastIndexOf(".");
-  const stem = dot > 0 ? base.slice(0, dot) : base;
-  const ext = dot > 0 ? base.slice(dot + 1).toLowerCase() : "";
-  dlFilename.value = stem.toLowerCase();
-  dlExt.value = ["c", "cpp", "h", "hpp", "txt"].includes(ext) ? "." + ext : ".cpp";
-}
+  
 
 async function openDownloadDialog() {
   if (!ensureCompilerStarted()) return;
   showToast("Grabbing code from compiler...");
   let text = null;
-  try { text = await extractWorkspaceText(); } catch (e) { console.error(e); }
+  try { text = await readCurrentFile(); } catch (e) { console.error(e); }
   if (!text || !text.trim()) { showToast("Workspace is empty, nothing to download!"); return; }
 
   dlCode.value = text;
@@ -3187,7 +3269,6 @@ function confirmDownload() {
   showToast("Downloaded " + fullName);
 }
 
-if (tbDownload) tbDownload.addEventListener("click", openDownloadDialog);
 if (dlCloseBtn) dlCloseBtn.addEventListener("click", closeDownloadModal);
 if (dlCancelBtn) dlCancelBtn.addEventListener("click", closeDownloadModal);
 if (dlConfirmBtn) dlConfirmBtn.addEventListener("click", confirmDownload);
@@ -3195,79 +3276,6 @@ if (downloadModal) {
   downloadModal.addEventListener("click", (e) => {
     if (e.target === downloadModal) closeDownloadModal();
   });
-}
-
-
-// ============================================================================
-// EXTRACT EXACTLY WHAT IS IN THE EDITOR (ignores file name / path completely)
-// ============================================================================
-function findFileInTree(node, name, prefix = "") {
-  if (!node) return null;
-  let p = node.name ? (prefix ? prefix + "/" + node.name : node.name) : prefix;
-  p = p.replace(/^[.\/]+/, "").replace(/\/{2,}/g, "/");
-  if (node.nodes) {
-    for (const n of node.nodes) {
-      const r = findFileInTree(n, name, p);
-      if (r) return r;
-    }
-    return null;
-  }
-  return (node.name && node.name.toUpperCase() === name) ? p : null;
-}
-
-async function extractWorkspaceText() {
-  dosBox.focus();
-  const canvas = dosBox.querySelector("canvas");
-  if (canvas) canvas.focus();
-  clearKeyMatrix();
-  await delay(50);
-
-  const combo = async (mods, key) => {
-    for (const m of mods) { dosCi.sendKeyEvent(m, true); await delay(30); }
-    dosCi.sendKeyEvent(key, true); await delay(40);
-    dosCi.sendKeyEvent(key, false); await delay(40);
-    for (const m of mods.slice().reverse()) { dosCi.sendKeyEvent(m, false); await delay(30); }
-    await delay(90);
-  };
-
-  const K = 75, B = 66, W = 87;
-  const tmpName = "X" + String(Date.now()).slice(-6) + ".TMP";   // unique, so no "overwrite?" prompt
-
-  // Close menus
-  await pressDosKey(KBD.ESC, false, 30, 60);
-  await pressDosKey(KBD.ESC, false, 30, 60);
-
-  // Select the ENTIRE file
-  await combo([KBD.LCTRL], 266);                                   // Ctrl+PgUp  (top of file)
-  await combo([KBD.LCTRL], K); await combo([KBD.LCTRL], B);        // Ctrl+K B   (block start)
-  await combo([KBD.LCTRL], 267);                                   // Ctrl+PgDn  (bottom of file)
-  await combo([KBD.LCTRL], K); await combo([KBD.LCTRL], K);        // Ctrl+K K   (block end)
-
-  // Write the selection to a temp file: Ctrl+K W
-  await combo([KBD.LCTRL], K); await combo([KBD.LCTRL], W);
-  await delay(500);
-
-  const target = "C:\\" + tmpName;
-  for (const ch of target) {
-    const kInfo = charToDosKeys(ch);
-    if (kInfo) for (const k of kInfo) await pressDosKey(k.keyCode, k.shift, 14, 14);
-  }
-  await delay(100);
-  await pressDosKey(KBD.ENTER, false, 25, 300);
-
-  // Wait for the temp file to appear, then read it
-  let foundPath = null;
-  for (let i = 0; i < 15 && !foundPath; i++) {
-    await delay(60);
-    try { foundPath = findFileInTree(await dosCi.fsTree(), tmpName); } catch (e) {}
-  }
-  if (!foundPath) return null;   // editor was empty (nothing to write)
-
-  const bytes = await dosCi.fsReadFile(foundPath);
-  const text = new TextDecoder("utf-8").decode(bytes);
-  try { await dosCi.fsDeleteFile(foundPath); } catch (e) {}   // tidy up
-  clearKeyMatrix();
-  return text;
 }
   
   
@@ -3292,41 +3300,16 @@ document.getElementById("save-close-btn").addEventListener("click", closeSaveMod
 document.getElementById("save-cancel-btn").addEventListener("click", closeSaveModals);
 document.getElementById("view-saved-close-btn").addEventListener("click", closeSaveModals);
 
-if (tbSave) {
-  tbSave.addEventListener("click", async () => {
-    if (!ensureCompilerStarted()) return;
-    showToast("Reading current workspace...");
-
-    let text = null;
-    try { text = await extractWorkspaceText(); } catch (e) { console.error(e); }
-
-    if (!text || !text.trim()) { showToast("Workspace is empty, nothing to save!"); return; }
-
-    saveListCode.value = text;
-    saveListFilename.value = lastDosFilename || "MYPROG.CPP";
-    saveListModal.classList.add("visible");
-    toggleModalScroll(true);
-  });
-}
 
 document.getElementById("save-confirm-btn").addEventListener("click", async () => {
   const fName = getSanitizedFilename(saveListFilename.value);
-  let saved = JSON.parse(localStorage.getItem("tc_saved_programs") || "[]");
-  
-  const existIdx = saved.findIndex(x => x.name === fName);
-  if (existIdx >= 0) saved[existIdx].code = saveListCode.value;
-  else saved.push({ name: fName, code: saveListCode.value });
-  
-  localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
-
-  // Write directly to disk in TURBOC3/BIN
-  if (dosCi) {
-    try {
-      await dosCi.fsWriteFile("TURBOC3/BIN/" + fName, new TextEncoder().encode(saveListCode.value));
-    } catch (e) {}
-  }
+  const code = saveListCode.value;
+  if (!saveToBrowserList(fName, code)) return;
   closeSaveModals();
-  showToast("Saved " + fName + " to your personal list!");
+  if (fName === lastDosFilename) { showToast("Saved " + fName); return; }
+  // new name: make a copy under that name and open it in the editor
+  const ok = await exclusive("Opening " + fName + "...", () => openCodeInEditor(fName, code));
+  if (ok) showToast("Saved as " + fName);
 });
 
 // View Saved Programs
@@ -3359,10 +3342,6 @@ document.getElementById("btn-open-saved").addEventListener("click", () => {
   toggleModalScroll(true);
 });
 
-// Direct Actions "My Saved Programs" button -> same action as the top button
-document.getElementById("tb-saved").addEventListener("click", () => {
-  document.getElementById("btn-open-saved").click();
-});
   
 document.getElementById("btn-back-to-list").addEventListener("click", () => {
   savedProgramsList.style.display = "flex";
@@ -3375,7 +3354,6 @@ document.getElementById("saved-delete-btn").addEventListener("click", async () =
   let saved = JSON.parse(localStorage.getItem("tc_saved_programs") || "[]");
   saved = saved.filter(x => x.name !== delName);
   localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
-  delete knownContent[delName];
   if (dosCi) { try { await dosCi.fsDeleteFile(delName); } catch (e) {} }
   document.getElementById("btn-open-saved").click();
 });
@@ -3559,6 +3537,64 @@ document.getElementById("saved-inject-btn").addEventListener("click", async () =
   });
 
   dosBox.addEventListener("contextmenu", (e) => e.preventDefault());
+})();
+
+
+// ============================================================================
+// INPUT RECOVERY: frees a stuck mouse / keys after output screen or fullscreen
+// ============================================================================
+function recoverInput() {
+  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
+  try {
+    if (dosCi) {
+      for (let b = 0; b < 3; b++) { try { dosCi.sendMouseButton(b, false); } catch (e) {} }
+      clearKeyMatrix();
+      [KBD.LSHIFT, KBD.RSHIFT, KBD.LCTRL, KBD.RCTRL, KBD.LALT, KBD.RALT].forEach(k => {
+        try { dosCi.sendKeyEvent(k, false); } catch (e) {}
+      });
+    }
+  } catch (e) {}
+  const c = dosBox.querySelector("canvas");
+  if (c) c.style.pointerEvents = "auto";
+}
+["fullscreenchange", "webkitfullscreenchange", "pointerlockchange", "focus", "visibilitychange"]
+  .forEach(ev => (ev === "focus" ? window : document).addEventListener(ev, () => setTimeout(recoverInput, 50)));
+document.addEventListener("pointerdown", (e) => {
+  if (document.pointerLockElement) recoverInput();
+}, true);
+
+
+// ============================================================================
+// MOUSE GUARD + FIX MOUSE
+// ============================================================================
+function releaseBrowserMouse() {
+  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
+  if (dosCi) { try { dosCi.sendMouseButton(0, false); } catch (e) {} }
+}
+
+(function () {
+  let downInDos = false;
+
+  window.addEventListener("pointerdown", (e) => {
+    downInDos = !!(e.target && e.target.closest && e.target.closest("#dos"));
+  }, true);
+
+  function endPointer(e) {
+    // free any pointer capture, so page buttons can be clicked again
+    try {
+      const el = e.target;
+      if (el && el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    } catch (x) {}
+    // make sure DOS never keeps thinking a button is held down
+    if (downInDos) {
+      downInDos = false;
+      setTimeout(releaseBrowserMouse, 150);
+    }
+  }
+  window.addEventListener("pointerup", endPointer, true);
+  window.addEventListener("pointercancel", endPointer, true);
+  window.addEventListener("lostpointercapture", endPointer, true);
+
 })();
   
   
