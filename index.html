@@ -2245,6 +2245,13 @@ void main() {
 })();
 </script>
 
+<script>
+  // Never let the emulator lock the mouse (this is what freezes clicks)
+  try {
+    Element.prototype.requestPointerLock = function () { return Promise.resolve(); };
+  } catch (e) {}
+</script>
+  
 <!-- js-dos scripts -->
 <script src="js-dos.js"></script>
 <script src="emulators.js"></script>
@@ -2552,6 +2559,14 @@ startBtn.addEventListener("click", () => {
 });
 
 
+// Start Turbo C++ and prepare the workspace as soon as the page opens
+window.addEventListener("load", () => {
+  bootOverlay = true;
+  showBusy("Starting Turbo C++...");
+  setTimeout(() => startBtn.click(), 300);
+});
+
+
 // ============================================================================
 // WORKSPACE: restore browser-saved files, use C:\ as the folder, auto-save to the browser
 // ============================================================================
@@ -2563,16 +2578,20 @@ function readSavedList() {
   try { return JSON.parse(localStorage.getItem("tc_saved_programs") || "[]"); } catch (e) { return []; }
 }
 
+let bootOverlay = false;
+
 function ensureWorkspace() {
   if (wsPromise) return wsPromise;
   wsPromise = (async () => {
-    const wait = WS_BOOT_MS - (Date.now() - emuReadyAt);
-    if (wait > 0) await delay(wait);
-    try { clearInterval(window.__tcNudge); } catch (e) {}      // stop the start-up screen refresh
-    const ownBusy = !isBusy();
-    if (ownBusy) showBusy("Setting up your workspace...");
+    const ownBusy = !isBusy() || bootOverlay;
+    if (ownBusy) showBusy("Starting Turbo C++...");
     try {
-      // 1) Bring back the programs saved in this browser
+      const wait = WS_BOOT_MS - (Date.now() - emuReadyAt);
+      if (wait > 0) await delay(wait);
+      try { clearInterval(window.__tcNudge); } catch (e) {}
+      setBusyText("Setting up your workspace...");
+
+      // 1) Put every browser-saved program into C:\
       const enc = new TextEncoder();
       for (const f of readSavedList()) {
         try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); knownContent[f.name] = f.code; } catch (e) {}
@@ -2581,11 +2600,11 @@ function ensureWorkspace() {
       dosBox.focus();
       clearKeyMatrix();
       await dosEscapeAll();
-      await dosCombo([KBD.LALT], 70);                 // Alt+F  (File menu)
+      await dosCombo([KBD.LALT], 70);
       await delay(150);
-      await pressDosKey(67, false, 25, 300);          // C      (Change dir...)
-      await pressDosKey(269, false, 15, 10);          // End
-      for (let i = 0; i < 40; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);   // clear the old path
+      await pressDosKey(67, false, 25, 300);
+      await pressDosKey(269, false, 15, 10);
+      for (let i = 0; i < 40; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);
       await typeDosText("C:\\");
       await delay(100);
       await pressDosKey(KBD.ENTER, false, 25, 300);
@@ -2593,6 +2612,7 @@ function ensureWorkspace() {
     } catch (e) {
       console.error("Workspace setup failed:", e);
     } finally {
+      bootOverlay = false;
       if (ownBusy) hideBusy();
     }
   })();
@@ -3262,12 +3282,15 @@ document.getElementById("btn-back-to-list").addEventListener("click", () => {
   savedPreviewArea.style.display = "none";
 });
 
-document.getElementById("saved-delete-btn").addEventListener("click", () => {
+document.getElementById("saved-delete-btn").addEventListener("click", async () => {
   if(!confirm("Delete this saved program permanently?")) return;
+  const delName = currentPreviewingProgram.name;
   let saved = JSON.parse(localStorage.getItem("tc_saved_programs") || "[]");
-  saved = saved.filter(x => x.name !== currentPreviewingProgram.name);
+  saved = saved.filter(x => x.name !== delName);
   localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
-  document.getElementById("btn-open-saved").click(); // Refresh list
+  delete knownContent[delName];
+  if (dosCi) { try { await dosCi.fsDeleteFile(delName); } catch (e) {} }   // also remove from C:\
+  document.getElementById("btn-open-saved").click();
 });
 
 document.getElementById("saved-inject-btn").addEventListener("click", async () => {
@@ -3465,7 +3488,36 @@ if (tbEsc) {
 
   dosBox.addEventListener("contextmenu", (e) => e.preventDefault());
 })();
-  
+
+
+// ============================================================================
+// INPUT RECOVERY: frees a stuck mouse / keys after output screen or fullscreen
+// ============================================================================
+function recoverInput() {
+  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
+  try {
+    if (dosCi) {
+      for (let b = 0; b < 3; b++) { try { dosCi.sendMouseButton(b, false); } catch (e) {} }
+      clearKeyMatrix();
+      [KBD.LSHIFT, KBD.RSHIFT, KBD.LCTRL, KBD.RCTRL, KBD.LALT, KBD.RALT].forEach(k => {
+        try { dosCi.sendKeyEvent(k, false); } catch (e) {}
+      });
+    }
+  } catch (e) {}
+  const c = dosBox.querySelector("canvas");
+  if (c) c.style.pointerEvents = "auto";
+}
+["fullscreenchange", "webkitfullscreenchange", "pointerlockchange", "focus", "visibilitychange"]
+  .forEach(ev => (ev === "focus" ? window : document).addEventListener(ev, () => setTimeout(recoverInput, 50)));
+document.addEventListener("pointerdown", (e) => {
+  if (document.pointerLockElement) recoverInput();
+}, true);
+// After switching to/from the output screen, release everything
+["tb-userscreen", "tb-run"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("click", () => setTimeout(recoverInput, 300));
+});
+
   
 // ============================================================================
 // 6. GLOBAL SHORTCUTS
