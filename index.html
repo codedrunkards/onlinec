@@ -2315,8 +2315,6 @@ const tbRun = document.getElementById("tb-run");
 const tbUserscreen = document.getElementById("tb-userscreen");
 const tbClear = document.getElementById("tb-clear");
 const tbSave = document.getElementById("tb-save");
-const tbOpen = document.getElementById("tb-open");
-const tbEsc = document.getElementById("tb-esc");
 
 // Global State
 let dosboxInstance = null;
@@ -2589,36 +2587,23 @@ function ensureWorkspace() {
       const wait = WS_BOOT_MS - (Date.now() - emuReadyAt);
       if (wait > 0) await delay(wait);
       try { clearInterval(window.__tcNudge); } catch (e) {}
-      setBusyText("Loading your saved programs...");
+      setBusyText("Setting up your workspace...");
 
-      // 1) Write every browser-saved program into C:\
+      // Put saved programs on C:\
       const enc = new TextEncoder();
-      const names = [];
       for (const f of readSavedList()) {
-        try {
-          await dosCi.fsWriteFile(f.name, enc.encode(f.code));
-          knownContent[f.name] = f.code;
-          names.push(f.name);
-        } catch (e) { console.warn("Could not write", f.name, e); }
+        try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); knownContent[f.name] = f.code; } catch (e) {}
       }
 
-      // 2) Make them visible to the Open dialog
+      // File > Change dir... > C:\
       dosBox.focus();
       clearKeyMatrix();
-      if (names.length) {
-        setBusyText("Updating the Open list...");
-        await refreshDosDirCache();
-        names.forEach(n => dosVisible.add(n));
-      }
-
-      // 3) File > Change dir... > C:\
-      setBusyText("Setting up your workspace...");
       await dosEscapeAll();
       await dosCombo([KBD.LALT], 70);
       await delay(150);
       await pressDosKey(67, false, 25, 300);
       await pressDosKey(269, false, 15, 10);
-      for (let i = 0; i < 40; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);
+      for (let i = 0; i < 20; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);
       await typeDosText("C:\\");
       await delay(100);
       await pressDosKey(KBD.ENTER, false, 25, 300);
@@ -2662,8 +2647,6 @@ function startAutoSave() {
   }, 4000);
 }
 
-
-const dosVisible = new Set();   // file names the Open dialog already knows about
 
 // DOSBox caches folder listings, so files written from the browser stay hidden
 // until the cache is rescanned. File > DOS shell > RESCAN > EXIT does that.
@@ -2819,12 +2802,6 @@ async function injectCodeIntoDos() {
     if (typeof dosCi.fsWriteFile === "function") {
       await dosCi.fsWriteFile(fullPath, uint8);
       knownContent[dosFilename] = code;
-
-      if (!dosVisible.has(dosFilename)) {
-        setBusyText("Adding " + dosFilename + " to the Open list...");
-        await refreshDosDirCache();
-        dosVisible.add(dosFilename);
-      }
       
       closeModal();
       showToast(`Injecting ${dosFilename}...`);
@@ -3270,24 +3247,13 @@ document.getElementById("save-confirm-btn").addEventListener("click", async () =
   
   localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
 
-  // Sync directly to DOS C:\ drive so the Turbo C++ Open dialog sees it
-  let wroteToDos = false;
   if (dosCi) {
     try {
-      const uint8 = new TextEncoder().encode(saveListCode.value);
-      await dosCi.fsWriteFile(fName, uint8);
+      await dosCi.fsWriteFile(fName, new TextEncoder().encode(saveListCode.value));
       knownContent[fName] = saveListCode.value;
-      wroteToDos = true;
     } catch (e) {}
   }
-
   closeSaveModals();
-  if (wroteToDos && !dosVisible.has(fName)) {
-    showBusy("Adding " + fName + " to the Open list...");
-    try { await refreshDosDirCache(); dosVisible.add(fName); }
-    catch (e) { console.error(e); }
-    finally { hideBusy(); }
-  }
   showToast("Saved " + fName + " to your personal list and C:\\");
 });
 
@@ -3338,12 +3304,7 @@ document.getElementById("saved-delete-btn").addEventListener("click", async () =
   saved = saved.filter(x => x.name !== delName);
   localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
   delete knownContent[delName];
-  if (dosCi) {
-    try { await dosCi.fsDeleteFile(delName); } catch (e) {}
-    dosVisible.delete(delName);
-    showBusy("Updating the Open list...");
-    try { await refreshDosDirCache(); } catch (e) {} finally { hideBusy(); }
-  }
+  if (dosCi) { try { await dosCi.fsDeleteFile(delName); } catch (e) {} }
   document.getElementById("btn-open-saved").click();
 });
 
@@ -3354,21 +3315,6 @@ document.getElementById("saved-inject-btn").addEventListener("click", async () =
   injectFilenameInput.value = currentPreviewingProgram.name;
   await injectCodeIntoDos();
 });
-
-if (tbOpen) {
-  tbOpen.addEventListener("click", async () => {
-    if (!ensureCompilerStarted()) return;
-    await pressDosKey(KBD.F3, false, 25, 40);
-    showToast("Open File Dialog (F3)");
-  });
-}
-
-if (tbEsc) {
-  tbEsc.addEventListener("click", async () => {
-    if (!ensureCompilerStarted()) return;
-    await pressDosKey(KBD.ESC, false, 25, 40);
-  });
-}
 
 // ============================================================================
 // MOBILE / TABLET SOFT KEYBOARD: one tap opens it, no page jumping
@@ -3637,9 +3583,8 @@ function releaseBrowserMouse() {
 // ============================================================================
 // INTERNAL MENU CLICKS -> EXTERNAL FUNCTIONS
 // ============================================================================
-const MENU_DEBUG = /[?&]debugmenu=1/.test(location.search);   // open the site with ?debugmenu=1 to see row/col of every click
+const MENU_DEBUG = /[?&]debugmenu=1/.test(location.search);
 
-// Columns/rows are cell positions on the 80x25 screen. Adjust here if a click misses.
 const MENU_BAR = {
   file:    { c1: 7,  c2: 12, left: 6,  right: 27, items: { 3: "open", 4: "save", 5: "save", 6: "save" } },
   run:     { c1: 27, c2: 31, left: 26, right: 55, items: { 2: "run" } },
@@ -3647,7 +3592,7 @@ const MENU_BAR = {
 };
 
 (function () {
-  let openMenu = null, swallow = false, swallowTimer = null;
+  let openMenu = null, swallow = false, swallowTimer = null, mouseWatchUntil = 0;
 
   function cellOf(e) {
     const c = dosBox.querySelector("canvas");
@@ -3661,12 +3606,19 @@ const MENU_BAR = {
   }
 
   async function doAction(action) {
-    await pressDosKey(KBD.ESC, false, 30, 80);      // close the native menu first
-    await pressDosKey(KBD.ESC, false, 30, 80);
+    await delay(250);                                   // let the click finish first
+    for (let i = 0; i < 3; i++) await pressDosKey(KBD.ESC, false, 30, 120);   // make sure the native menu is closed
     await delay(100);
-    if (action === "open") document.getElementById("btn-open-saved").click();
-    else if (action === "save" && tbSave) tbSave.click();
-    else if (action === "run" && tbRun) tbRun.click();
+    releaseBrowserMouse();
+    if (action === "open") {
+      document.getElementById("btn-open-saved").click();
+    } else if (action === "save") {
+      if (tbSave) tbSave.click();
+    } else if (action === "run") {
+      mouseWatchUntil = Date.now() + 60000;             // free the mouse when a key is pressed to leave the output screen
+      if (tbRun) tbRun.click();
+      [500, 1500, 3000].forEach(t => setTimeout(releaseBrowserMouse, t));
+    }
   }
 
   window.addEventListener("pointerdown", (e) => {
@@ -3676,7 +3628,7 @@ const MENU_BAR = {
     if (!p) return;
     if (MENU_DEBUG) showToast("row " + p.row + ", col " + p.col, 1500);
 
-    // A menu is open: did this click land on one of its items?
+    // A menu title was clicked earlier: did this click land on one of its items?
     if (openMenu) {
       const m = MENU_BAR[openMenu];
       const action = (p.col >= m.left && p.col <= m.right) ? m.items[p.row] : null;
@@ -3687,24 +3639,23 @@ const MENU_BAR = {
         swallowTimer = setTimeout(() => { swallow = false; }, 500);
         e.stopImmediatePropagation();
         e.preventDefault();
-        setTimeout(() => doAction(action), 0);
+        doAction(action);
         return;
       }
     }
 
     // Did this click land on a menu title in the top bar?
-    const prev = openMenu;
     openMenu = null;
     if (p.row === 0) {
       for (const key in MENU_BAR) {
         const m = MENU_BAR[key];
-        if (p.col >= m.c1 && p.col <= m.c2) { openMenu = (prev === key) ? null : key; break; }
+        if (p.col >= m.c1 && p.col <= m.c2) { openMenu = key; break; }
       }
     }
   }, true);
 
   // Hide the rest of that click from DOS
-  ["pointerup", "mousedown", "mouseup", "click", "touchstart", "touchend"].forEach((t) => {
+  ["pointerup", "mousedown", "mouseup", "click"].forEach((t) => {
     window.addEventListener(t, (e) => {
       if (swallow && e.target && e.target.closest && e.target.closest("#dos")) {
         e.stopImmediatePropagation();
@@ -3714,8 +3665,13 @@ const MENU_BAR = {
     }, true);
   });
 
-  // Any key press (like Esc) may close the menu
-  window.addEventListener("keydown", () => { openMenu = null; }, true);
+  window.addEventListener("keydown", () => {
+    openMenu = null;
+    // after Run from the menu, the first key press (leaving the output screen) also frees the mouse
+    if (Date.now() < mouseWatchUntil) {
+      [300, 900].forEach(t => setTimeout(releaseBrowserMouse, t));
+    }
+  }, true);
 })();
   
 // ============================================================================
