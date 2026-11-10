@@ -2523,8 +2523,12 @@ startBtn.addEventListener("click", () => {
   });
   dosboxInstance = dosPlayer;
 
- function onEmulatorReady(ci) {
+  function onEmulatorReady(ci) {
     keyboard = { keyPress: (code) => ci.simulateKeyPress(code) };
+
+    // Prepare the workspace (restore saved files, set C:\ as folder) and start the browser auto-save
+    emuReadyAt = Date.now();
+    ensureWorkspace().then(startAutoSave);
 
     let nudges = 0;
     const nudgeTimer = setInterval(() => {
@@ -2542,10 +2546,89 @@ startBtn.addEventListener("click", () => {
       }
       if (nudges >= 10) clearInterval(nudgeTimer);
     }, 1000);
+    window.__tcNudge = nudgeTimer;
   }
   
 });
 
+
+// ============================================================================
+// WORKSPACE: restore browser-saved files, use C:\ as the folder, auto-save to the browser
+// ============================================================================
+const WS_BOOT_MS = 7000;            // how long to wait for Turbo C++ to finish starting
+let emuReadyAt = 0, wsPromise = null, autoSaveTimer = null, autoSaving = false;
+const knownContent = {};            // NAME.EXT -> last text we know about (so ready-made programs are not auto-saved)
+
+function readSavedList() {
+  try { return JSON.parse(localStorage.getItem("tc_saved_programs") || "[]"); } catch (e) { return []; }
+}
+
+function ensureWorkspace() {
+  if (wsPromise) return wsPromise;
+  wsPromise = (async () => {
+    const wait = WS_BOOT_MS - (Date.now() - emuReadyAt);
+    if (wait > 0) await delay(wait);
+    try { clearInterval(window.__tcNudge); } catch (e) {}      // stop the start-up screen refresh
+    const ownBusy = !isBusy();
+    if (ownBusy) showBusy("Setting up your workspace...");
+    try {
+      // 1) Bring back the programs saved in this browser
+      const enc = new TextEncoder();
+      for (const f of readSavedList()) {
+        try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); knownContent[f.name] = f.code; } catch (e) {}
+      }
+      // 2) File > Change dir... > C:\
+      dosBox.focus();
+      clearKeyMatrix();
+      await dosEscapeAll();
+      await dosCombo([KBD.LALT], 70);                 // Alt+F  (File menu)
+      await delay(150);
+      await pressDosKey(67, false, 25, 300);          // C      (Change dir...)
+      await pressDosKey(269, false, 15, 10);          // End
+      for (let i = 0; i < 40; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);   // clear the old path
+      await typeDosText("C:\\");
+      await delay(100);
+      await pressDosKey(KBD.ENTER, false, 25, 300);
+      await dosEscapeAll();
+    } catch (e) {
+      console.error("Workspace setup failed:", e);
+    } finally {
+      if (ownBusy) hideBusy();
+    }
+  })();
+  return wsPromise;
+}
+
+// Every 4 seconds: copy new/changed programs from C:\ into the browser's saved list
+function startAutoSave() {
+  if (autoSaveTimer) return;
+  autoSaveTimer = setInterval(async () => {
+    if (autoSaving || !dosCi || document.hidden || isBusy()) return;
+    autoSaving = true;
+    try {
+      const tree = await dosCi.fsTree();
+      const files = ((tree && tree.nodes) || []).filter((n) => !n.nodes && /\.(c|cpp|cc|h|hpp)$/i.test(n.name));
+      for (const n of files) {
+        const name = n.name.toUpperCase();
+        const bytes = await dosCi.fsReadFile(n.name);
+        const text = new TextDecoder("utf-8").decode(bytes);
+        if (knownContent[name] === text) continue;     // unchanged, or a ready-made program we inserted
+        knownContent[name] = text;
+        if (!text.trim()) continue;
+        const list = readSavedList();
+        const i = list.findIndex((x) => x.name === name);
+        if (i >= 0) list[i].code = text; else list.push({ name: name, code: text });
+        try {
+          localStorage.setItem("tc_saved_programs", JSON.stringify(list));
+          showToast("Saved " + name + " in your browser");
+        } catch (e) {}
+      }
+    } catch (e) {}
+    autoSaving = false;
+  }, 4000);
+}
+
+  
 // Files we have already opened in the Turbo C++ editor during this session
 const openedInEditor = new Set();
 
@@ -2671,15 +2754,17 @@ async function injectCodeIntoDos() {
 
   const dosFilename = getSanitizedFilename(injectFilenameInput.value);
   lastDosFilename = dosFilename;
-  const fullPath = "TURBOC3/BIN/" + dosFilename;
+  const fullPath = dosFilename;     // saved in the C:\ folder
 
   showBusy("Preparing " + dosFilename + "...");            // freeze the site + show the popup
   try {
+    await ensureWorkspace();
     const encoder = new TextEncoder();
     const uint8 = encoder.encode(code);
 
     if (typeof dosCi.fsWriteFile === "function") {
       await dosCi.fsWriteFile(fullPath, uint8);
+      knownContent[dosFilename] = code;
       closeModal();
       showToast(`Injecting ${dosFilename}...`);
 
@@ -3346,6 +3431,30 @@ if (tbEsc) {
   });
 
   ["keydown", "keyup", "keypress"].forEach((t) => hiddenInput.addEventListener(t, (e) => e.stopPropagation()));
+})();
+
+  
+// ============================================================================
+// MOUSE UN-STICK: every click starts from a clean state
+// ============================================================================
+(function () {
+  function releaseMouse() {
+    if (!dosCi) return;
+    for (let b = 0; b < 3; b++) { try { dosCi.sendMouseButton(b, false); } catch (e) {} }
+  }
+  // Before the emulator sees a click, reset the mouse and the keyboard state
+  dosBox.addEventListener("mousedown", () => {
+    releaseMouse();
+    clearKeyMatrix();
+    const c = dosBox.querySelector("canvas");
+    if (c && document.activeElement !== hiddenInput) c.focus();
+  }, true);
+  // Always release after any mouse-up, even one that happened outside the workspace
+  ["mouseup", "pointerup", "pointercancel"].forEach((t) =>
+    window.addEventListener(t, () => setTimeout(releaseMouse, 0), true));
+  window.addEventListener("blur", releaseMouse);
+  document.addEventListener("visibilitychange", releaseMouse);
+  dosBox.addEventListener("contextmenu", (e) => e.preventDefault());
 })();
   
   
