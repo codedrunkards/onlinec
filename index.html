@@ -1956,7 +1956,7 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
       <button type="button" class="touch-btn" id="tb-save">💾 Save<span class="sc"> (F2)</span></button>
       <button type="button" class="touch-btn" id="tb-download"><svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg> Download</button>
       <button type="button" class="touch-btn" id="tb-saved">💾 My Saved Programs</button>
-      <button type="button" class="touch-btn" id="tb-esc">Esc</button>
+      <button type="button" class="touch-btn" id="tb-fixmouse">🖱️ Fix Mouse</button>
     </div>
   </div>
 
@@ -2589,16 +2589,30 @@ function ensureWorkspace() {
       const wait = WS_BOOT_MS - (Date.now() - emuReadyAt);
       if (wait > 0) await delay(wait);
       try { clearInterval(window.__tcNudge); } catch (e) {}
-      setBusyText("Setting up your workspace...");
+      setBusyText("Loading your saved programs...");
 
-      // 1) Put every browser-saved program into C:\
+      // 1) Write every browser-saved program into C:\
       const enc = new TextEncoder();
+      const names = [];
       for (const f of readSavedList()) {
-        try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); knownContent[f.name] = f.code; } catch (e) {}
+        try {
+          await dosCi.fsWriteFile(f.name, enc.encode(f.code));
+          knownContent[f.name] = f.code;
+          names.push(f.name);
+        } catch (e) { console.warn("Could not write", f.name, e); }
       }
-      // 2) File > Change dir... > C:\
+
+      // 2) Make them visible to the Open dialog
       dosBox.focus();
       clearKeyMatrix();
+      if (names.length) {
+        setBusyText("Updating the Open list...");
+        await refreshDosDirCache();
+        names.forEach(n => dosVisible.add(n));
+      }
+
+      // 3) File > Change dir... > C:\
+      setBusyText("Setting up your workspace...");
       await dosEscapeAll();
       await dosCombo([KBD.LALT], 70);
       await delay(150);
@@ -2618,7 +2632,7 @@ function ensureWorkspace() {
   })();
   return wsPromise;
 }
-
+  
 // Every 4 seconds: copy new/changed programs from C:\ into the browser's saved list
 function startAutoSave() {
   if (autoSaveTimer) return;
@@ -2646,6 +2660,26 @@ function startAutoSave() {
     } catch (e) {}
     autoSaving = false;
   }, 4000);
+}
+
+
+const dosVisible = new Set();   // file names the Open dialog already knows about
+
+// DOSBox caches folder listings, so files written from the browser stay hidden
+// until the cache is rescanned. File > DOS shell > RESCAN > EXIT does that.
+async function refreshDosDirCache() {
+  if (!dosCi) return;
+  dosBox.focus();
+  clearKeyMatrix();
+  await dosEscapeAll();
+  await dosCombo([KBD.LALT], 70);            // Alt+F  (File menu)
+  await delay(200);
+  await pressDosKey(68, false, 25, 1000);    // D      (DOS shell)
+  await typeDosText("z:\\rescan");
+  await pressDosKey(KBD.ENTER, false, 25, 600);
+  await typeDosText("exit");
+  await pressDosKey(KBD.ENTER, false, 25, 1000);
+  await dosEscapeAll();
 }
 
   
@@ -2785,6 +2819,13 @@ async function injectCodeIntoDos() {
     if (typeof dosCi.fsWriteFile === "function") {
       await dosCi.fsWriteFile(fullPath, uint8);
       knownContent[dosFilename] = code;
+
+      if (!dosVisible.has(dosFilename)) {
+        setBusyText("Adding " + dosFilename + " to the Open list...");
+        await refreshDosDirCache();
+        dosVisible.add(dosFilename);
+      }
+      
       closeModal();
       showToast(`Injecting ${dosFilename}...`);
 
@@ -3229,16 +3270,24 @@ document.getElementById("save-confirm-btn").addEventListener("click", async () =
   
   localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
 
-  // Sync directly to DOS C:\ drive so Turbo C++ native menus (F3 / Open) see it instantly
+  // Sync directly to DOS C:\ drive so the Turbo C++ Open dialog sees it
+  let wroteToDos = false;
   if (dosCi) {
     try {
       const uint8 = new TextEncoder().encode(saveListCode.value);
       await dosCi.fsWriteFile(fName, uint8);
-      knownContent[fName] = saveListCode.value; // Prevent duplicate auto-save notifications
+      knownContent[fName] = saveListCode.value;
+      wroteToDos = true;
     } catch (e) {}
   }
 
   closeSaveModals();
+  if (wroteToDos && !dosVisible.has(fName)) {
+    showBusy("Adding " + fName + " to the Open list...");
+    try { await refreshDosDirCache(); dosVisible.add(fName); }
+    catch (e) { console.error(e); }
+    finally { hideBusy(); }
+  }
   showToast("Saved " + fName + " to your personal list and C:\\");
 });
 
@@ -3289,7 +3338,12 @@ document.getElementById("saved-delete-btn").addEventListener("click", async () =
   saved = saved.filter(x => x.name !== delName);
   localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
   delete knownContent[delName];
-  if (dosCi) { try { await dosCi.fsDeleteFile(delName); } catch (e) {} }   // also remove from C:\
+  if (dosCi) {
+    try { await dosCi.fsDeleteFile(delName); } catch (e) {}
+    dosVisible.delete(delName);
+    showBusy("Updating the Open list...");
+    try { await refreshDosDirCache(); } catch (e) {} finally { hideBusy(); }
+  }
   document.getElementById("btn-open-saved").click();
 });
 
@@ -3518,6 +3572,70 @@ document.addEventListener("pointerdown", (e) => {
   if (el) el.addEventListener("click", () => setTimeout(recoverInput, 300));
 });
 
+
+// ============================================================================
+// MOUSE GUARD + FIX MOUSE
+// ============================================================================
+function releaseBrowserMouse() {
+  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) {}
+  if (dosCi) {
+    for (let b = 0; b < 3; b++) { try { dosCi.sendMouseButton(b, false); } catch (e) {} }
+    try { dosCi.sendMouseSync(); } catch (e) {}
+  }
+}
+
+(function () {
+  let downInDos = false;
+
+  window.addEventListener("pointerdown", (e) => {
+    downInDos = !!(e.target && e.target.closest && e.target.closest("#dos"));
+  }, true);
+
+  function endPointer(e) {
+    // free any pointer capture, so page buttons can be clicked again
+    try {
+      const el = e.target;
+      if (el && el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    } catch (x) {}
+    // make sure DOS never keeps thinking a button is held down
+    if (downInDos) {
+      downInDos = false;
+      releaseBrowserMouse();
+    }
+  }
+  window.addEventListener("pointerup", endPointer, true);
+  window.addEventListener("pointercancel", endPointer, true);
+  window.addEventListener("lostpointercapture", endPointer, true);
+
+  async function fixMouse() {
+    if (!ensureCompilerStarted()) return;
+    showBusy("Resetting the mouse...");
+    try {
+      releaseBrowserMouse();
+      await delay(100);
+      await refreshDosDirCache();     // DOS shell round trip makes Turbo C++ re-initialise its mouse
+      releaseBrowserMouse();
+      showToast("Mouse reset done");
+    } catch (e) {
+      console.error("Fix mouse failed:", e);
+    } finally {
+      hideBusy();
+    }
+  }
+  window.fixMouse = fixMouse;
+
+  const btn = document.getElementById("tb-fixmouse");
+  if (btn) btn.addEventListener("click", fixMouse);
+
+  // Keyboard backup (works even if mouse clicks are dead): Ctrl+Alt+M
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.altKey && (e.key === "m" || e.key === "M")) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      fixMouse();
+    }
+  }, true);
+})();
   
 // ============================================================================
 // 6. GLOBAL SHORTCUTS
@@ -3528,7 +3646,7 @@ window.addEventListener("keydown", (e) => {
     toggleFullscreen();
     return;
   }
-  if (e.key === "F5") {
+    if (e.key === "F5" && !e.altKey && !e.ctrlKey && !e.shiftKey) {
     e.preventDefault();
     triggerZoom();
     return;
