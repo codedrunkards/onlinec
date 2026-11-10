@@ -227,7 +227,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     --text-bright: #ffffff;
     --font-mono: 'Fira Code', Consolas, monospace;
     --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --fs-bar-h: 64px;
+    --fs-bar-h: 54px;
   }
 
   * {
@@ -1301,28 +1301,31 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .touch-btn { font-size: 0.58rem; padding: 7px 2px; }
   }
 
-  body.is-fullscreen .direct-actions-card { padding: 8px 12px !important; }
+  body.is-fullscreen .direct-actions-card { padding: 6px 8px !important; }
 body.is-fullscreen .direct-actions-buttons {
   flex-wrap: nowrap !important;
   overflow-x: auto !important;
-  gap: 8px !important;
-  justify-content: flex-start !important;
+  scrollbar-width: none !important;
+  gap: 5px !important;
+  justify-content: stretch !important;
 }
+body.is-fullscreen .direct-actions-buttons::-webkit-scrollbar { display: none !important; }
 body.is-fullscreen .touch-btn {
-  flex: 0 0 auto !important;
-  min-width: max-content !important;
-  min-height: 46px !important;
-  font-size: clamp(0.85rem, 1.6vw, 1.05rem) !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  font-size: clamp(0.62rem, 1vw, 0.8rem) !important;
   font-weight: 700 !important;
-  padding: 10px 14px !important;
+  padding: 6px 8px !important;
   color: #ffffff !important;
   background: #1f2833 !important;
   border: 1px solid var(--cyan-accent) !important;
-  border-radius: 8px !important;
+  border-radius: 7px !important;
   overflow: visible !important;
+  white-space: nowrap !important;
 }
 body.is-fullscreen .touch-btn:active { background: var(--cyan-accent) !important; color: #000 !important; }
-body.is-fullscreen .touch-btn .sc { display: inline !important; }
+body.is-fullscreen .touch-btn .sc { display: none !important; }
 
     /* Normal (non-fullscreen) mode: let the action buttons wrap onto extra lines */
   body:not(.is-fullscreen) .direct-actions-buttons {
@@ -1826,6 +1829,8 @@ body, .chat-msg, .chat-text, .chat-meta, .doc-card, .center-popup-body,
   .saved-item-name { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); }
 
   body:not(.is-fullscreen) #tb-paste { display: none; }
+
+  .saved-item-hint { font-size: .7rem; color: #8c979a; white-space: nowrap; margin-left: 10px; align-self: center; }
   
 </style>
 </head>
@@ -2670,7 +2675,7 @@ function ensureWorkspace() {
       await delay(150);
       await pressDosKey(67, false, 25, 300);
       await pressDosKey(269, false, 15, 10);
-      for (let i = 0; i < 12; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);
+      for (let i = 0; i < 40; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);
       await typeDosText("C:\\");
       await delay(100);
       await pressDosKey(KBD.ENTER, false, 25, 300);
@@ -2712,7 +2717,7 @@ async function dosEscapeAll() {
 // F3 -> type name -> Enter (loads from disk, or switches to the window if already open)
 async function openFileInEditor(name) {
   await pressDosKey(KBD.F3, false, 25, 300);
-  await typeDosText(name);
+  await typeDosText("C:\\" + name);
   await delay(150);
   await pressDosKey(KBD.ENTER, false, 25, 400);
 }
@@ -2743,7 +2748,7 @@ async function readFileIntoEditor(name) {
   await dosCombo([KBD.LCTRL], 266);                                     // cursor to top
   await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], R);       // Ctrl+K R
   await delay(500);
-  await typeDosText(name);
+  await typeDosText("C:\\" + name);
   await delay(150);
   await pressDosKey(KBD.ENTER, false, 25, 600);
   await dosCombo([KBD.LCTRL], 266);                                     // cursor back to top
@@ -3431,40 +3436,54 @@ function showSavedPreview(prog, focusDesc) {
   if (focusDesc) d.focus();
 }
 
-document.getElementById("btn-open-saved").addEventListener("click", () => {
+function renderSavedList() {
   const saved = readSavedList();
   savedProgramsList.innerHTML = "";
-  savedProgramsList.style.display = "flex";
-  savedPreviewArea.style.display = "none";
-
   if (saved.length === 0) {
     savedProgramsList.innerHTML = "<div style='color:#8c979a; font-size:0.85rem; text-align:center;'>No programs saved yet. Use the Save button in direct actions.</div>";
-  } else {
-    saved.forEach((prog) => {
-      const item = document.createElement("div");
-      item.className = "saved-item";
-      const left = document.createElement("div");
-      left.style.minWidth = "0";
-      const nm = document.createElement("div");
-      nm.className = "saved-item-name";
-      nm.textContent = "📄 " + prog.name;
-      const ds = document.createElement("div");
-      ds.style.cssText = "font-size:.74rem;color:#8c979a;margin-top:2px;word-break:break-word;";
-      ds.textContent = prog.desc ? prog.desc : "No description yet";
-      left.appendChild(nm); left.appendChild(ds);
-      item.appendChild(left);
-      if (!prog.desc) {
-        const add = document.createElement("button");
-        add.type = "button";
-        add.className = "change-name-btn";
-        add.textContent = "➕ Add description";
-        add.addEventListener("click", (e) => { e.stopPropagation(); showSavedPreview(prog, true); });
-        item.appendChild(add);
-      }
-      item.addEventListener("click", () => showSavedPreview(prog, false));
-      savedProgramsList.appendChild(item);
-    });
+    return;
   }
+  saved.forEach((prog) => {
+    const item = document.createElement("div");
+    item.className = "saved-item";
+
+    const left = document.createElement("div");
+    left.style.cssText = "min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:5px;";
+
+    const nm = document.createElement("div");
+    nm.className = "saved-item-name";
+    nm.textContent = "📄 " + prog.name;
+    left.appendChild(nm);
+
+    if (prog.desc) {
+      const ds = document.createElement("div");
+      ds.style.cssText = "font-size:.74rem;color:#8c979a;word-break:break-word;";
+      ds.textContent = prog.desc;
+      left.appendChild(ds);
+    } else {
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "change-name-btn";
+      add.textContent = "➕ Add description";
+      add.addEventListener("click", (e) => { e.stopPropagation(); showSavedPreview(prog, true); });
+      left.appendChild(add);
+    }
+
+    const hint = document.createElement("span");
+    hint.className = "saved-item-hint";
+    hint.textContent = "Click to view";
+
+    item.appendChild(left);
+    item.appendChild(hint);
+    item.addEventListener("click", () => showSavedPreview(prog, false));
+    savedProgramsList.appendChild(item);
+  });
+}
+
+document.getElementById("btn-open-saved").addEventListener("click", () => {
+  savedProgramsList.style.display = "flex";
+  savedPreviewArea.style.display = "none";
+  renderSavedList();
   viewSavedModal.classList.add("visible");
   toggleModalScroll(true);
 });
@@ -3474,6 +3493,9 @@ document.getElementById("saved-desc-btn").addEventListener("click", () => {
   if (!d) { showToast("Please write a description first."); return; }
   if (saveToBrowserList(currentPreviewingProgram.name, currentPreviewingProgram.code, d)) {
     currentPreviewingProgram.desc = d;
+    renderSavedList();
+    savedProgramsList.style.display = "flex";
+    savedPreviewArea.style.display = "none";
     showToast("Description saved");
   }
 });
