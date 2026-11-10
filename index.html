@@ -3136,7 +3136,7 @@ async function extractWorkspaceText() {
   await combo([KBD.LCTRL], K); await combo([KBD.LCTRL], W);
   await delay(500);
 
-  const target = "C:\\TURBOC3\\BIN\\" + tmpName;
+  const target = "C:\\" + tmpName;
   for (const ch of target) {
     const kInfo = charToDosKeys(ch);
     if (kInfo) for (const k of kInfo) await pressDosKey(k.keyCode, k.shift, 14, 14);
@@ -3198,18 +3198,28 @@ if (tbSave) {
   });
 }
 
-document.getElementById("save-confirm-btn").addEventListener("click", () => {
+document.getElementById("save-confirm-btn").addEventListener("click", async () => {
   const fName = getSanitizedFilename(saveListFilename.value);
   let saved = JSON.parse(localStorage.getItem("tc_saved_programs") || "[]");
   
   // Update if exists, otherwise push new
   const existIdx = saved.findIndex(x => x.name === fName);
-  if(existIdx >= 0) saved[existIdx].code = saveListCode.value;
+  if (existIdx >= 0) saved[existIdx].code = saveListCode.value;
   else saved.push({ name: fName, code: saveListCode.value });
   
   localStorage.setItem("tc_saved_programs", JSON.stringify(saved));
+
+  // Sync directly to DOS C:\ drive so Turbo C++ native menus (F3 / Open) see it instantly
+  if (dosCi) {
+    try {
+      const uint8 = new TextEncoder().encode(saveListCode.value);
+      await dosCi.fsWriteFile(fName, uint8);
+      knownContent[fName] = saveListCode.value; // Prevent duplicate auto-save notifications
+    } catch (e) {}
+  }
+
   closeSaveModals();
-  showToast("Saved " + fName + " to your personal list!");
+  showToast("Saved " + fName + " to your personal list and C:\\");
 });
 
 // View Saved Programs
@@ -3435,25 +3445,24 @@ if (tbEsc) {
 
   
 // ============================================================================
-// MOUSE UN-STICK: every click starts from a clean state
+// MOUSE FIX: Natural mouse tracking without breaking output screen state
 // ============================================================================
 (function () {
-  function releaseMouse() {
+  // Gently focus the canvas when clicked without hijacking the native click event
+  dosBox.addEventListener("pointerdown", () => {
+    const c = dosBox.querySelector("canvas");
+    if (c && document.activeElement !== hiddenInput) {
+      c.focus({ preventScroll: true });
+    }
+  }, { passive: true });
+
+  // Only reset stuck buttons if the user completely leaves the browser tab
+  window.addEventListener("blur", () => {
     if (!dosCi) return;
     for (let b = 0; b < 3; b++) { try { dosCi.sendMouseButton(b, false); } catch (e) {} }
-  }
-  // Before the emulator sees a click, reset the mouse and the keyboard state
-  dosBox.addEventListener("mousedown", () => {
-    releaseMouse();
     clearKeyMatrix();
-    const c = dosBox.querySelector("canvas");
-    if (c && document.activeElement !== hiddenInput) c.focus();
-  }, true);
-  // Always release after any mouse-up, even one that happened outside the workspace
-  ["mouseup", "pointerup", "pointercancel"].forEach((t) =>
-    window.addEventListener(t, () => setTimeout(releaseMouse, 0), true));
-  window.addEventListener("blur", releaseMouse);
-  document.addEventListener("visibilitychange", releaseMouse);
+  });
+
   dosBox.addEventListener("contextmenu", (e) => e.preventDefault());
 })();
   
