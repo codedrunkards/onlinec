@@ -2199,10 +2199,12 @@ void main() {
   </div>
 </div>
   <div id="file-menu">
+  <button type="button" data-id="new">📄 New</button>
   <button type="button" data-id="open">📂 Open</button>
   <button type="button" data-id="save">💾 Save</button>
   <button type="button" data-id="saveas">📝 Save As</button>
   <button type="button" data-id="download">⬇️ Download</button>
+</div>
 </div>
   
   <!-- Toast Notification Box -->
@@ -4939,9 +4941,34 @@ if ("serviceWorker" in navigator) {
 </script>
 
 <script>
+// File menu box: stays attached to the "File" button inside the compiler
 (function () {
   const fm = document.getElementById("file-menu");
-  const hide = () => { fm.style.display = "none"; };
+  let anchor = null, raf = 0;
+
+  function hide() {
+    fm.style.display = "none";
+    anchor = null;
+    cancelAnimationFrame(raf);
+  }
+
+  // Put the box right under the File button (runs every frame while the box is open)
+  function place() {
+    if (!anchor || fm.style.display !== "block") return;
+    const r = anchor.getBoundingClientRect();
+    const vv = window.visualViewport;
+    const vw = vv ? vv.width : window.innerWidth;
+    const vh = vv ? vv.height : window.innerHeight;
+    const gone = r.width === 0 || r.height === 0 || r.bottom < 0 || r.top > vh;   // File button hidden or scrolled away
+    if (gone) { hide(); return; }
+    const w = fm.offsetWidth, h = fm.offsetHeight;
+    let left = r.left, top = r.bottom + 4;
+    if (left + w > vw - 6) left = Math.max(6, vw - w - 6);
+    if (top + h > vh - 6) top = Math.max(6, r.top - h - 4);        // no room below: open above the button
+    fm.style.left = left + "px";
+    fm.style.top = top + "px";
+    raf = requestAnimationFrame(place);
+  }
 
   document.querySelectorAll(".menu-zone").forEach((z) => {
     z.addEventListener("click", (e) => {
@@ -4950,23 +4977,26 @@ if ("serviceWorker" in navigator) {
       const k = z.dataset.k;
       if (k === "run") { hide(); runAction(ACTION_BY_ID.run); return; }
       if (k === "file") {
-        const r = z.getBoundingClientRect();
-        fm.style.left = r.left + "px";
-        fm.style.top = (r.bottom + 4) + "px";
-        fm.style.display = fm.style.display === "block" ? "none" : "block";
+        if (fm.style.display === "block") { hide(); return; }
+        anchor = z;
+        fm.style.display = "block";
+        place();
       }
     });
   });
 
   fm.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
+    const a = ACTION_BY_ID[b.dataset.id];
     hide();
-    runAction(ACTION_BY_ID[b.dataset.id]);
+    if (a) runAction(a);
   });
+
   document.addEventListener("click", hide);
+  window.addEventListener("resize", () => { if (anchor) place(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
 })();
 </script>
-
 
 <script>
 (function () {
