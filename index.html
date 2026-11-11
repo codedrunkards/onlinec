@@ -5013,7 +5013,7 @@ if ("serviceWorker" in navigator) {
 // Mouse wheel / finger drag over the compiler moves the typing cursor with Up/Down keys
 (function () {
   const wrap = document.getElementById("dos-wrapper");
-  const WHEEL_PX = 40;      // bigger number = slower
+  const WHEEL_PX = 20;      // bigger number = slower
   const TOUCH_PX = 14;
   const LINES = 1;          // lines moved per step
   let pending = 0, running = false, wAcc = 0, tAcc = 0, lastY = 0;
