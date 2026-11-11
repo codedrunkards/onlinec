@@ -2005,7 +2005,7 @@ body.is-fullscreen canvas { top: var(--fs-bar-h) !important; bottom: 0 !importan
   <!-- Action / Feature Toolbar -->
   <div class="ide-toolbar">
     <button type="button" id="btn-open-paste" class="tool-btn" title="Paste C/C++ Code (Shift+Insert or Ctrl+Shift+V)">
-      📂 <span>Write/Paste/Import Code</span>
+      📂 <span>Write/Import/Paste/Copy Code</span>
     </button>
     <button type="button" id="btn-toggle-fs" class="tool-btn" title="Toggle Fullscreen (F11)">
       ⛶ <span>Fullscreen: F11</span>
@@ -3330,7 +3330,7 @@ async function actPaste() {
 // needsFile: button does nothing until a file is open
 // hint    : shortcut shown on the button (hidden on small phones)
 const ACTIONS = [
-  { id: "paste",    icon: "📂", label: "Write/Paste/Import", direct: true, run: actPaste },
+  { id: "paste",    icon: "📂", label: "Write/Import/Paste/Copy", direct: true, run: actPaste },
   { id: "new",      icon: "📄", label: "New", busy: "Creating a new file...", run: actNew },
   { id: "open",     icon: "📂", label: "Open",     run: actOpen },
   { id: "save",     icon: "💾", label: "Save", hint: "F2", needsFile: true, busy: "Reading your code...", run: actSaveAs },
@@ -5013,7 +5013,7 @@ if ("serviceWorker" in navigator) {
 // Mouse wheel / finger drag over the compiler moves the typing cursor with Up/Down keys
 (function () {
   const wrap = document.getElementById("dos-wrapper");
-  const WHEEL_PX = 20;      // bigger number = slower
+  const WHEEL_PX = 10;      // bigger number = slower
   const TOUCH_PX = 14;
   const LINES = 1;          // lines moved per step
   let pending = 0, running = false, wAcc = 0, tAcc = 0, lastY = 0;
