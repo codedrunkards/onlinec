@@ -3317,8 +3317,8 @@ function actPaste() { openModal(); }
 // needsFile: button does nothing until a file is open
 // hint    : shortcut shown on the button (hidden on small phones)
 const ACTIONS = [
-  { id: "paste", icon: "📂", label: "Write/Paste/Import", direct: true, run: actPaste },
-  { id: "new", hidden: true, icon: "📄", label: "New", busy: "Creating a new file...", run: actNew },
+  { id: "paste",    icon: "📂", label: "Write/Paste/Import", direct: true, run: actPaste },
+  { id: "new",      icon: "📄", label: "New", busy: "Creating a new file...", run: actNew },
   { id: "open",     icon: "📂", label: "Open",     run: actOpen },
   { id: "save",     icon: "💾", label: "Save", hint: "F2", needsFile: true, busy: "Reading your code...", run: actSaveAs },
   { id: "saveas",   icon: "📝", label: "Save As",  needsFile: true, busy: "Reading your code...", run: actSaveAs },
