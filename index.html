@@ -588,7 +588,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .busy-title { font-size: 1.1rem; font-weight: 700; color: var(--cyan-accent); }
   .busy-text { font-size: 0.85rem; color: var(--text-bright); font-family: var(--font-mono); min-height: 1.2em; }
   .busy-note { font-size: 0.75rem; color: #8c979a; line-height: 1.4; }
-
+    /* ---- Freeze all buttons while any process is running ---- */
+  body.is-busy .touch-btn,
+  body.is-working .touch-btn,
+  body.is-busy .tool-btn,
+  body.is-working .tool-btn,
+  body.is-busy .btn-inject,
+  body.is-working .btn-inject,
+  body.is-busy .btn-cancel,
+  body.is-working .btn-cancel,
+  body.is-busy .modal-close-btn,
+  body.is-working .modal-close-btn {
+    pointer-events: none !important;
+    opacity: 0.45 !important;
+    filter: grayscale(1);
+    cursor: not-allowed;
+  }
   #download-modal { z-index: 1000010; }
   #download-modal .filename-input { text-transform: none; width: auto; max-width: 100%; }
   
@@ -2901,6 +2916,7 @@ if (busyOverlay) {
 async function exclusive(message, fn) {
   if (actionBusy) { showToast("Please wait, the previous action is still running..."); return false; }
   actionBusy = true;
+  document.body.classList.add("is-working");
   if (message) showBusy(message);
   try {
     await ensureWorkspace();
@@ -2912,6 +2928,7 @@ async function exclusive(message, fn) {
     return false;
   } finally {
     actionBusy = false;
+    document.body.classList.remove("is-working");
     clearKeyMatrix();
     if (message) hideBusy();
   }
