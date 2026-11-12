@@ -5394,26 +5394,44 @@ if ("serviceWorker" in navigator) {
 // ===== Re-open the last file on the next visit =====
 (function () {
   const KEY = "tc_last_session";
-  const AUTO_SAVE = false;        // false = remember only when a file is opened
+  const AUTO_SAVE = true;        // false = remember only when a file is opened
   const IDLE_MS = 1000;          // save 1 second after you stop typing
   const MAX_MS  = 5000;          // ...and at least every 5 seconds while you keep typing
   let idleTimer = null, maxTimer = null, saving = false;
 
   // Lean snapshot: only F2 (save) + read the file. No Escape, no key release, no popup.
+    // Shows a still picture of the compiler on top, so nothing happening underneath is visible
+  async function freezeFrame() {
+    try {
+      const c = dosBox.querySelector("canvas");
+      if (!c || !dosCi || typeof dosCi.screenshot !== "function") return null;
+      const img = await dosCi.screenshot();
+      if (!img || !img.data) return null;
+      const ov = document.createElement("canvas");
+      ov.width = img.width; ov.height = img.height;
+      ov.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(img.data), img.width, img.height), 0, 0);
+      const r = c.getBoundingClientRect();
+      ov.style.cssText = "position:fixed;z-index:150;pointer-events:none;" +
+        "left:" + r.left + "px;top:" + r.top + "px;width:" + r.width + "px;height:" + r.height + "px;";
+      document.body.appendChild(ov);
+      return ov;
+    } catch (e) { return null; }
+  }
+
   async function snapshot() {
     if (!AUTO_SAVE || saving || !dosCi || !lastDosFilename) return;
     if (/^NONAME\d+\.CPP$/i.test(lastDosFilename)) return;     // F2 would open a Save-As dialog
     if (actionBusy || isBusy() || document.hidden || editorOnScreen !== true) return;
     if (document.querySelector(".modal-backdrop.visible, .full-chat-modal.open")) return;
-    if (Date.now() < (window.__tcQuietUntil || 0)) return;   // quiet period after returning to the tab
-    if (await isDialogOpen()) return;                         // never press F2 while a native dialog is open
-    saving = true; actionBusy = true;                          // keeps other macros from starting meanwhile
+    if (Date.now() < (window.__tcQuietUntil || 0)) return;
+    saving = true; actionBusy = true;
     const name = lastDosFilename;
+    const cover = await freezeFrame();                         // hides the dialog from the user
     try {
       await pressDosKey(KBD.F2, false, 25, 150);
-      if (await isDialogOpen() === true) {                 // "Date/time of disk file has changed"
-        await pressDosKey(KBD.TAB, true, 25, 150);         // Shift+Tab: No -> Yes
-        await pressDosKey(KBD.ENTER, false, 25, 600);      // confirm overwrite
+      if (await isDialogOpen() === true) {                     // "Date/time of disk file has changed"
+        await pressDosKey(KBD.TAB, true, 25, 150);             // Shift+Tab: No -> Yes
+        await pressDosKey(KBD.ENTER, false, 25, 600);          // confirm
       }
       const bytes = await readDosFile(name);
       if (bytes && lastDosFilename === name) {
@@ -5423,7 +5441,11 @@ if ("serviceWorker" in navigator) {
         }));
       }
     } catch (e) {
-    } finally { actionBusy = false; saving = false; }
+    } finally {
+      await delay(150);
+      if (cover) cover.remove();
+      actionBusy = false; saving = false;
+    }
   }
 
   function runNow() {
