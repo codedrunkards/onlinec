@@ -3207,6 +3207,13 @@ async function openCodeInEditor(name, code) {
     setBusyText("Loading the code...");
     await clearEditorWindow();
     await readFileIntoEditor(name);
+    if (!/^NONAME\d+\.CPP$/i.test(name)) {
+      await pressDosKey(KBD.F2, false, 25, 300);           // save once so Turbo C++ learns the new timestamp
+      if (await isDialogOpen() === true) {
+        await pressDosKey(KBD.TAB, true, 25, 150);
+        await pressDosKey(KBD.ENTER, false, 25, 600);
+      }
+    }
   }
   await ensureZoomed(!alreadyOpen || isNew);   // always leave the window full-size
   
@@ -5407,6 +5414,10 @@ if ("serviceWorker" in navigator) {
     const name = lastDosFilename;
     try {
       await pressDosKey(KBD.F2, false, 25, 150);
+      if (await isDialogOpen() === true) {                 // "Date/time of disk file has changed"
+        await pressDosKey(KBD.TAB, true, 25, 150);         // Shift+Tab: No -> Yes
+        await pressDosKey(KBD.ENTER, false, 25, 600);      // confirm overwrite
+      }
       const bytes = await readDosFile(name);
       if (bytes && lastDosFilename === name) {
         localStorage.setItem(KEY, JSON.stringify({
