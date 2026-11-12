@@ -3078,8 +3078,15 @@ async function readCurrentFile() {
   if (!dlg && isNoname) { await delay(400); dlg = await isDialogOpen(); }
 
   if (dlg || (isNoname && dlg === null)) {
-    // press Enter (OK), and again if an "overwrite?" question follows
-    await pressDosKey(KBD.ENTER, false, 25, 600);
+    if (isNoname) {
+      // Save As dialog: Enter = OK
+      await pressDosKey(KBD.ENTER, false, 25, 600);
+    } else {
+      // "Date/time of disk file has changed" warning: focus is on No,
+      // so Shift+Tab moves to Yes, then Enter confirms the overwrite
+      await pressDosKey(KBD.TAB, true, 25, 150);
+      await pressDosKey(KBD.ENTER, false, 25, 600);
+    }
     for (let i = 0; i < 2 && await isDialogOpen(); i++) {
       await pressDosKey(KBD.ENTER, false, 25, 600);
     }
@@ -5394,6 +5401,8 @@ if ("serviceWorker" in navigator) {
     if (/^NONAME\d+\.CPP$/i.test(lastDosFilename)) return;     // F2 would open a Save-As dialog
     if (actionBusy || isBusy() || document.hidden || editorOnScreen !== true) return;
     if (document.querySelector(".modal-backdrop.visible, .full-chat-modal.open")) return;
+    if (Date.now() < (window.__tcQuietUntil || 0)) return;   // quiet period after returning to the tab
+    if (await isDialogOpen()) return;                         // never press F2 while a native dialog is open
     saving = true; actionBusy = true;                          // keeps other macros from starting meanwhile
     const name = lastDosFilename;
     try {
@@ -5461,6 +5470,41 @@ if ("serviceWorker" in navigator) {
     }
   }
   setInterval(update, 300);
+})();
+</script>
+
+
+<script>
+// Tab-return guard: release stuck keys and close stray menus/dialogs
+(function () {
+  let hiddenAt = 0;
+  const MODS = [KBD.LSHIFT, KBD.RSHIFT, KBD.LCTRL, KBD.RCTRL, KBD.LALT, KBD.RALT];
+
+  function releaseAll() {
+    if (!dosCi) return;
+    MODS.forEach((k) => { try { dosCi.sendKeyEvent(k, false); } catch (e) {} });
+    clearKeyMatrix();
+  }
+
+  async function resync() {
+    if (!dosCi || actionBusy || isBusy()) return;
+    window.__tcQuietUntil = Date.now() + 4000;   // autosave stays quiet meanwhile
+    actionBusy = true;
+    try {
+      releaseAll();
+      await delay(300);
+      for (let i = 0; i < 2; i++) await pressDosKey(KBD.ESC, false, 20, 80);   // closes any open menu/dialog
+    } finally {
+      actionBusy = false;
+      releaseAll();
+    }
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { hiddenAt = Date.now(); releaseAll(); }
+    else if (Date.now() - hiddenAt > 1500) setTimeout(resync, 400);
+  });
+  window.addEventListener("blur", releaseAll);
 })();
 </script>
   
