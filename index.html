@@ -3485,7 +3485,7 @@ const ACTIONS = [
   { id: "open",     icon: "📂", label: "Open",     run: actOpen },
   { id: "save",     icon: "💾", label: "Save", hint: "F2", needsFile: true, busy: "Reading your code...", run: actSaveAs },
   { id: "saveas",   icon: "📝", label: "Save As",  needsFile: true, busy: "Reading your code...", run: actSaveAs },
-  { id: "run",      icon: "▶️", label: "Run",      hint: "Ctrl+F9", needsFile: true, run: actRun },
+  { id: "run",      icon: "▶️", label: "Run", hint: "Ctrl+F9", needsFile: true, run: actRun },
   { id: "output",   dom: "tb-userscreen", icon: "🖥️", label: "Output", hint: "Alt+F5", run: actOutput },
   { id: "clear",    icon: "🧹", label: "Clear",    needsFile: true, busy: "Clearing the editor...", run: actClear },
   { id: "download", icon: "⬇️", label: "Download", needsFile: true, busy: "Reading your code...", run: actDownload },
@@ -5792,7 +5792,13 @@ if ("serviceWorker" in navigator) {
     if (e.ctrlKey && e.key === "F9" && !e.repeat && lastDosFilename && !isOpen) open();
   }, true);
 
-  window.TCOut = { open: open, close: close, isOpen: function () { return isOpen; } };
+  window.TCOut = { 
+  open: open, 
+  close: close, 
+  isOpen: function () { return isOpen; },
+  run: typeof actRun !== "undefined" ? actRun : function() { open(); }
+};
+    
 })();
   
 </script>
