@@ -449,9 +449,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     max-width: 100% !important;
     height: auto !important;
   }
-
-  #out-screen{position:absolute;inset:0;z-index:300;display:flex;flex-direction:column;background:#000}
-#out-screen[hidden]{display:none}
   
     /* Covers over the Turbo C++ menu bar, window title bar and status line (positioned by JS) */
   .dos-shield {
@@ -3211,6 +3208,8 @@ async function openCodeInEditor(name, code) {
     }
     code = code.replace(/<<\s*endl/g, '<< endl; delay(15)');
     code = code.replace(/(printf\s*\([^;]*\\n[^;]*\);)/g, '$1 delay(15);');
+    code = code.replace(/(\bputs\s*\([^;]*\);)/g, '$1 delay(15);');
+    code = code.replace(/(cout\s*<<[^;]*\\n[^;]*;)/g, '$1 delay(15);');
     if (typeof dosCi.fsWriteFile !== "function") throw new Error("Filesystem write unavailable in this session.");
     await dosCi.fsWriteFile(name, new TextEncoder().encode(code));
   }
@@ -5535,7 +5534,7 @@ if ("serviceWorker" in navigator) {
     if (typeof editorOnScreen === "undefined") return;
     if (editorOnScreen === true) seenEditor = true;          // the editor has been seen at least once
     const broken = typeof screenFails !== "undefined" && screenFails >= 3;   // screen reading failed: stay normal
-    const onOutput = !!dosCi && seenEditor && !broken && editorOnScreen === false;
+    const onOutput = (!!dosCi && seenEditor && !broken && editorOnScreen === false) || !!(window.TCOut && window.TCOut.isOpen());
     if (onOutput === showingBack) return;
     showingBack = onOutput;
     if (onOutput) {
@@ -5624,6 +5623,7 @@ if ("serviceWorker" in navigator) {
 
   var ROWS = 25, MAX_CHUNKS = 80, CHUNK_ROWS = 100;
   var isOpen = false, timer = null, polling = false, stick = true;
+  var sawOutput = false, openedAt = 0;
   var prev = null, chunk = null;
 
   box.addEventListener("scroll", function () {
@@ -5665,6 +5665,19 @@ if ("serviceWorker" in navigator) {
     return true;
   }
 
+    function isIdeFrame(id) {
+    var y = Math.floor(id.height / 25 * 0.5);
+    var step = Math.max(1, Math.floor(id.width / 60));
+    var grey = 0, total = 0;
+    for (var x = 2; x < id.width - 2; x += step) {
+      var i = (y * id.width + x) * 4;
+      total++;
+      if (Math.abs(id.data[i] - 170) < 30 && Math.abs(id.data[i + 1] - 170) < 30 && Math.abs(id.data[i + 2] - 170) < 30) grey++;
+    }
+    return total > 0 && grey / total > 0.5;
+  }
+
+  
   // STRICT CHARACTER-CELL MATCHING: Compares 80 columns one-by-one
   function rowsSame(a, b, ra, rb, w, rh) {
     var wChar = w / 80;
@@ -5674,8 +5687,8 @@ if ("serviceWorker" in navigator) {
     for (var col = 0; col < 80; col++) {
       var xStart = Math.floor(col * wChar), xEnd = Math.floor((col + 1) * wChar);
       var charDiff = 0;
-      for (var y = startY; y < endY; y++) {
-        for (var x = xStart; x < xEnd; x++) {
+      for (var y = startY; y < endY; y += 2) {
+        for (var x = xStart; x < xEnd; x += 2) {
           var ia = ((ra * rh + y) * w + x) * 4;
           var ib = ((rb * rh + y) * w + x) * 4;
           var da = a[ia] + a[ia + 1] + a[ia + 2];
@@ -5683,7 +5696,7 @@ if ("serviceWorker" in navigator) {
           if (Math.abs(da - db) > 50) charDiff++;
         }
       }
-      if (charDiff > 3) charsDiffer++;
+      if (charDiff > 1) charsDiffer++;
       if (charsDiffer > 1) return false;
     }
     return true;
@@ -5763,10 +5776,16 @@ if ("serviceWorker" in navigator) {
       if (!raw || !raw.data || !isOpen) return;
       var id = toImageData(raw);
 
+      if (isIdeFrame(id)) {                 // Turbo's blue editor: never draw it in our screen
+        if (!sawOutput && Date.now() - openedAt > 8000) returnToEditor(true);  // compile error: reveal the editor
+        return;                             // otherwise keep the last output frame / "Compiling..." text
+      }
+
       if (prev && prev.width === id.width && prev.height === id.height && looksLikeText(id)) {
         var s = detectScroll(prev, id);
         if (s > 0) archive(prev, s);
       }
+      sawOutput = true;
       prev = id;
       showLive(id);
       if (stick) box.scrollTop = box.scrollHeight;
@@ -5777,30 +5796,37 @@ if ("serviceWorker" in navigator) {
     }
   }
 
-  function open() {
+    function open() {
     if (isOpen) return;
     hist.innerHTML = ""; chunk = null; prev = null; stick = true;
+    sawOutput = false; openedAt = Date.now();
     live.style.display = "none"; waitEl.style.display = "block";
     isOpen = true;
     box.classList.add("on");
     closeBtn.style.display = "block";
     placeCloseBtn();
     timer = setInterval(tick, 20);
+    try { focusDos(); } catch (e) {}
   }
 
   // FIXED RETURN TO BLUE EDITOR: Closes overlay and returns straight to IDE without bouncing
-  async function returnToEditor() {
+    async function returnToEditor(skipKey) {
     if (!isOpen) return;
     isOpen = false;
     clearInterval(timer);
     timer = null;
     box.classList.remove("on");
     closeBtn.style.display = "none";
-    
-    // Send ESC to dismiss output screen and return to editor
+    if (skipKey === true) return;          // just hide the overlay, send no key
     try {
       focusDos();
-      await pressDosKey(KBD.ESC, false, 40, 100);
+      for (var n = 0; n < 4; n++) {
+        var ide = await isEditorOnScreen();
+        if (ide === true) break;           // already in the editor
+        await pressDosKey(KBD.ESC, false, 40, 100);
+        await delay(250);
+        if (ide === null) break;           // screenshots unavailable: one ESC only
+      }
       focusDos();
     } catch (e) {}
   }
@@ -5819,19 +5845,26 @@ if ("serviceWorker" in navigator) {
   };
 
   // FIXED GO BACK / OUTPUT BUTTON: Clean switch with NO infinite toggle loop
-  if (ACTION_BY_ID && ACTION_BY_ID.output) {
-    ACTION_BY_ID.output.run = async function () {
+      ACTION_BY_ID.output.run = async function () {
       if (isOpen) {
         await returnToEditor();
-      } else {
-        open();
-        focusDos();
+        return;
+      }
+      focusDos();
+      var ide = await isEditorOnScreen();   // true = editor, false = Turbo output screen
+      open();
+      if (ide !== false) {                  // press Alt+F5 only if we are NOT already on the output screen
         await dosCombo([KBD.LALT], KBD.F5, 60);
       }
     };
-  }
 
-  window.addEventListener("keydown", function (e) {
+    window.addEventListener("keydown", function (e) {
+    if (e.altKey && !e.ctrlKey && e.key === "F5") {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (!e.repeat) runAction(ACTION_BY_ID.output);
+      return;
+    }
     if (e.ctrlKey && e.key === "F9" && !e.repeat && lastDosFilename && !isOpen) {
       open();
     }
