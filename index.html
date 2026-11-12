@@ -3205,14 +3205,32 @@ async function openCodeInEditor(name, code) {
   await stashCurrentFile();
   if (!isNew) {
     code = await fixBgiPath(code);
-    // Ensure high-speed loops give the browser frame buffer time to archive scrolled lines
-    if (!/#include\s*<dos\.h>/.test(code)) {
-      code = "#include <dos.h>\n" + code;
-    }
-    // Automatically pace endl so browser captures every single line
-    code = code.replace(/<<\s*endl/g, '<< endl; delay(2)');
+
+    // Solution A: Dual-Stream Tee (captures 100% of output to C:\OUT.TXT while displaying on screen)
+    var teeHeader = 
+      "#include <stdio.h>\n" +
+      "#ifdef __cplusplus\n" +
+      "#include <iostream.h>\n" +
+      "class _TCOutLog : public streambuf {\n" +
+      "  streambuf* _o;\n" +
+      "public:\n" +
+      "  _TCOutLog(streambuf* o): _o(o) { remove(\"C:\\\\OUT.TXT\"); }\n" +
+      "  virtual int overflow(int c) {\n" +
+      "    if (c != EOF) {\n" +
+      "      _o->overflow(c);\n" +
+      "      FILE* f = fopen(\"C:\\\\OUT.TXT\", \"a\");\n" +
+      "      if (f) { fputc(c, f); fclose(f); }\n" +
+      "    }\n" +
+      "    return c;\n" +
+      "  }\n" +
+      "};\n" +
+      "static _TCOutLog _tc_tee(cout.rdbuf());\n" +
+      "struct _TCOutInit { _TCOutInit() { cout = &_tc_tee; } } _tc_init;\n" +
+      "#endif\n\n";
+
+    var compiledCode = teeHeader + code;
     if (typeof dosCi.fsWriteFile !== "function") throw new Error("Filesystem write unavailable in this session.");
-    await dosCi.fsWriteFile(name, new TextEncoder().encode(code));
+    await dosCi.fsWriteFile(name, new TextEncoder().encode(compiledCode));
   }
   await prepDos();
 
@@ -5587,265 +5605,100 @@ if ("serviceWorker" in navigator) {
 </script>
 
 <script>
-  (function () {
+(function () {
   var wrap = document.getElementById("dos-wrapper");
   if (!wrap) return;
 
-  // ---------- markup + css (injected, no manual HTML/CSS edits needed) ----------
+  // Injected CSS for pure native terminal scrollbox
   var css = document.createElement("style");
   css.textContent =
-    "#out-screen{position:absolute;inset:0;z-index:300;background:#000;overflow-y:auto;overflow-x:hidden;display:none}" +
-    "#out-screen.on{display:block}" +
-    "#out-screen canvas{display:block;width:100%;height:auto;image-rendering:pixelated}" +
-    "body.is-fullscreen #out-screen canvas{position:static !important;top:auto !important;bottom:auto !important;" +
-    "width:100% !important;height:auto !important;max-width:100% !important;max-height:none !important;z-index:auto !important}" +
-    "#out-wait{color:#c0c0c0;font:14px monospace;padding:12px}" +
-    "#out-close{position:fixed;z-index:310;width:30px;height:30px;border:1px solid #66fcf1;border-radius:6px;" +
-    "background:#14171d;color:#66fcf1;cursor:pointer;font-size:16px;line-height:1}";
+    "#out-screen{position:absolute;inset:0;z-index:300;background:#000;display:none;flex-direction:column;}" +
+    "#out-screen.on{display:flex;}" +
+    "#out-text{flex:1;overflow-y:auto;overflow-x:auto;padding:12px;font:15px/1.35 'Fira Code',Consolas,monospace;color:#66fcf1;white-space:pre-wrap;word-break:break-word;user-select:text;-webkit-user-select:text;}" +
+    "#out-close{position:absolute;top:10px;right:14px;z-index:310;width:32px;height:32px;border:1px solid #66fcf1;border-radius:6px;background:#14171d;color:#66fcf1;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.8);}" +
+    "#out-close:hover{background:#66fcf1;color:#0b0c10;}";
   document.head.appendChild(css);
 
+  // Terminal overlay container
   var box = document.createElement("div");
   box.id = "out-screen";
-  box.innerHTML = '<div id="out-wait">Compiling...</div><div id="out-hist"></div><canvas id="out-live" style="display:none"></canvas>';
+  box.innerHTML = '<div id="out-text">Compiling and running...</div><button id="out-close" type="button" title="Back to Compiler">✕</button>';
   wrap.appendChild(box);
-  var closeBtn = document.createElement("button");
-  closeBtn.id = "out-close"; closeBtn.type = "button"; closeBtn.textContent = "\u2715"; closeBtn.title = "Close output";
-  closeBtn.style.display = "none";
-  wrap.appendChild(closeBtn);
 
-  var waitEl = document.getElementById("out-wait");
-  var hist = document.getElementById("out-hist");
-  var live = document.getElementById("out-live");
-  var lctx = live.getContext("2d");
+  var outText = document.getElementById("out-text");
+  var closeBtn = document.getElementById("out-close");
+  var isOpen = false;
+  var pollTimer = null;
 
-  // ---------- state ----------
-  var ROWS = 25, MAX_CHUNKS = 60, CHUNK_ROWS = 100;
-  var isOpen = false, timer = null, polling = false, stick = true;
-  var prev = null, seenOutput = false, openedAt = 0, chunk = null, lastWasEditor = true;
-
-  box.addEventListener("scroll", function () {
-    stick = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
-  });
-  // Clicking the overlay gives the keyboard back to DOSBox (typing = Turbo C++ input)
-  box.addEventListener("click", function (e) {
-  if (e.target === closeBtn) return;
-  try { focusDos(); } catch (err) {}
-  var h = document.getElementById("keyboard-helper");
-  if (h && window.matchMedia && matchMedia("(pointer: coarse)").matches) {
-    h.focus();
-  }
-});
-
-    
-  function placeCloseBtn() {
-    var r = box.getBoundingClientRect();
-    closeBtn.style.top = (r.top + 6) + "px";
-    closeBtn.style.left = (r.right - 40 - (box.offsetWidth - box.clientWidth)) + "px";
-  }
-
-  // ---------- frame helpers ----------
-  function toImageData(img) {
-    if (typeof ImageData !== "undefined" && img instanceof ImageData) return img;
-    return new ImageData(new Uint8ClampedArray(img.data), img.width, img.height);
-  }
-
-  function isEditorFrame(id) {                       // light-grey menu bar across row 0
-    var y = Math.floor(id.height / ROWS * 0.5), step = Math.max(1, Math.floor(id.width / 60)), grey = 0, total = 0;
-    for (var x = 2; x < id.width - 2; x += step) {
-      var i = (y * id.width + x) * 4; total++;
-      if (Math.abs(id.data[i] - 170) < 30 && Math.abs(id.data[i + 1] - 170) < 30 && Math.abs(id.data[i + 2] - 170) < 30) grey++;
-    }
-    return total > 0 && grey / total > 0.5;
-  }
-
-  function looksLikeText(id) {                       // 80x25 text screen (720x400, 640x400, 720x350); BGI 640x480 is not
-    return (id.width === 720 || id.width === 640) && id.height % ROWS === 0;
-  }
-
-  function rowBlank(d, r, w, rh) {
-    for (var y = 0; y < rh; y += 2) for (var x = 0; x < w; x += 3) {
-      var i = ((r * rh + y) * w + x) * 4;
-      if (d[i] || d[i + 1] || d[i + 2]) return false;
-    }
-    return true;
-  }
-
-  function rowsSame(a, b, ra, rb, w, rh) {
-    var diff = 0, total = 0;
-    var startY = Math.floor(rh * 0.15), endY = Math.floor(rh * 0.85); // ignore top/bottom padding
-    for (var y = startY; y < endY; y++) {
-      for (var x = 0; x < w; x += 2) {
-        var ia = ((ra * rh + y) * w + x) * 4;
-        var ib = ((rb * rh + y) * w + x) * 4;
-        total++;
-        // Compare brightness difference
-        var da = a[ia] + a[ia + 1] + a[ia + 2];
-        var db = b[ib] + b[ib + 1] + b[ib + 2];
-        if (Math.abs(da - db) > 40) diff++;
-      }
-    }
-    return (diff / total) < 0.005; // Strict: 0.5% difference means rows are NOT the same
-  }
-
-  // How many text rows did the screen scroll up between frames p and n?  0 = none / unknown
-  function detectScroll(p, n) {
-    var w = p.width, rh = p.height / ROWS, pd = p.data, nd = n.data;
-    
-    // Check if screen didn't change at all
-    var identical = 0;
-    for (var r = 0; r < ROWS; r++) {
-      if (rowsSame(pd, nd, r, r, w, rh)) identical++;
-    }
-    if (identical >= ROWS - 1) return 0;
-
-    var bestShift = 0;
-    var bestMatches = 0;
-
-    // Test how many rows up the screen moved (from 1 row up to 24 rows up)
-    for (var s = 1; s < ROWS; s++) {
-      var overlap = ROWS - s;
-      var matches = 0;
-      for (var i = 0; i < overlap; i++) {
-        if (rowsSame(pd, nd, i + s, i, w, rh)) {
-          matches++;
-        }
-      }
-      // If most rows in the overlap area line up perfectly
-      if (matches >= Math.max(2, overlap - 1) && matches > bestMatches) {
-        bestMatches = matches;
-        bestShift = s;
-      }
-    }
-
-    // Fallback: If screen shifted by more than what overlap could detect,
-    // take the top visible line of the new frame and find where it was in the old frame
-    if (bestShift === 0) {
-      for (var topIdx = 0; topIdx < Math.min(5, ROWS); topIdx++) {
-        if (rowBlank(nd, topIdx, w, rh)) continue;
-        for (var oldIdx = topIdx + 1; oldIdx < ROWS; oldIdx++) {
-          if (rowsSame(pd, nd, oldIdx, topIdx, w, rh)) {
-            bestShift = oldIdx - topIdx;
-            break;
+  // Reading live output from virtual disk (C:\OUT.TXT)
+  async function refreshOutput() {
+    if (!isOpen || !dosCi) return;
+    try {
+      var bytes = await dosCi.fsReadFile("OUT.TXT");
+      if (bytes && bytes.length > 0) {
+        var text = new TextDecoder("utf-8").decode(bytes);
+        if (outText.textContent !== text) {
+          var stickToBottom = (outText.scrollHeight - outText.scrollTop - outText.clientHeight) < 50;
+          outText.textContent = text;
+          if (stickToBottom) {
+            outText.scrollTop = outText.scrollHeight;
           }
         }
-        if (bestShift > 0) break;
       }
-    }
-
-    return bestShift;
-  }
-
-  // ---------- scrollback storage ----------
-  function archive(pid, s) {
-    var w = pid.width, rh = pid.height / ROWS;
-    if (!chunk || chunk.rows + s > CHUNK_ROWS || chunk.w !== w || chunk.rh !== rh) {
-      var cv = document.createElement("canvas"); cv.width = w; cv.height = 1;
-      hist.appendChild(cv);
-      chunk = { cv: cv, rows: 0, w: w, rh: rh };
-      while (hist.children.length > MAX_CHUNKS) hist.removeChild(hist.firstChild);
-    }
-    var nc = document.createElement("canvas");
-    nc.width = w; nc.height = (chunk.rows + s) * rh;
-    var c = nc.getContext("2d");
-    if (chunk.rows > 0) c.drawImage(chunk.cv, 0, 0);
-    c.putImageData(pid, 0, chunk.rows * rh, 0, 0, w, s * rh);   // rows 0..s-1 of the old frame = the lines that scrolled off
-    if (chunk.cv.parentNode === hist) hist.replaceChild(nc, chunk.cv);
-    chunk.cv = nc; chunk.rows += s;
-  }
-
-  function showLive(id) {
-    if (live.width !== id.width || live.height !== id.height) { live.width = id.width; live.height = id.height; }
-    lctx.putImageData(id, 0, 0);
-    live.style.display = "block";
-    waitEl.style.display = "none";
-  }
-
-  // ---------- main loop ----------
-  async function tick() {
-    if (!isOpen || polling) return;
-    if (typeof dosCi === "undefined" || !dosCi || typeof dosCi.screenshot !== "function") return;
-    polling = true;
-    try {
-      var raw = await dosCi.screenshot();
-      if (!raw || !raw.data || !isOpen) return;
-      var id = toImageData(raw);
-      var editor = isEditorFrame(id);
-      lastWasEditor = editor;
-
-      if (editor) {
-        if (seenOutput) { close(false); return; }                        // program finished, user is back in the editor
-        if (Date.now() - openedAt > 12000) { close(false); return; }      // compile error etc.: let the user read it in Turbo C++
-        prev = null;
-        return;
-      }
-
-      seenOutput = true;
-      if (prev && prev.width === id.width && prev.height === id.height && looksLikeText(id)) {
-        var s = detectScroll(prev, id);
-        if (s > 0) archive(prev, s);
-      }
-      prev = id;
-      showLive(id);
-      if (stick) box.scrollTop = box.scrollHeight;
-      placeCloseBtn();
     } catch (e) {
-      /* ignore a failed frame */
-    } finally {
-      polling = false;
+      // File not created yet while compiling
     }
   }
 
-  function open(keepIfOpen) {
+  function open() {
     if (isOpen) return;
-    hist.innerHTML = ""; chunk = null; prev = null; seenOutput = false; stick = true;
-    live.style.display = "none"; waitEl.style.display = "block";
-    openedAt = Date.now(); isOpen = true;
-    box.classList.add("on"); closeBtn.style.display = "block"; placeCloseBtn();
-    timer = setInterval(tick, 25);
+    isOpen = true;
+    outText.textContent = "Compiling program...";
+    box.classList.add("on");
+    pollTimer = setInterval(refreshOutput, 100);
   }
 
-  async function close(manual) {
+  async function close() {
     if (!isOpen) return;
-    isOpen = false; clearInterval(timer); timer = null;
-    box.classList.remove("on"); closeBtn.style.display = "none";
-    if (manual && !lastWasEditor) {                // we are still on the DOS output screen: send the key that returns to the editor
-      try { await pressDosKey(KBD.ESC, false, 40, 200); } catch (e) {}
-    }
+    isOpen = false;
+    clearInterval(pollTimer);
+    pollTimer = null;
+    box.classList.remove("on");
     try { focusDos(); } catch (e) {}
   }
 
-  closeBtn.addEventListener("click", function (e) { e.stopPropagation(); close(true); });
-  window.addEventListener("resize", placeCloseBtn);
-  document.addEventListener("fullscreenchange", function () { setTimeout(placeCloseBtn, 100); });
+  closeBtn.addEventListener("click", close);
 
-  // ---------- hook into your existing buttons (no edits to your own code needed) ----------
+  // Hook Run & Output buttons
   var _runAction = runAction;
   runAction = function (a) {
-    if (a && a.id === "run" && !actionBusy && lastDosFilename && dosCi) open();      // appears the moment Run is clicked
+    if (a && a.id === "run" && !actionBusy && lastDosFilename && dosCi) {
+      open();
+    }
     return _runAction.apply(this, arguments);
   };
 
   if (ACTION_BY_ID && ACTION_BY_ID.output) {
     var _outRun = ACTION_BY_ID.output.run;
     ACTION_BY_ID.output.run = function () {
-      if (!isOpen) open();
-      return _outRun.apply(this, arguments);       // Alt+F5 toggle as before; overlay closes itself when the editor is back
+      if (!isOpen) {
+        open();
+        refreshOutput();
+      } else {
+        close();
+      }
+      return _outRun.apply(this, arguments);
     };
   }
 
-  // Ctrl+F9 typed on the real keyboard also opens it (the key still reaches Turbo C++ as before)
   window.addEventListener("keydown", function (e) {
-    if (e.ctrlKey && e.key === "F9" && !e.repeat && lastDosFilename && !isOpen) open();
+    if (e.ctrlKey && e.key === "F9" && !e.repeat && lastDosFilename && !isOpen) {
+      open();
+    }
   }, true);
 
-  window.TCOut = { 
-  open: open, 
-  close: close, 
-  isOpen: function () { return isOpen; }
-};
-    
+  window.TCOut = { open: open, close: close, isOpen: function () { return isOpen; } };
 })();
-  
 </script>
   
 </body>
