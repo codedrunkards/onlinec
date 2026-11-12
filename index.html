@@ -47,8 +47,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<script>if (window.top !== window.self) { try { window.top.location = window.self.location; } catch (e) { document.documentElement.innerHTML = ""; } }</script>  
-
+<script>if (window.top !== window.self) { try { window.top.location = window.self.location; } catch (e) { document.documentElement.innerHTML = ""; } }</script>
+  
 <!-- JSON-LD Structured Data: WebApplication + FAQPage for Top Google Ranking -->
 <script type="application/ld+json">
 {
@@ -212,11 +212,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 <!-- js-dos v8 styles -->
 <link rel="stylesheet" href="js-dos.css">
+<link rel="preload" href="turboc.jsdos" as="fetch" crossorigin>
+<link rel="preload" href="js-dos.js" as="script">
+<link rel="preload" href="emulators.js" as="script">
   
 <!-- Firebase App & Realtime Database SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
   :root {
@@ -546,9 +548,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     /* ---- Freeze + "please wait" popup while code is being injected ---- */
   .busy-overlay {
     display: none;
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: 1000100;                 /* above every dialog, the action bar and the toast */
+    z-index: 500;                 /* above every dialog, the action bar and the toast */
     background-color: rgba(5, 7, 10, 0.78);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -586,7 +588,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .busy-title { font-size: 1.1rem; font-weight: 700; color: var(--cyan-accent); }
   .busy-text { font-size: 0.85rem; color: var(--text-bright); font-family: var(--font-mono); min-height: 1.2em; }
   .busy-note { font-size: 0.75rem; color: #8c979a; line-height: 1.4; }
-  html.is-busy, body.is-busy { overflow: hidden !important; }
 
   #download-modal { z-index: 1000010; }
   #download-modal .filename-input { text-transform: none; width: auto; max-width: 100%; }
@@ -1906,16 +1907,11 @@ body.is-fullscreen canvas { top: var(--fs-bar-h) !important; bottom: 0 !importan
   </div>
 
   <!-- 1. Username Claim Form (Visible only before joining) -->
-    <div class="chat-join-box" id="chat-join-section">
-    <div class="chat-join-desc">🔐 Create an account to chat: pick a unique username and a password (8+ characters). Joined before? Enter your old username with a new password to protect it. Already have an account? Tap Log in. Usernames cannot be changed.</div>
-    <div style="display: flex; flex-direction: column; gap: 6px;">
-      <input type="text" id="choose-username-input" maxlength="15" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Username..." style="background: var(--bg-dark); border: 1px solid var(--border-color); color: #fff; padding: 7px 10px; border-radius: 5px; outline: none; font-family: var(--font-mono); font-size: 0.8rem;">
-      <input type="password" id="choose-password-input" maxlength="64" autocomplete="current-password" placeholder="Password (8+ characters)..." style="background: var(--bg-dark); border: 1px solid var(--border-color); color: #fff; padding: 7px 10px; border-radius: 5px; outline: none; font-family: var(--font-mono); font-size: 0.8rem;">
-      <div style="display: flex; gap: 6px;">
-        <button type="button" class="chat-send" id="btn-claim-username" style="padding: 0 12px; flex: 1;">Create account</button>
-        <button type="button" class="chat-send" id="btn-login-username" style="padding: 0 12px; flex: 1;">Log in</button>
-      </div>
-      <div id="auth-msg" style="font-size: 0.72rem; font-family: var(--font-mono); line-height: 1.3;"></div>
+  <div class="chat-join-box" id="chat-join-section">
+    <div class="chat-join-desc">⚠️ Choose your username to join. Once chosen, it cannot be changed and must be unique!</div>
+    <div style="display: flex; gap: 6px;">
+      <input type="text" id="choose-username-input" maxlength="15" placeholder="Pick a username..." style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: #fff; padding: 7px 10px; border-radius: 5px; outline: none; font-family: var(--font-mono); font-size: 0.8rem;">
+      <button type="button" class="chat-send" id="btn-claim-username" style="padding: 0 12px;">Join</button>
     </div>
   </div>
 
@@ -1945,10 +1941,16 @@ body.is-fullscreen canvas { top: var(--fs-bar-h) !important; bottom: 0 !importan
     </div>
 
     <button type="button" class="btn-open-fullchat" id="btn-open-fullchat">⛶ Expand Full Chat Window</button>
-            <div class="chat-user-row">
+        <div class="chat-user-row">
       <span class="chat-badge" id="chat-current-user">User: ...</span>
-      <button type="button" class="change-name-btn" id="btn-logout" title="Log out">🚪 Log out</button>
+      <button type="button" class="change-name-btn" id="btn-change-username" title="Change my username">✏️ Change</button>
     </div>
+    <div class="change-name-row" id="change-username-row" style="display:none;">
+      <input type="text" id="change-username-input" form="change-username-noform" maxlength="15" placeholder="New username..." autocomplete="off" autocapitalize="none" spellcheck="false">
+      <button type="button" class="chat-send" id="btn-change-save" style="padding:0 12px;height:34px;">Save</button>
+      <button type="button" class="btn-cancel" id="btn-change-cancel" style="padding:0 10px;height:34px;">✕</button>
+    </div>
+    <div class="change-name-msg" id="change-username-msg"></div>
     <div class="chat-row" style="align-items: flex-end;">
       <textarea id="chat-input" rows="1" maxlength="300" placeholder="Type a message... (Enter to send)" disabled></textarea>
       <button type="submit" class="chat-send" id="chat-send" disabled style="height: 38px;">Send</button>
@@ -2033,6 +2035,15 @@ body.is-fullscreen canvas { top: var(--fs-bar-h) !important; bottom: 0 !importan
       <div id="dos" tabindex="0"></div>
       <div class="dos-shield" id="dos-shield-top"><span id="dos-filename">TURBO C++ 3.2</span></div>
       <div class="dos-shield" id="dos-shield-bottom"></div>
+      <!-- Freeze overlay shown while code is injected into Turbo C++ -->
+  <div class="busy-overlay" id="busy-overlay" role="alertdialog" aria-modal="true" aria-live="polite">
+    <div class="busy-card">
+      <div class="busy-spinner"></div>
+      <div class="busy-title">Please wait...</div>
+      <div class="busy-text" id="busy-text">Preparing...</div>
+      <div class="busy-note">Your code is being placed in the workspace. Please don't tap or type until this finishes.</div>
+    </div>
+  </div>
       <div class="menu-zone" data-k="sys" data-a="0" data-b="4"></div>
       <div class="menu-zone" data-k="file" data-a="4" data-b="10"></div>
       <div class="menu-zone" data-k="run" data-a="24" data-b="29"></div>
@@ -2153,6 +2164,26 @@ void main() {
     </div>
   </div>
 
+  <div class="modal-backdrop" id="new-file-modal">
+  <div class="modal-dialog" style="max-width:420px;">
+    <div class="modal-header">
+      <h3 class="modal-title">📄 Create New File</h3>
+      <button type="button" class="modal-close-btn" id="new-file-close">&times;</button>
+    </div>
+    <div class="modal-filename-group">
+      <div>
+        <div class="filename-label">File name:</div>
+        <div style="font-size:.7rem;color:#8c979a;">Max 8 letters + extension (e.g. PRIME.CPP)</div>
+      </div>
+      <input type="text" id="new-file-name" class="filename-input" style="width:150px;" placeholder="MYPROG.CPP" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="new-file-cancel">Cancel</button>
+      <button type="button" class="btn-inject" id="new-file-create">📄 <span>Create</span></button>
+    </div>
+  </div>
+</div>
+
   <!-- View/Inject Saved Programs Modal -->
   <div class="modal-backdrop" id="view-saved-modal">
     <div class="modal-dialog">
@@ -2179,16 +2210,6 @@ void main() {
           <button type="button" class="btn-inject" id="saved-inject-btn">⚡ <span>Open in Turbo C++</span></button>
         </div>
       </div>
-    </div>
-  </div>
-
-    <!-- Freeze overlay shown while code is injected into Turbo C++ -->
-  <div class="busy-overlay" id="busy-overlay" role="alertdialog" aria-modal="true" aria-live="polite">
-    <div class="busy-card">
-      <div class="busy-spinner"></div>
-      <div class="busy-title">Please wait...</div>
-      <div class="busy-text" id="busy-text">Preparing...</div>
-      <div class="busy-note">Your code is being placed in the workspace. Please don't tap or type until this finishes.</div>
     </div>
   </div>
 
@@ -2653,7 +2674,7 @@ startBtn.addEventListener("click", () => {
   function onEmulatorReady(ci) {
     keyboard = { keyPress: (code) => ci.simulateKeyPress(code) };
 
-    // js-dos pauses when the tab is hidden: ignore that while an action runs
+        // js-dos pauses when the tab is hidden: ignore that while an action runs
     const realPause = (ci.pause || function () {}).bind(ci);
     const realResume = (ci.resume || function () {}).bind(ci);
     if (typeof ci.pause === "function") {
@@ -2707,7 +2728,7 @@ let bootOverlay = false;
 
 
 async function isEditorOnScreen() {
-  if (document.hidden || !dosCi || typeof dosCi.screenshot !== "function") return null;
+    if (document.hidden || !dosCi || typeof dosCi.screenshot !== "function") return null;
   try {
     const img = await dosCi.screenshot();
     if (!img || !img.data) return null;
@@ -2729,7 +2750,7 @@ async function waitForEditorScreen(maxMs) {
     const r = await isEditorOnScreen();
     if (r === true) return true;
     if (r === null) { await delay(3000); return false; }   // screenshots unsupported: short fixed wait
-    await delay(250);
+    await delay(80);
   }
   return false;
 }
@@ -2742,39 +2763,17 @@ function ensureWorkspace() {
     if (ownBusy) showBusy("Starting Turbo C++...");
     try {
       await waitForEditorScreen(WS_BOOT_MS);
-      await delay(150);
       try { clearInterval(window.__tcNudge); } catch (e) {}
       setBusyText("Setting up your workspace...");
-
-      // Put saved programs on C:\
       const enc = new TextEncoder();
       for (const f of readSavedList()) {
-          try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); } catch (e) {}
+        try { await dosCi.fsWriteFile(f.name, enc.encode(f.code)); } catch (e) {}
       }
-
-      // File > Change dir... > C:\
-      dosBox.focus();
-      clearKeyMatrix();
-      await dosEscapeAll();
-      await dosCombo([KBD.LALT], 70);
-      await delay(150);
-      await pressDosKey(67, false, 25, 300);
-      await pressDosKey(269, false, 15, 10);
-      for (let i = 0; i < 40; i++) await pressDosKey(KBD.BACKSPACE, false, 10, 8);
-      await typeDosText("C:\\");
-      await delay(100);
-      await pressDosKey(KBD.ENTER, false, 25, 300);
-      await dosEscapeAll();
     } catch (e) {
       console.error("Workspace setup failed:", e);
     } finally {
       bootOverlay = false;
       if (ownBusy && !actionBusy) hideBusy();
-      if (ownBusy && !lastDosFilename) {
-        setTimeout(() => {
-          if (!lastDosFilename && !actionBusy) runAction(ACTION_BY_ID.new);
-        }, 100);
-      }
       if (window.showBarTour) setTimeout(window.showBarTour, 1500);
     }
   })();
@@ -2802,15 +2801,15 @@ async function dosCombo(mods, key, hold = 40) {
 
 // Close any menu or dialog that might be open
 async function dosEscapeAll() {
-  for (let i = 0; i < 3; i++) await pressDosKey(KBD.ESC, false, 30, 70);
+  for (let i = 0; i < 2; i++) await pressDosKey(KBD.ESC, false, 20, 40);
 }
 
 // F3 -> type name -> Enter (loads from disk, or switches to the window if already open)
 async function openFileInEditor(name) {
-  await pressDosKey(KBD.F3, false, 25, 300);
+  await pressDosKey(KBD.F3, false, 25, 150)
   await typeDosText("C:\\" + name);
-  await delay(150);
-  await pressDosKey(KBD.ENTER, false, 25, 400);
+  await delay(60);
+  await pressDosKey(KBD.ENTER, false, 25, 200);
 }
 
 // Deletes the ENTIRE content of the active editor window (whole file, not just the screen)
@@ -2823,7 +2822,7 @@ async function clearEditorWindow() {
   await dosEscapeAll();
 
   const K = 75, B = 66, Y = 89;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 1; pass++) {
     await dosCombo([KBD.LCTRL], 266);                                   // Ctrl+PgUp  top of file
     await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], B);     // Ctrl+K B   block start
     await dosCombo([KBD.LCTRL], 267);                                   // Ctrl+PgDn  bottom of file
@@ -2838,10 +2837,10 @@ async function readFileIntoEditor(name) {
   const K = 75, R = 82;
   await dosCombo([KBD.LCTRL], 266);                                     // cursor to top
   await dosCombo([KBD.LCTRL], K); await dosCombo([KBD.LCTRL], R);       // Ctrl+K R
-  await delay(500);
+  await delay(200);
   await typeDosText("C:\\" + name);
   await delay(150);
-  await pressDosKey(KBD.ENTER, false, 25, 600);
+  await pressDosKey(KBD.ENTER, false, 25, 300);
   await dosCombo([KBD.LCTRL], 266);                                     // cursor back to top
 }  
 
@@ -3000,7 +2999,7 @@ async function isDialogOpen() {
 async function readCurrentFile() {
   if (!lastDosFilename) return null;
   await prepDos();
-  await pressDosKey(KBD.F2, false, 25, 700);
+  await pressDosKey(KBD.F2, false, 25, 300);
 
   const isNoname = /^NONAME\d+\.CPP$/i.test(lastDosFilename);
   let dlg = await isDialogOpen();
@@ -3013,7 +3012,7 @@ async function readCurrentFile() {
       await pressDosKey(KBD.ENTER, false, 25, 600);
     }
   }
-  await delay(300);
+  await delay(100);
 
   let bytes = null, lastErr = null;
   for (let i = 0; i < 3 && !bytes; i++) {
@@ -3093,15 +3092,15 @@ async function isWindowZoomed() {
 }
 
 async function ensureZoomed(firstTimeFallback) {
-  await delay(200);
+  await delay(60);
   let z = await isWindowZoomed();
   if (z === null) {                       // screenshots unsupported: old behaviour
     if (firstTimeFallback) await pressDosKey(KBD.F5, false, 25, 120);
     return;
   }
   for (let i = 0; i < 3 && z === false; i++) {
-    await pressDosKey(KBD.F5, false, 25, 250);
-    await delay(150);
+    await pressDosKey(KBD.F5, false, 25, 120);
+    await delay(60);
     z = await isWindowZoomed();
   }
 }
@@ -3286,10 +3285,36 @@ document.addEventListener("fullscreenchange", () => {
 // 5. ACTION BAR - the ONLY way users control Turbo C++ (the native menu is locked)
 //    To add a button: write one  async function actXxx()  and add one line to ACTIONS.
 // ============================================================================
-async function actNew() {
-  await openCodeInEditor(nextNoname(), null);
-  showToast("New file " + lastDosFilename + " is ready");
+const newFileModal = document.getElementById("new-file-modal");
+const newFileInput = document.getElementById("new-file-name");
+
+function actNew() {
+  if (!ensureCompilerStarted()) return;
+  newFileInput.value = "";
+  newFileModal.classList.add("visible");
+  toggleModalScroll(true);
+  newFileInput.focus();
 }
+function closeNewModal() {
+  newFileModal.classList.remove("visible");
+  toggleModalScroll(false);
+  clearKeyMatrix();
+}
+async function createNewFile() {
+  const raw = newFileInput.value.trim();
+  if (!raw) { showToast("Please type a file name."); return; }
+  const name = getSanitizedFilename(raw);
+  if (openedInEditor.has(name) || readSavedList().some((x) => x.name === name)) {
+    showToast(name + " already exists. Choose another name.");
+    return;
+  }
+  closeNewModal();
+  const ok = await exclusive("Creating " + name + "...", () => openCodeInEditor(name, null));
+  if (ok) showToast("New file " + name + " is ready");
+}
+document.getElementById("new-file-close").addEventListener("click", closeNewModal);
+document.getElementById("new-file-cancel").addEventListener("click", closeNewModal);
+document.getElementById("new-file-create").addEventListener("click", createNewFile);
 
 function actOpen() {                        // opens "My Saved Programs"
   document.getElementById("btn-open-saved").click();
@@ -3358,7 +3383,7 @@ async function actPaste() {
 // hint    : shortcut shown on the button (hidden on small phones)
 const ACTIONS = [
   { id: "paste",    icon: "📂", label: "Write/Import/Paste/Copy", direct: true, run: actPaste },
-  { id: "new",      icon: "📄", label: "New", busy: "Creating a new file...", run: actNew },
+  { id: "new", icon: "📄", label: "New", direct: true, run: actNew },
   { id: "open",     icon: "📂", label: "Open",     run: actOpen },
   { id: "save",     icon: "💾", label: "Save", hint: "F2", needsFile: true, busy: "Reading your code...", run: actSaveAs },
   { id: "saveas",   icon: "📝", label: "Save As",  needsFile: true, busy: "Reading your code...", run: actSaveAs },
@@ -3615,6 +3640,25 @@ function showSavedPreview(prog, focusDesc) {
   if (focusDesc) d.focus();
 }
 
+
+async function renameSaved(prog) {
+  const raw = prompt("New file name (max 8 letters + extension):", prog.name);
+  if (raw === null) return;
+  const nn = getSanitizedFilename(raw);
+  if (nn === prog.name) return;
+  const list = readSavedList();
+  if (list.some((x) => x.name === nn)) { showToast("A saved file named " + nn + " already exists."); return; }
+  const item = list.find((x) => x.name === prog.name);
+  if (!item) return;
+  const old = item.name;
+  item.name = nn;
+  try { localStorage.setItem("tc_saved_programs", JSON.stringify(list)); }
+  catch (e) { showToast("Could not save the new name."); return; }
+  if (dosCi && old !== lastDosFilename) { try { await dosCi.fsDeleteFile(old); } catch (e) {} }
+  showToast("Renamed to " + nn);
+  renderSavedList();
+}
+  
 function renderSavedList() {
   const saved = readSavedList();
   savedProgramsList.innerHTML = "";
@@ -3632,7 +3676,16 @@ function renderSavedList() {
     const nm = document.createElement("div");
     nm.className = "saved-item-name";
     nm.textContent = "📄 " + prog.name;
-    left.appendChild(nm);
+        const nameRow = document.createElement("div");
+    nameRow.style.cssText = "display:flex;align-items:center;gap:8px;flex-wrap:wrap;";
+    nameRow.appendChild(nm);
+    const ren = document.createElement("button");
+    ren.type = "button";
+    ren.className = "change-name-btn";
+    ren.textContent = "✏️ Rename";
+    ren.addEventListener("click", (e) => { e.stopPropagation(); renameSaved(prog); });
+    nameRow.appendChild(ren);
+    left.appendChild(nameRow);
 
     if (prog.desc) {
       const ds = document.createElement("div");
@@ -4126,7 +4179,7 @@ if ("serviceWorker" in navigator) {
 // ============================================================================
 // 9. LIVE CHAT (Multiline Auto-wrap, Admin DM & Global Visitor Popups)
 // ============================================================================
-(async function () {
+(function () {
   const firebaseConfig = {
     apiKey: "AIzaSyASkYqRf1HheRldg-s5YaPwIuZt_9VOmiM",
     authDomain: "turboc-compiler.firebaseapp.com",
@@ -4138,13 +4191,6 @@ if ("serviceWorker" in navigator) {
   };
 
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  await Promise.race([                       // wait for the saved login to be restored
-    new Promise((res) => { const off = auth.onAuthStateChanged(() => { off(); res(); }); }),
-    new Promise((res) => setTimeout(res, 5000))
-  ]);
-  const AUTH_SUFFIX = "@tcchat.example.com";
-  const ADMIN_NAME = "sankalpsingh";
   const db = firebase.database();
   const messagesRef = db.ref("messages");
   const problemsRef = db.ref("problems");
@@ -4192,9 +4238,8 @@ if ("serviceWorker" in navigator) {
   const fullInput = document.getElementById("full-chat-input");
 
   let activeTab = "general";
-  const me = auth.currentUser;
-  let myUsername = (me && me.email && me.email.endsWith(AUTH_SUFFIX)) ? me.email.slice(0, -AUTH_SUFFIX.length).toLowerCase() : "";
-  const isAdmin = (myUsername === ADMIN_NAME);
+  let myUsername = (localStorage.getItem("tc_chat_username") || "").trim().toLowerCase();
+  const isAdmin = (myUsername === "sankalpsingh");
 
   function setStatus(online) {
     if (online) {
@@ -4240,48 +4285,109 @@ if ("serviceWorker" in navigator) {
   setupTextarea(fullInput, fullForm);
 
   // Username Claim
-    // Account: Create account / Log in / Log out
-  const pwInput = document.getElementById("choose-password-input");
-  const authMsg = document.getElementById("auth-msg");
-  const loginBtn = document.getElementById("btn-login-username");
-  const logoutBtn = document.getElementById("btn-logout");
-  try { const old = localStorage.getItem("tc_chat_username"); if (old && !myUsername) usernameInput.value = old; } catch (e) {}
-
-  async function doAuth(signup) {
-    const say = (t, bad) => { authMsg.textContent = t; authMsg.style.color = bad ? "#ff6b6b" : "#3ddc84"; };
-    const name = (usernameInput.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
-    const pw = pwInput.value || "";
-    if (name.length < 3) { say("Username: at least 3 letters/numbers.", true); return; }
-    if (signup && name === ADMIN_NAME) { say("This username is reserved.", true); return; }
-    if (pw.length < 8) { say("Password: at least 8 characters.", true); return; }
-    claimBtn.disabled = true; loginBtn.disabled = true;
-    say("Please wait...");
+  claimBtn.addEventListener("click", async () => {
+    const clean = (usernameInput.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (clean.length < 3) { alert("Username must be at least 3 letters/numbers long."); return; }
+    claimBtn.disabled = true; claimBtn.textContent = "...";
     try {
-      if (signup) await auth.createUserWithEmailAndPassword(name + AUTH_SUFFIX, pw);
-      else await auth.signInWithEmailAndPassword(name + AUTH_SUFFIX, pw);
-      try { localStorage.removeItem("tc_chat_username"); } catch (e) {}
+            const res = await usersRef.child(clean).transaction((current) => {
+        return current === null ? { claimedAt: Date.now() } : undefined;
+      });
+      if (!res.committed) {
+        alert("This username is already taken! Please choose another one.");
+        claimBtn.disabled = false; claimBtn.textContent = "Join";
+        return;
+      }
+      myUsername = clean;
+      localStorage.setItem("tc_chat_username", myUsername);
       location.reload();
     } catch (e) {
-      const c = (e && e.code) || "";
-      say(c === "auth/email-already-in-use" ? "This username already has an account. If it is yours, tap Log in."
-        : (c === "auth/wrong-password" || c === "auth/invalid-credential" || c === "auth/user-not-found" || c === "auth/invalid-login-credentials") ? "Wrong username or password."
-        : c === "auth/too-many-requests" ? "Too many attempts. Wait a few minutes."
-        : c === "auth/network-request-failed" ? "No internet connection."
-        : c === "auth/operation-not-allowed" ? "Email/Password sign-in is not enabled in Firebase."
-        : "Could not continue. Try again.", true);
-      claimBtn.disabled = false; loginBtn.disabled = false;
+      alert("Error checking username. Check internet connection.");
+      claimBtn.disabled = false; claimBtn.textContent = "Join";
     }
-  }
-  claimBtn.addEventListener("click", () => doAuth(true));
-  loginBtn.addEventListener("click", () => doAuth(false));
-  pwInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doAuth(false); } });
-  if (logoutBtn) logoutBtn.addEventListener("click", async () => {
-    try { await auth.signOut(); } catch (e) {}
-    try { localStorage.removeItem("tc_chat_username"); } catch (e) {}
-    location.reload();
   });
 
-  
+    // ==========================================================================
+  // CHANGE USERNAME (unique: the name is claimed atomically, so two people can never get the same one)
+  // ==========================================================================
+  (function setupChangeUsername() {
+    const btnOpen = document.getElementById("btn-change-username");
+    const row = document.getElementById("change-username-row");
+    const inp = document.getElementById("change-username-input");
+    const btnSave = document.getElementById("btn-change-save");
+    const btnCancel = document.getElementById("btn-change-cancel");
+    const msg = document.getElementById("change-username-msg");
+    if (!btnOpen || !row || !inp || !btnSave || !btnCancel || !msg) return;
+
+    // The admin account keeps its fixed name
+    if (isAdmin) { btnOpen.style.display = "none"; return; }
+
+    function setMsg(text, bad) {
+      msg.textContent = text || "";
+      msg.style.color = bad ? "#ff6b6b" : "#3ddc84";
+    }
+    function closeEditor() { row.style.display = "none"; inp.value = ""; setMsg(""); }
+
+    btnOpen.addEventListener("click", () => {
+      if (row.style.display === "flex") { closeEditor(); return; }
+      row.style.display = "flex";
+      setMsg("");
+      inp.value = "";
+      inp.focus();
+    });
+    btnCancel.addEventListener("click", closeEditor);
+
+    btnSave.addEventListener("click", async () => {
+      const oldName = myUsername;
+      const clean = (inp.value || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+
+      if (clean.length < 3) { setMsg("At least 3 letters/numbers (a-z, 0-9, _).", true); return; }
+      if (clean === oldName) { setMsg("That is already your username.", true); return; }
+      if (clean === "sankalpsingh") { setMsg("This username is reserved.", true); return; }
+
+      btnSave.disabled = true;
+      setMsg("Checking...");
+      try {
+        // Claim the new name only if nobody owns it (atomic)
+        const res = await usersRef.child(clean).transaction((current) => {
+          return current === null ? { claimedAt: Date.now(), previous: oldName } : undefined;
+        });
+        if (!res.committed) {
+          setMsg("This username is already taken. Try another.", true);
+          btnSave.disabled = false;
+          return;
+        }
+
+        // Move all old messages to the new name (they stay yours, with the delete button)
+        setMsg("Updating your old messages...");
+        try {
+          const updates = {};
+          for (const refName of ["messages", "problems"]) {
+            const snap = await db.ref(refName).orderByChild("name").equalTo(oldName).once("value");
+            snap.forEach((c) => { updates[refName + "/" + c.key + "/name"] = clean; });
+          }
+          if (Object.keys(updates).length) await db.ref().update(updates);
+        } catch (e) {
+          // Undo the new-name claim so nothing is left half-done
+          try { await usersRef.child(clean).remove(); } catch (e2) {}
+          setMsg("Could not update your old messages. Nothing was changed. Try again.", true);
+          btnSave.disabled = false;
+          return;
+        }
+
+        // Release the old name so someone else can use it
+        try { await usersRef.child(oldName).remove(); } catch (e) {}
+
+        localStorage.setItem("tc_chat_username", clean);
+        setMsg("Username changed! Reloading...");
+        setTimeout(() => location.reload(), 600);
+      } catch (e) {
+        setMsg("Could not change. Check your internet and try again.", true);
+        btnSave.disabled = false;
+      }
+    });
+  })();
+
     // Turns http(s):// and www. links into real clickable links (safe: no innerHTML)
   function linkify(container, text) {
     const re = /((?:https?:\/\/|www\.)[^\s<]+)/gi;
@@ -4525,7 +4631,7 @@ if ("serviceWorker" in navigator) {
   });
 
   // Listener B: Direct @user notification
-    if (myUsername) directPopupRef.on("value", (snap) => {
+  directPopupRef.on("value", (snap) => {
     const data = snap.val();
     if (!data || !data.text || !data.id || !myUsername) return;
     if (data.targetUser === "all" || data.targetUser === myUsername) {
@@ -4722,12 +4828,7 @@ if ("serviceWorker" in navigator) {
   } catch (e) {}
   var t0 = Date.now(), buf = [], sent = 0, metaSent = false, seen = {};
 
-  function user() {
-    try {
-      var u = window.firebase && firebase.apps && firebase.apps.length && firebase.auth().currentUser;
-      return (u && u.email) ? u.email.split("@")[0].toLowerCase() : "";
-    } catch (e) { return ""; }
-  }
+  function user() { try { return (localStorage.getItem("tc_chat_username") || "").trim().toLowerCase(); } catch (e) { return ""; } }
   function key()  { var u = user(); return u ? u : "guest_" + vid; }
   function isAdmin() { return user() === "sankalpsingh"; }
 
