@@ -624,6 +624,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     #btn-report-bug { position: static; align-self: flex-end; margin-bottom: 8px; }
   }
   body.is-fullscreen #btn-report-bug { display: none; }
+
+    /* ---- Output button turns into a glowing "Go Back" while the Output screen is showing ---- */
+  #tb-userscreen.go-back-glow {
+    background: rgba(255, 193, 7, 0.20) !important;
+    color: #ffd54f !important;
+    border: 1px solid #ffc107 !important;
+    font-weight: 800 !important;
+    animation: goBackGlow 1.2s ease-in-out infinite;
+  }
+  @keyframes goBackGlow {
+    0%, 100% { box-shadow: 0 0 6px rgba(255,193,7,.45), 0 0 14px rgba(255,193,7,.25); }
+    50%      { box-shadow: 0 0 16px rgba(255,193,7,.95), 0 0 34px rgba(255,193,7,.6); }
+  }
   
   #download-modal { z-index: 1000010; }
   #download-modal .filename-input { text-transform: none; width: auto; max-width: 100%; }
@@ -5421,6 +5434,33 @@ if ("serviceWorker" in navigator) {
     clearInterval(wait);
     wsPromise.then(() => setTimeout(restore, 300));
   }, 300);
+})();
+</script>
+
+<script>
+// ===== Output button -> glowing "Go Back" while the Output screen is showing =====
+(function () {
+  const btn = document.getElementById("tb-userscreen");
+  if (!btn) return;
+  let seenEditor = false, showingBack = false, normalHTML = "";
+
+  function update() {
+    if (typeof editorOnScreen === "undefined") return;
+    if (editorOnScreen === true) seenEditor = true;          // the editor has been seen at least once
+    const broken = typeof screenFails !== "undefined" && screenFails >= 3;   // screen reading failed: stay normal
+    const onOutput = !!dosCi && seenEditor && !broken && editorOnScreen === false;
+    if (onOutput === showingBack) return;
+    showingBack = onOutput;
+    if (onOutput) {
+      normalHTML = btn.innerHTML;                            // remember "icon Output (Alt+F5)"
+      btn.textContent = "Go Back";                           // no emoji
+      btn.classList.add("go-back-glow");
+    } else {
+      btn.innerHTML = normalHTML;
+      btn.classList.remove("go-back-glow");
+    }
+  }
+  setInterval(update, 300);
 })();
 </script>
   
