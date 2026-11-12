@@ -3205,32 +3205,14 @@ async function openCodeInEditor(name, code) {
   await stashCurrentFile();
   if (!isNew) {
     code = await fixBgiPath(code);
-
-    // Solution A: Dual-Stream Tee (captures 100% of output to C:\OUT.TXT while displaying on screen)
-    var teeHeader = 
-      "#include <stdio.h>\n" +
-      "#ifdef __cplusplus\n" +
-      "#include <iostream.h>\n" +
-      "class _TCOutLog : public streambuf {\n" +
-      "  streambuf* _o;\n" +
-      "public:\n" +
-      "  _TCOutLog(streambuf* o): _o(o) { remove(\"C:\\\\OUT.TXT\"); }\n" +
-      "  virtual int overflow(int c) {\n" +
-      "    if (c != EOF) {\n" +
-      "      _o->overflow(c);\n" +
-      "      FILE* f = fopen(\"C:\\\\OUT.TXT\", \"a\");\n" +
-      "      if (f) { fputc(c, f); fclose(f); }\n" +
-      "    }\n" +
-      "    return c;\n" +
-      "  }\n" +
-      "};\n" +
-      "static _TCOutLog _tc_tee(cout.rdbuf());\n" +
-      "struct _TCOutInit { _TCOutInit() { cout = &_tc_tee; } } _tc_init;\n" +
-      "#endif\n\n";
-
-    var compiledCode = teeHeader + code;
+    // Pace fast terminal output loops so every single line is preserved in scrollback
+    if (!/#include\s*<dos\.h>/.test(code)) {
+      code = "#include <dos.h>\n" + code;
+    }
+    code = code.replace(/<<\s*endl/g, '<< endl; delay(15)');
+    code = code.replace(/(printf\s*\([^;]*\\n[^;]*\);)/g, '$1 delay(15);');
     if (typeof dosCi.fsWriteFile !== "function") throw new Error("Filesystem write unavailable in this session.");
-    await dosCi.fsWriteFile(name, new TextEncoder().encode(compiledCode));
+    await dosCi.fsWriteFile(name, new TextEncoder().encode(code));
   }
   await prepDos();
 
@@ -5609,65 +5591,215 @@ if ("serviceWorker" in navigator) {
   var wrap = document.getElementById("dos-wrapper");
   if (!wrap) return;
 
-  // Injected CSS for pure native terminal scrollbox
   var css = document.createElement("style");
   css.textContent =
-    "#out-screen{position:absolute;inset:0;z-index:300;background:#000;display:none;flex-direction:column;}" +
-    "#out-screen.on{display:flex;}" +
-    "#out-text{flex:1;overflow-y:auto;overflow-x:auto;padding:12px;font:15px/1.35 'Fira Code',Consolas,monospace;color:#66fcf1;white-space:pre-wrap;word-break:break-word;user-select:text;-webkit-user-select:text;}" +
-    "#out-close{position:absolute;top:10px;right:14px;z-index:310;width:32px;height:32px;border:1px solid #66fcf1;border-radius:6px;background:#14171d;color:#66fcf1;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.8);}" +
+    "#out-screen{position:absolute;inset:0;z-index:300;background:#000;overflow-y:auto;overflow-x:hidden;display:none;}" +
+    "#out-screen.on{display:block;}" +
+    "#out-screen canvas{display:block;width:100%;height:auto;image-rendering:pixelated;}" +
+    "body.is-fullscreen #out-screen canvas{position:static !important;top:auto !important;bottom:auto !important;" +
+    "width:100% !important;height:auto !important;max-width:100% !important;max-height:none !important;z-index:auto !important;}" +
+    "#out-wait{color:#66fcf1;font:15px 'Fira Code',monospace;padding:16px;text-align:center;}" +
+    "#out-close{position:absolute;top:10px;right:14px;z-index:310;width:32px;height:32px;border:1px solid #66fcf1;border-radius:6px;" +
+    "background:#14171d;color:#66fcf1;cursor:pointer;font-size:16px;font-weight:bold;line-height:1;box-shadow:0 4px 12px rgba(0,0,0,0.8);}" +
     "#out-close:hover{background:#66fcf1;color:#0b0c10;}";
   document.head.appendChild(css);
 
-  // Terminal overlay container
   var box = document.createElement("div");
   box.id = "out-screen";
-  box.innerHTML = '<div id="out-text">Compiling and running...</div><button id="out-close" type="button" title="Back to Compiler">✕</button>';
+  box.innerHTML = '<div id="out-wait">Compiling and running...</div><div id="out-hist"></div><canvas id="out-live" style="display:none"></canvas>';
   wrap.appendChild(box);
 
-  var outText = document.getElementById("out-text");
-  var closeBtn = document.getElementById("out-close");
-  var isOpen = false;
-  var pollTimer = null;
+  var closeBtn = document.createElement("button");
+  closeBtn.id = "out-close";
+  closeBtn.type = "button";
+  closeBtn.textContent = "\u2715";
+  closeBtn.title = "Back to Editor";
+  closeBtn.style.display = "none";
+  wrap.appendChild(closeBtn);
 
-  // Reading live output from virtual disk (C:\OUT.TXT)
-  async function refreshOutput() {
-    if (!isOpen || !dosCi) return;
-    try {
-      var bytes = await dosCi.fsReadFile("OUT.TXT");
-      if (bytes && bytes.length > 0) {
-        var text = new TextDecoder("utf-8").decode(bytes);
-        if (outText.textContent !== text) {
-          var stickToBottom = (outText.scrollHeight - outText.scrollTop - outText.clientHeight) < 50;
-          outText.textContent = text;
-          if (stickToBottom) {
-            outText.scrollTop = outText.scrollHeight;
-          }
+  var waitEl = document.getElementById("out-wait");
+  var hist = document.getElementById("out-hist");
+  var live = document.getElementById("out-live");
+  var lctx = live.getContext("2d");
+
+  var ROWS = 25, MAX_CHUNKS = 80, CHUNK_ROWS = 100;
+  var isOpen = false, timer = null, polling = false, stick = true;
+  var prev = null, chunk = null;
+
+  box.addEventListener("scroll", function () {
+    stick = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+  });
+
+  // Clicking on screen focuses keyboard input for cin/scanf
+  box.addEventListener("click", function (e) {
+    if (e.target === closeBtn) return;
+    try { focusDos(); } catch (err) {}
+    var h = document.getElementById("keyboard-helper");
+    if (h && window.matchMedia && matchMedia("(pointer: coarse)").matches) {
+      h.focus();
+    }
+  });
+
+  function placeCloseBtn() {
+    var r = box.getBoundingClientRect();
+    closeBtn.style.top = (r.top + 8) + "px";
+    closeBtn.style.left = (r.right - 44) + "px";
+  }
+
+  function toImageData(img) {
+    if (typeof ImageData !== "undefined" && img instanceof ImageData) return img;
+    return new ImageData(new Uint8ClampedArray(img.data), img.width, img.height);
+  }
+
+  function looksLikeText(id) {
+    return (id.width === 720 || id.width === 640) && id.height % ROWS === 0;
+  }
+
+  function rowBlank(d, r, w, rh) {
+    for (var y = 0; y < rh; y += 2) {
+      for (var x = 0; x < w; x += 3) {
+        var i = ((r * rh + y) * w + x) * 4;
+        if (d[i] || d[i + 1] || d[i + 2]) return false;
+      }
+    }
+    return true;
+  }
+
+  // CHARACTER-CELL COMPARATOR: Compares character-by-character (80 columns).
+  // Never confuses [1/60] with [2/60].
+  function rowsSame(a, b, ra, rb, w, rh) {
+    var wChar = w / 80; // pixels per character cell
+    var charsDiffer = 0;
+    var startY = Math.floor(rh * 0.15), endY = Math.floor(rh * 0.85);
+
+    for (var col = 0; col < 80; col++) {
+      var xStart = Math.floor(col * wChar), xEnd = Math.floor((col + 1) * wChar);
+      var charDiff = 0;
+      for (var y = startY; y < endY; y++) {
+        for (var x = xStart; x < xEnd; x++) {
+          var ia = ((ra * rh + y) * w + x) * 4;
+          var ib = ((rb * rh + y) * w + x) * 4;
+          var da = a[ia] + a[ia + 1] + a[ia + 2];
+          var db = b[ib] + b[ib + 1] + b[ib + 2];
+          if (Math.abs(da - db) > 45) charDiff++;
         }
       }
+      if (charDiff > 3) charsDiffer++;
+      if (charsDiffer > 1) return false; // Different text lines!
+    }
+    return true;
+  }
+
+  // SCROLL DETECTION: Accurately finds exact shift distance (1 to 24 rows)
+  function detectScroll(p, n) {
+    var w = p.width, rh = p.height / ROWS, pd = p.data, nd = n.data;
+    
+    var identical = 0;
+    for (var r = 0; r < ROWS; r++) {
+      if (rowsSame(pd, nd, r, r, w, rh)) identical++;
+    }
+    if (identical >= ROWS - 1) return 0; // Screen did not move
+
+    var bestShift = 0;
+    var bestMatches = 0;
+
+    for (var s = 1; s < ROWS; s++) {
+      var overlap = ROWS - s;
+      var matches = 0;
+      for (var i = 0; i < overlap; i++) {
+        if (rowsSame(pd, nd, i + s, i, w, rh)) {
+          matches++;
+        }
+      }
+      // If at least 40% of rows match, this shift is confirmed
+      if (matches >= Math.max(2, Math.floor(overlap * 0.40)) && matches > bestMatches) {
+        bestMatches = matches;
+        bestShift = s;
+      }
+    }
+    return bestShift;
+  }
+
+  function archive(pid, s) {
+    var w = pid.width, rh = pid.height / ROWS;
+    if (!chunk || chunk.rows + s > CHUNK_ROWS || chunk.w !== w || chunk.rh !== rh) {
+      var cv = document.createElement("canvas");
+      cv.width = w; cv.height = 1;
+      hist.appendChild(cv);
+      chunk = { cv: cv, rows: 0, w: w, rh: rh };
+      while (hist.children.length > MAX_CHUNKS) hist.removeChild(hist.firstChild);
+    }
+    var nc = document.createElement("canvas");
+    nc.width = w; nc.height = (chunk.rows + s) * rh;
+    var c = nc.getContext("2d");
+    if (chunk.rows > 0) c.drawImage(chunk.cv, 0, 0);
+    c.putImageData(pid, 0, chunk.rows * rh, 0, 0, w, s * rh);
+    if (chunk.cv.parentNode === hist) hist.replaceChild(nc, chunk.cv);
+    chunk.cv = nc; chunk.rows += s;
+  }
+
+  function showLive(id) {
+    if (live.width !== id.width || live.height !== id.height) {
+      live.width = id.width; live.height = id.height;
+    }
+    lctx.putImageData(id, 0, 0);
+    live.style.display = "block";
+    waitEl.style.display = "none";
+  }
+
+  // MAIN RUNTIME LOOP
+  async function tick() {
+    if (!isOpen || polling) return;
+    if (typeof dosCi === "undefined" || !dosCi || typeof dosCi.screenshot !== "function") return;
+    polling = true;
+    try {
+      var raw = await dosCi.screenshot();
+      if (!raw || !raw.data || !isOpen) return;
+      var id = toImageData(raw);
+
+      // Archive scrolled lines in text mode
+      if (prev && prev.width === id.width && prev.height === id.height && looksLikeText(id)) {
+        var s = detectScroll(prev, id);
+        if (s > 0) archive(prev, s);
+      }
+      prev = id;
+      showLive(id);
+      if (stick) box.scrollTop = box.scrollHeight;
+      placeCloseBtn();
     } catch (e) {
-      // File not created yet while compiling
+    } finally {
+      polling = false;
     }
   }
 
   function open() {
     if (isOpen) return;
+    hist.innerHTML = ""; chunk = null; prev = null; stick = true;
+    live.style.display = "none"; waitEl.style.display = "block";
     isOpen = true;
-    outText.textContent = "Compiling program...";
     box.classList.add("on");
-    pollTimer = setInterval(refreshOutput, 100);
+    closeBtn.style.display = "block";
+    placeCloseBtn();
+    timer = setInterval(tick, 20); // 50 checks per second
   }
 
+  // Strictly closes only when user clicks Close or Go Back
   async function close() {
     if (!isOpen) return;
     isOpen = false;
-    clearInterval(pollTimer);
-    pollTimer = null;
+    clearInterval(timer);
+    timer = null;
     box.classList.remove("on");
-    try { focusDos(); } catch (e) {}
+    closeBtn.style.display = "none";
+    try {
+      await pressDosKey(KBD.ESC, false, 40, 100);
+      focusDos();
+    } catch (e) {}
   }
 
   closeBtn.addEventListener("click", close);
+  window.addEventListener("resize", placeCloseBtn);
+  document.addEventListener("fullscreenchange", function () { setTimeout(placeCloseBtn, 100); });
 
   // Hook Run & Output buttons
   var _runAction = runAction;
@@ -5683,7 +5815,6 @@ if ("serviceWorker" in navigator) {
     ACTION_BY_ID.output.run = function () {
       if (!isOpen) {
         open();
-        refreshOutput();
       } else {
         close();
       }
@@ -5700,6 +5831,7 @@ if ("serviceWorker" in navigator) {
   window.TCOut = { open: open, close: close, isOpen: function () { return isOpen; } };
 })();
 </script>
+
   
 </body>
 </html>
