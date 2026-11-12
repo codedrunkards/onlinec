@@ -3099,7 +3099,11 @@ async function readCurrentFile() {
     catch (e) { lastErr = e; await delay(250); }
   }
   if (!bytes) throw lastErr || new Error("Could not read " + lastDosFilename);
-  return new TextDecoder("utf-8").decode(bytes);
+  const txt = new TextDecoder("utf-8").decode(bytes);
+  if (!/^NONAME\d+\.CPP$/i.test(lastDosFilename) && txt.trim()) {
+    try { localStorage.setItem("tc_last_session", JSON.stringify({ name: lastDosFilename, code: txt })); } catch (e) {}
+  }
+  return txt;
 }
 
   
@@ -3207,13 +3211,6 @@ async function openCodeInEditor(name, code) {
     setBusyText("Loading the code...");
     await clearEditorWindow();
     await readFileIntoEditor(name);
-    if (!/^NONAME\d+\.CPP$/i.test(name)) {
-      await pressDosKey(KBD.F2, false, 25, 300);           // save once so Turbo C++ learns the new timestamp
-      if (await isDialogOpen() === true) {
-        await pressDosKey(KBD.TAB, true, 25, 150);
-        await pressDosKey(KBD.ENTER, false, 25, 600);
-      }
-    }
   }
   await ensureZoomed(!alreadyOpen || isNew);   // always leave the window full-size
   
@@ -5397,7 +5394,7 @@ if ("serviceWorker" in navigator) {
 // ===== Re-open the last file on the next visit =====
 (function () {
   const KEY = "tc_last_session";
-  const AUTO_SAVE = true;        // false = remember only when a file is opened
+  const AUTO_SAVE = false;        // false = remember only when a file is opened
   const IDLE_MS = 1000;          // save 1 second after you stop typing
   const MAX_MS  = 5000;          // ...and at least every 5 seconds while you keep typing
   let idleTimer = null, maxTimer = null, saving = false;
