@@ -5396,7 +5396,7 @@ if ("serviceWorker" in navigator) {
 // ===== Re-open the last file on the next visit =====
 (function () {
   const KEY = "tc_last_session";
-  const AUTO_SAVE = true;        // false = remember only when a file is opened
+  const AUTO_SAVE = false;        // false = remember only when a file is opened
   const IDLE_MS = 1000;          // save 1 second after you stop typing
   const MAX_MS  = 5000;          // ...and at least every 5 seconds while you keep typing
   let idleTimer = null, maxTimer = null, saving = false;
