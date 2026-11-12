@@ -452,8 +452,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   #out-screen{position:absolute;inset:0;z-index:300;display:flex;flex-direction:column;background:#000}
 #out-screen[hidden]{display:none}
-#out-term{flex:1;overflow-y:auto;font:16px/1.25 var(--font-mono);color:#c0c0c0;white-space:pre-wrap;padding:6px}
-#out-gfx{flex:1;min-height:0;width:100%;object-fit:contain}
   
     /* Covers over the Turbo C++ menu bar, window title bar and status line (positioned by JS) */
   .dos-shield {
@@ -2111,11 +2109,6 @@ body.is-fullscreen canvas { top: var(--fs-bar-h) !important; bottom: 0 !importan
     </div>
     <div id="dos-wrapper">
       <div id="dos" tabindex="0"></div>
-      <div id="out-screen" hidden>
-        <div id="out-term" tabindex="0"></div>
-        <canvas id="out-gfx" hidden></canvas>
-        <div id="out-bar"><input id="out-input" placeholder="Type input, press Enter"><button id="out-close">✕</button></div>
-      </div>
       <div class="dos-shield" id="dos-shield-top"><span id="dos-filename">TURBO C++ 3.2</span></div>
       <div class="dos-shield" id="dos-shield-bottom"></div>
       <!-- Freeze overlay shown while code is injected into Turbo C++ -->
@@ -3432,8 +3425,9 @@ async function actSaveAs() {
   
 async function actRun() {
   focusDos();
-  const code = await readCurrentFile();   // your existing F2-save + read from DOS
-  await TCOut.run(code, lastDosFilename);
+  await dosCombo([KBD.LCTRL], KBD.F9);
+  showToast("Running program (Ctrl+F9)...");
+  setTimeout(recoverInput, 300);
 }
 
 async function actOutput() {
@@ -3496,10 +3490,10 @@ function runAction(a) {
   if (a.direct) { if (!ensureCompilerStarted()) return; return a.run(); }
   if (!ensureCompilerStarted()) return;
   if (a.needsFile && !lastDosFilename) { showToast("Tap New or Open first."); return; }
-  if (a.id === "run" && !actionBusy) TCOut.open("Compiling...");
   return exclusive(a.busy || null, a.run);
 }
 
+  
 (function buildActionBar() {
   const bar = document.getElementById("action-bar");
   if (!bar) return;
@@ -5627,8 +5621,16 @@ if ("serviceWorker" in navigator) {
     stick = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
   });
   // Clicking the overlay gives the keyboard back to DOSBox (typing = Turbo C++ input)
-  box.addEventListener("click", function () { try { focusDos(); } catch (e) {} });
+  box.addEventListener("click", function (e) {
+  if (e.target === closeBtn) return;
+  try { focusDos(); } catch (err) {}
+  var h = document.getElementById("keyboard-helper");
+  if (h && window.matchMedia && matchMedia("(pointer: coarse)").matches) {
+    h.focus();
+  }
+});
 
+    
   function placeCloseBtn() {
     var r = box.getBoundingClientRect();
     closeBtn.style.top = (r.top + 6) + "px";
@@ -5728,7 +5730,7 @@ if ("serviceWorker" in navigator) {
 
       if (editor) {
         if (seenOutput) { close(false); return; }                        // program finished, user is back in the editor
-        if (Date.now() - openedAt > 6000) { close(false); return; }      // compile error etc.: let the user read it in Turbo C++
+        if (Date.now() - openedAt > 12000) { close(false); return; }      // compile error etc.: let the user read it in Turbo C++
         prev = null;
         return;
       }
@@ -5795,8 +5797,7 @@ if ("serviceWorker" in navigator) {
   window.TCOut = { 
   open: open, 
   close: close, 
-  isOpen: function () { return isOpen; },
-  run: typeof actRun !== "undefined" ? actRun : function() { open(); }
+  isOpen: function () { return isOpen; }
 };
     
 })();
