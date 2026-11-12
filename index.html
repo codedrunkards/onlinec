@@ -3073,6 +3073,8 @@ async function readCurrentFile() {
   await prepDos();
   await pressDosKey(KBD.F2, false, 25, 300);
 
+  if (window.__answerYes) { await delay(200); await window.__answerYes(); }
+
   const isNoname = /^NONAME\d+\.CPP$/i.test(lastDosFilename);
   let dlg = await isDialogOpen();
   if (!dlg && isNoname) { await delay(400); dlg = await isDialogOpen(); }
@@ -5399,6 +5401,38 @@ if ("serviceWorker" in navigator) {
   const MAX_MS  = 5000;          // ...and at least every 5 seconds while you keep typing
   let idleTimer = null, maxTimer = null, saving = false;
 
+
+    // True if the "Date/time of disk file has changed" box is on screen.
+  // Checks 5 spots in the grey lower part of that box (they are blue in the plain editor).
+  async function warnOpen() {
+    try {
+      if (!dosCi || typeof dosCi.screenshot !== "function") return null;
+      const img = await dosCi.screenshot();
+      if (!img || !img.data) return null;
+      const pts = [[0.28, 0.63], [0.33, 0.63], [0.45, 0.63], [0.58, 0.63], [0.73, 0.63]];
+      let grey = 0;
+      for (const [fx, fy] of pts) {
+        const i = (Math.floor(img.height * fy) * img.width + Math.floor(img.width * fx)) * 4;
+        if (Math.abs(img.data[i] - 170) < 25 && Math.abs(img.data[i + 1] - 170) < 25 && Math.abs(img.data[i + 2] - 170) < 25) grey++;
+      }
+      return grey >= 4;
+    } catch (e) { return null; }
+  }
+
+  // Answers the warning with "Yes". Tries up to 3 ways until it is gone.
+  async function answerYes() {
+    const tries = [
+      async () => { await pressDosKey(KBD.TAB, true, 25, 150); await pressDosKey(KBD.ENTER, false, 25, 500); }, // Shift+Tab to Yes, Enter
+      async () => { await pressDosKey(89, false, 25, 500); },                                                     // the letter Y
+      async () => { await pressDosKey(KBD.LEFT || 263, false, 25, 150); await pressDosKey(KBD.ENTER, false, 25, 500); }
+    ];
+    for (const t of tries) {
+      if (await warnOpen() !== true) return;
+      await t();
+      await delay(200);
+    }
+  }
+
   // Lean snapshot: only F2 (save) + read the file. No Escape, no key release, no popup.
     // Shows a still picture of the compiler on top, so nothing happening underneath is visible
   async function freezeFrame() {
@@ -5428,11 +5462,10 @@ if ("serviceWorker" in navigator) {
     const name = lastDosFilename;
     const cover = await freezeFrame();                         // hides the dialog from the user
     try {
+      await answerYes();                                       // in case the warning is already open
       await pressDosKey(KBD.F2, false, 25, 150);
-      if (await isDialogOpen() === true) {                     // "Date/time of disk file has changed"
-        await pressDosKey(KBD.TAB, true, 25, 150);             // Shift+Tab: No -> Yes
-        await pressDosKey(KBD.ENTER, false, 25, 600);          // confirm
-      }
+      await delay(250);                                        // the box takes a moment to appear
+      await answerYes();
       const bytes = await readDosFile(name);
       if (bytes && lastDosFilename === name) {
         localStorage.setItem(KEY, JSON.stringify({
@@ -5447,6 +5480,8 @@ if ("serviceWorker" in navigator) {
       actionBusy = false; saving = false;
     }
   }
+
+  window.__answerYes = answerYes;
 
   function runNow() {
     clearTimeout(idleTimer); clearTimeout(maxTimer);
