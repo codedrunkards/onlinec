@@ -5630,7 +5630,7 @@ if ("serviceWorker" in navigator) {
     stick = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
   });
 
-  // Clicking on screen focuses keyboard input for cin/scanf
+  // Tap anywhere on output screen focuses DOS keyboard input for cin/scanf
   box.addEventListener("click", function (e) {
     if (e.target === closeBtn) return;
     try { focusDos(); } catch (err) {}
@@ -5659,16 +5659,15 @@ if ("serviceWorker" in navigator) {
     for (var y = 0; y < rh; y += 2) {
       for (var x = 0; x < w; x += 3) {
         var i = ((r * rh + y) * w + x) * 4;
-        if (d[i] || d[i + 1] || d[i + 2]) return false;
+        if (d[i] > 30 || d[i + 1] > 30 || d[i + 2] > 30) return false;
       }
     }
     return true;
   }
 
-  // CHARACTER-CELL COMPARATOR: Compares character-by-character (80 columns).
-  // Never confuses [1/60] with [2/60].
+  // STRICT CHARACTER-CELL MATCHING: Compares 80 columns one-by-one
   function rowsSame(a, b, ra, rb, w, rh) {
-    var wChar = w / 80; // pixels per character cell
+    var wChar = w / 80;
     var charsDiffer = 0;
     var startY = Math.floor(rh * 0.15), endY = Math.floor(rh * 0.85);
 
@@ -5681,24 +5680,33 @@ if ("serviceWorker" in navigator) {
           var ib = ((rb * rh + y) * w + x) * 4;
           var da = a[ia] + a[ia + 1] + a[ia + 2];
           var db = b[ib] + b[ib + 1] + b[ib + 2];
-          if (Math.abs(da - db) > 45) charDiff++;
+          if (Math.abs(da - db) > 50) charDiff++;
         }
       }
       if (charDiff > 3) charsDiffer++;
-      if (charsDiffer > 1) return false; // Different text lines!
+      if (charsDiffer > 1) return false;
     }
     return true;
   }
 
-  // SCROLL DETECTION: Accurately finds exact shift distance (1 to 24 rows)
+  // ACCURATE SCROLL DETECTION: Only triggers when true scrolling occurs
   function detectScroll(p, n) {
     var w = p.width, rh = p.height / ROWS, pd = p.data, nd = n.data;
-    
-    var identical = 0;
+
+    // RULE 1: If bottom row (row 24) of previous frame was blank,
+    // screen has NOT reached bottom yet -> IMPOSSIBLE to have scrolled off top!
+    if (rowBlank(pd, ROWS - 1, w, rh)) return 0;
+
+    // RULE 2: If screen cleared (clrscr), reset history and do not archive
+    var newRowsOccupied = 0;
     for (var r = 0; r < ROWS; r++) {
-      if (rowsSame(pd, nd, r, r, w, rh)) identical++;
+      if (!rowBlank(nd, r, w, rh)) newRowsOccupied++;
     }
-    if (identical >= ROWS - 1) return 0; // Screen did not move
+    if (newRowsOccupied <= 3 && !rowBlank(pd, 10, w, rh)) {
+      hist.innerHTML = "";
+      chunk = null;
+      return 0;
+    }
 
     var bestShift = 0;
     var bestMatches = 0;
@@ -5711,7 +5719,6 @@ if ("serviceWorker" in navigator) {
           matches++;
         }
       }
-      // If at least 40% of rows match, this shift is confirmed
       if (matches >= Math.max(2, Math.floor(overlap * 0.40)) && matches > bestMatches) {
         bestMatches = matches;
         bestShift = s;
@@ -5747,7 +5754,6 @@ if ("serviceWorker" in navigator) {
     waitEl.style.display = "none";
   }
 
-  // MAIN RUNTIME LOOP
   async function tick() {
     if (!isOpen || polling) return;
     if (typeof dosCi === "undefined" || !dosCi || typeof dosCi.screenshot !== "function") return;
@@ -5757,7 +5763,6 @@ if ("serviceWorker" in navigator) {
       if (!raw || !raw.data || !isOpen) return;
       var id = toImageData(raw);
 
-      // Archive scrolled lines in text mode
       if (prev && prev.width === id.width && prev.height === id.height && looksLikeText(id)) {
         var s = detectScroll(prev, id);
         if (s > 0) archive(prev, s);
@@ -5780,28 +5785,31 @@ if ("serviceWorker" in navigator) {
     box.classList.add("on");
     closeBtn.style.display = "block";
     placeCloseBtn();
-    timer = setInterval(tick, 20); // 50 checks per second
+    timer = setInterval(tick, 20);
   }
 
-  // Strictly closes only when user clicks Close or Go Back
-  async function close() {
+  // FIXED RETURN TO BLUE EDITOR: Closes overlay and returns straight to IDE without bouncing
+  async function returnToEditor() {
     if (!isOpen) return;
     isOpen = false;
     clearInterval(timer);
     timer = null;
     box.classList.remove("on");
     closeBtn.style.display = "none";
+    
+    // Send ESC to dismiss output screen and return to editor
     try {
+      focusDos();
       await pressDosKey(KBD.ESC, false, 40, 100);
       focusDos();
     } catch (e) {}
   }
 
-  closeBtn.addEventListener("click", close);
+  closeBtn.addEventListener("click", returnToEditor);
   window.addEventListener("resize", placeCloseBtn);
   document.addEventListener("fullscreenchange", function () { setTimeout(placeCloseBtn, 100); });
 
-  // Hook Run & Output buttons
+  // Hook Run Button
   var _runAction = runAction;
   runAction = function (a) {
     if (a && a.id === "run" && !actionBusy && lastDosFilename && dosCi) {
@@ -5810,15 +5818,16 @@ if ("serviceWorker" in navigator) {
     return _runAction.apply(this, arguments);
   };
 
+  // FIXED GO BACK / OUTPUT BUTTON: Clean switch with NO infinite toggle loop
   if (ACTION_BY_ID && ACTION_BY_ID.output) {
-    var _outRun = ACTION_BY_ID.output.run;
-    ACTION_BY_ID.output.run = function () {
-      if (!isOpen) {
-        open();
+    ACTION_BY_ID.output.run = async function () {
+      if (isOpen) {
+        await returnToEditor();
       } else {
-        close();
+        open();
+        focusDos();
+        await dosCombo([KBD.LALT], KBD.F5, 60);
       }
-      return _outRun.apply(this, arguments);
     };
   }
 
@@ -5828,10 +5837,9 @@ if ("serviceWorker" in navigator) {
     }
   }, true);
 
-  window.TCOut = { open: open, close: close, isOpen: function () { return isOpen; } };
+  window.TCOut = { open: open, close: returnToEditor, isOpen: function () { return isOpen; } };
 })();
 </script>
-
   
 </body>
 </html>
