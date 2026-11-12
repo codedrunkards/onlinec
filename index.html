@@ -3205,6 +3205,12 @@ async function openCodeInEditor(name, code) {
   await stashCurrentFile();
   if (!isNew) {
     code = await fixBgiPath(code);
+    // Ensure high-speed loops give the browser frame buffer time to archive scrolled lines
+    if (!/#include\s*<dos\.h>/.test(code)) {
+      code = "#include <dos.h>\n" + code;
+    }
+    // Automatically pace endl so browser captures every single line
+    code = code.replace(/<<\s*endl/g, '<< endl; delay(2)');
     if (typeof dosCi.fsWriteFile !== "function") throw new Error("Filesystem write unavailable in this session.");
     await dosCi.fsWriteFile(name, new TextEncoder().encode(code));
   }
