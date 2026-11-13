@@ -3488,6 +3488,7 @@ async function actSaveAs() {
 async function actRun() {
   try { if (window.OutCap) window.OutCap.beginRun(); } catch (e) {}
   focusDos();
+  if (window.__answerYes) { await window.__answerYes(); }   // closes a "date/time of disk file has changed" box if one is open
   await dosCombo([KBD.LCTRL], KBD.F9);
   showToast("Running program (Ctrl+F9)...");
   setTimeout(recoverInput, 300);
@@ -5718,6 +5719,7 @@ if ("serviceWorker" in navigator) {
   }
   function currentText() {
     let t = lines.map((l) => l.replace(/\s+$/, "")).join("\n").replace(/\s+$/, "");
+    t = t.replace(/^(?:[ \t]*\n)*(?:[ \t]*press any key[^\n]*(?:\n|$))+/i, "").replace(/^\s*\n/, "");
     if (dropped) t = "[... " + dropped + " older lines were dropped ...]\n" + t;
     return t;
   }
@@ -5765,9 +5767,46 @@ if ("serviceWorker" in navigator) {
     }
     applyMsg(msg);
   }
+
+    // ---- echo of typed keys (Turbo C++ does not send typed text through stdout) ----
+  const keyDown = new Set(), shiftKeys = new Set(), modKeys = new Set();
+  const SHIFT_DIG = ")!@#$%^&*(";
+  const PUNCT = { 45:["-","_"], 61:["=","+"], 91:["[","{"], 93:["]","}"], 92:["\\","|"],
+                  59:[";",":"], 39:["'",'"'], 46:[".",">"], 44:[",","<"], 47:["/","?"], 96:["`","~"] };
+  function keyToChar(code, shift) {
+    if (code >= 65 && code <= 90) return String.fromCharCode(shift ? code : code + 32);
+    if (code >= 48 && code <= 57) return shift ? SHIFT_DIG[code - 48] : String.fromCharCode(code);
+    if (code === 32) return " ";
+    if (PUNCT[code]) return PUNCT[code][shift ? 1 : 0];
+    return null;
+  }
+  function echoKey(code, pressed) {
+    if (code === 340 || code === 344) { pressed ? shiftKeys.add(code) : shiftKeys.delete(code); return; }
+    if (code === 341 || code === 345 || code === 342 || code === 346) { pressed ? modKeys.add(code) : modKeys.delete(code); return; }
+    if (!pressed) { keyDown.delete(code); return; }
+    if (keyDown.has(code)) return;
+    keyDown.add(code);
+    // only while the program's own screen is showing (not the editor, not our macros)
+    if (!runStartedAt || actionBusy || typeof editorOnScreen === "undefined" || editorOnScreen !== false) return;
+    if (modKeys.size) return;
+    if (code === 257) { feedText("\n"); return; }                       // Enter
+    if (code === 259) { if (col > 0) feedText("\b \b"); return; }       // Backspace
+    const ch = keyToChar(code, shiftKeys.size > 0);
+    if (ch) feedText(ch);
+  }
+  function hookKeys(ci) {
+    if (typeof ci.sendKeyEvent !== "function") return;
+    const orig = ci.sendKeyEvent.bind(ci);
+    ci.sendKeyEvent = function (code, pressed) {
+      try { echoKey(code, pressed); } catch (e) {}
+      return orig(code, pressed);
+    };
+  }
+  
   function attach(ci) {
     if (!ci || attachedCi === ci) return;
     attachedCi = ci;
+    hookKeys(ci);
     try {
       const ev = typeof ci.events === "function" ? ci.events() : null;
       if (ev && typeof ev.onStdout === "function") ev.onStdout(onStdout);
@@ -5799,7 +5838,7 @@ if ("serviceWorker" in navigator) {
     try {
       const img = await dosCi.screenshot();
       if (!img || !img.data) return;
-      const isText = (img.width === 720 && img.height === 400);   // normal 80x25 text screen
+      const isText = (img.height === 400);   // 80x25 text screen is 640x400 here; graphics modes have other heights
       if (isText) {                                              // skip if it is really the editor (grey menu bar)
         const y = Math.floor(img.height / 25 * 0.5), step = Math.max(1, Math.floor(img.width / 60));
         let grey = 0, total = 0;
@@ -5810,9 +5849,8 @@ if ("serviceWorker" in navigator) {
         if (total && grey / total > 0.5) return;
       }
       visitedOutput = true;
-      const url = imgToUrl(img);
-      lastFrame = url;
-      if (!isText) gfxFrame = url;
+      lastFrame = img;                 // keep the raw picture, convert to PNG only when the popup opens
+      if (!isText) gfxFrame = img;
     } catch (e) {} finally { grabbing = false; }
   }
   setInterval(() => {
@@ -5825,7 +5863,8 @@ if ("serviceWorker" in navigator) {
   function isOpen() { return modal.classList.contains("visible"); }
   function render() {
     const text = currentText();
-    const img = gfxFrame || (!text ? lastFrame : null);
+    const rawImg = gfxFrame || (!text ? lastFrame : null);
+    const img = rawImg ? imgToUrl(rawImg) : null;
     if (text) { screenEl.style.display = "block"; screenEl.textContent = text; screenEl.scrollTop = 0; }
     else if (!img) { screenEl.style.display = "block"; screenEl.textContent = "(The program printed no output.)"; }
     else screenEl.style.display = "none";
