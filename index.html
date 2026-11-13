@@ -5735,11 +5735,36 @@ if ("serviceWorker" in navigator) {
   let gfxFrame = null;         // last graphics-mode picture (data URL)
   let lastFrame = null;        // last picture of the output screen (any mode)
   let mode = null, held = [], sawCR = false, holdTimer = null;
+  let curTyped = "";          // what the user is typing right now
+  let orphans = [];           // typed lines whose prompt text DOS has not delivered yet: {typed, cols}
+  let skipStale = 0;          // chars of an old undelivered prompt that will leak into the next run
+  let q = Promise.resolve();  // keeps typed lines and DOS text in the order they happened
+  const enqueue = (fn) => { q = q.then(fn).catch(() => {}); };
 
   function say(m) { if (typeof showToast === "function") showToast(m, 4500); }
 
   // ---- live text from DOS (same logic as before) ----
-  function applyMsg(m) { feedText(m); if (mode === true) feedText("\n"); }
+    function deliver(text) {
+    if (skipStale > 0 || orphans.length) {
+      const nl = text.indexOf("\n");
+      let first = nl < 0 ? text : text.slice(0, nl);
+      const rest = nl < 0 ? "" : text.slice(nl);
+      if (skipStale > 0) { first = first.slice(skipStale); skipStale = 0; }   // drop the old program's leaked prompt
+      if (orphans.length) {                                                   // put each typed line right after its prompt
+        let out = "", prev = 0, pos = 0;
+        for (const o of orphans) {
+          pos += o.cols;
+          out += first.slice(prev, pos) + o.typed + "\n";
+          prev = pos;
+        }
+        first = out + first.slice(prev);
+        orphans = [];
+      }
+      text = first + rest;
+    }
+    feedText(text);
+  }
+  function applyMsg(m) { deliver(m + (mode === true ? "\n" : "")); }
   function resolveMode(m) {
     clearTimeout(holdTimer); holdTimer = null; mode = m;
     const h = held; held = [];
@@ -5754,7 +5779,8 @@ if ("serviceWorker" in navigator) {
     } catch (e) {}
     return String(m == null ? "" : m);
   }
-  function onStdout(raw) {
+  function onStdout(raw) { enqueue(() => onStdoutNow(raw)); }
+  function onStdoutNow(raw) {
     const msg = toText(raw);
     if (mode === null) {
       held.push(msg);
@@ -5762,7 +5788,7 @@ if ("serviceWorker" in navigator) {
       if (sawCR) { resolveMode(true); return; }
       sawCR = /\r$/.test(msg);
       clearTimeout(holdTimer);
-      holdTimer = setTimeout(() => resolveMode(sawCR), 500);
+      holdTimer = setTimeout(() => enqueue(() => resolveMode(sawCR)), 500);
       return;
     }
     applyMsg(msg);
@@ -5780,6 +5806,25 @@ if ("serviceWorker" in navigator) {
     if (PUNCT[code]) return PUNCT[code][shift ? 1 : 0];
     return null;
   }
+
+    // Takes the screen picture of the line being typed and returns how many characters of PROMPT sit before the typed text
+  function promptCols(img, n) {
+    if (!img || !img.data || img.height !== 400) return 0;          // text screens only
+    const d = img.data, W = img.width, cw = W / 80;
+    for (let r = 24; r >= 0; r--) {
+      let maxX = -1;
+      for (let y = r * 16; y < r * 16 + 13; y++) {                  // skip the bottom scanlines (cursor underline)
+        const b = (y * W + W - 1) * 4;
+        for (let x = W - 1; x > maxX; x--) {
+          const i = (y * W + x) * 4;
+          if (Math.abs(d[i] - d[b]) > 60 || Math.abs(d[i + 1] - d[b + 1]) > 60 || Math.abs(d[i + 2] - d[b + 2]) > 60) { maxX = x; break; }
+        }
+      }
+      if (maxX >= 0) return Math.max(0, Math.floor(maxX / cw) + 1 - n);
+    }
+    return 0;
+  }
+  
   function echoKey(code, pressed) {
     if (code === 340 || code === 344) { pressed ? shiftKeys.add(code) : shiftKeys.delete(code); return; }
     if (code === 341 || code === 345 || code === 342 || code === 346) { pressed ? modKeys.add(code) : modKeys.delete(code); return; }
@@ -5789,10 +5834,21 @@ if ("serviceWorker" in navigator) {
     // only while the program's own screen is showing (not the editor, not our macros)
     if (!runStartedAt || actionBusy || typeof editorOnScreen === "undefined" || editorOnScreen !== false) return;
     if (modKeys.size) return;
-    if (code === 257) { feedText("\n"); return; }                       // Enter
-    if (code === 259) { if (col > 0) feedText("\b \b"); return; }       // Backspace
+        if (code === 257) {                                                  // Enter
+      const typed = curTyped; curTyped = "";
+      let shot = null;
+      try { shot = dosCi.screenshot(); } catch (e) {}                    // picture taken BEFORE Enter reaches DOS
+      enqueue(async () => {
+        let cols = 0;
+        try { cols = promptCols(await shot, typed.replace(/\s+$/, "").length); } catch (e) {}
+        if (cols > 0) orphans.push({ typed: typed, cols: cols });        // its prompt is still stuck inside DOS
+        else feedText(typed + "\n");                                     // prompt was on an earlier, finished line
+      });
+      return;
+    }
+    if (code === 259) { curTyped = curTyped.slice(0, -1); return; }     // Backspace
     const ch = keyToChar(code, shiftKeys.size > 0);
-    if (ch) feedText(ch);
+    if (ch) curTyped += ch;
   }
   function hookKeys(ci) {
     if (typeof ci.sendKeyEvent !== "function") return;
@@ -5815,9 +5871,19 @@ if ("serviceWorker" in navigator) {
 
   // A new run starts: forget the previous run completely
   function beginRun() {
+    skipStale += orphans.reduce((s, o) => s + o.cols, 0);   // prompts DOS never delivered will leak into the next program
+    orphans = []; curTyped = "";
     clearHold(); resetTerm();
     runStartedAt = Date.now();
     visitedOutput = false; gfxFrame = null; lastFrame = null;
+  }
+  function fullText() {
+    let t = currentText();
+    if (orphans.length) {                                    // typed lines whose prompt could not be delivered
+      const miss = orphans.map((o) => "[prompt not available] " + o.typed).join("\n");
+      t = (t ? t + "\n" : "") + miss;
+    }
+    return t;
   }
 
   // --------------------------------------------------------------------------
@@ -5862,7 +5928,7 @@ if ("serviceWorker" in navigator) {
   // --------------------------------------------------------------------------
   function isOpen() { return modal.classList.contains("visible"); }
   function render() {
-    const text = currentText();
+    const text = fullText();
     const rawImg = gfxFrame || (!text ? lastFrame : null);
     const img = rawImg ? imgToUrl(rawImg) : null;
     if (text) { screenEl.style.display = "block"; screenEl.textContent = text; screenEl.scrollTop = 0; }
@@ -5904,7 +5970,7 @@ if ("serviceWorker" in navigator) {
     document.body.appendChild(a); a.click(); a.remove();
   }
   btnTxt.addEventListener("click", () => {
-    const t = currentText(); if (!t) return;
+    const t = fullText(); if (!t) return;
     const url = URL.createObjectURL(new Blob([t + "\r\n"], { type: "text/plain;charset=utf-8" }));
     saveAs(url, baseName() + "_output.txt");
     setTimeout(() => URL.revokeObjectURL(url), 3000);
