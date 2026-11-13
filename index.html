@@ -3104,7 +3104,7 @@ async function readCurrentFile() {
     catch (e) { lastErr = e; await delay(250); }
   }
   if (!bytes) throw lastErr || new Error("Could not read " + lastDosFilename);
-  const txt = new TextDecoder("utf-8").decode(bytes);
+  const txt = tcStrip(new TextDecoder("utf-8").decode(bytes));
   if (!/^NONAME\d+\.CPP$/i.test(lastDosFilename) && txt.trim()) {
     try { localStorage.setItem("tc_last_session", JSON.stringify({ name: lastDosFilename, code: txt })); } catch (e) {}
   }
@@ -3193,6 +3193,41 @@ async function ensureZoomed(firstTimeFallback) {
   }
 }
 
+function tcStrip(t) { return String(t).replace(/^#include\s+"tcpace\.h"[ \t]*\r?\n/i, ""); }
+
+function tcHeader(cpp) {
+  var L = [
+    '/* TCPACE.H - added by the website. Hidden when you Save or Download. */',
+    '#ifndef __TCPACE_H',
+    '#define __TCPACE_H',
+    '#pragma warn -use',
+    '#pragma warn -par',
+    '#pragma warn -eff',
+    '#include <stdio.h>',
+    '#include <stdarg.h>',
+    '#include <dos.h>',
+    '#include <conio.h>',
+    'static int __tcn = 0;',
+    'static void __tcp(void) { if (++__tcn >= 4) { __tcn = 0; delay(25); } }',
+    'static int __tcpf(const char *f, ...) { va_list a; int r; va_start(a, f); r = vprintf(f, a); va_end(a); __tcp(); return r; }',
+    'static int __tcputs(const char *s) { int r = puts(s); __tcp(); return r; }',
+    '#define printf __tcpf',
+    '#define puts __tcputs'
+  ];
+  if (cpp) L.push(
+    '#include <iostream.h>',
+    'static ostream& __tcendl(ostream& o) { o << \'\\n\'; o.flush(); __tcp(); return o; }',
+    'static ostream& __tcout(void) { __tcp(); return cout; }',
+    '#define endl __tcendl',
+    '#define cout __tcout()'
+  );
+  L.push(
+    'void __tcexit(void) { unsigned char m = peekb(0x40, 0x49); if (m <= 3 || m == 7) cputs("\\r\\n\\r\\n[Program finished - press any key, or tap Go Back]"); while (kbhit()) getch(); getch(); }',
+    '#pragma exit __tcexit',
+    '#endif'
+  );
+  return L.join('\r\n') + '\r\n';
+}
   
 // THE one function that puts a file into the Turbo C++ editor.
 //   code === null  -> brand-new empty file
@@ -3202,15 +3237,12 @@ async function openCodeInEditor(name, code) {
   await stashCurrentFile();
   if (!isNew) {
     code = await fixBgiPath(code);
-    // Pace fast terminal output loops so every single line is preserved in scrollback
-    if (!/#include\s*<dos\.h>/.test(code)) {
-      code = "#include <dos.h>\n" + code;
-    }
-    code = code.replace(/<<\s*endl/g, '<< endl; delay(15)');
-    code = code.replace(/(printf\s*\([^;]*\\n[^;]*\);)/g, '$1 delay(15);');
-    code = code.replace(/(\bputs\s*\([^;]*\);)/g, '$1 delay(15);');
-    code = code.replace(/(cout\s*<<[^;]*\\n[^;]*;)/g, '$1 delay(15);');
+    code = tcStrip(code);
+    var cleanCode = code;
     if (typeof dosCi.fsWriteFile !== "function") throw new Error("Filesystem write unavailable in this session.");
+    var useCpp = /\.cpp$/i.test(name) && /\b(cout|cin|endl)\b/.test(code);
+    await dosCi.fsWriteFile("TCPACE.H", new TextEncoder().encode(tcHeader(useCpp)));
+    code = '#include "tcpace.h"\n' + code;
     await dosCi.fsWriteFile(name, new TextEncoder().encode(code));
   }
   await prepDos();
@@ -3229,7 +3261,7 @@ async function openCodeInEditor(name, code) {
   
   openedInEditor.add(name);
   setCurrentFile(name);
-  baselineCode = isNew ? "" : code;
+  baselineCode = isNew ? "" : cleanCode;
   try { localStorage.setItem("tc_last_session", JSON.stringify({ name: name, code: isNew ? "" : code })); } catch (e) {}
   clearKeyMatrix();
 }
@@ -5482,7 +5514,7 @@ if ("serviceWorker" in navigator) {
       if (bytes && lastDosFilename === name) {
         localStorage.setItem(KEY, JSON.stringify({
           name: name,
-          code: new TextDecoder("utf-8").decode(bytes)
+          code: tcStrip(new TextDecoder("utf-8").decode(bytes))
         }));
       }
     } catch (e) {
@@ -5623,7 +5655,7 @@ if ("serviceWorker" in navigator) {
 
   var ROWS = 25, MAX_CHUNKS = 80, CHUNK_ROWS = 100;
   var isOpen = false, timer = null, polling = false, stick = true;
-  var sawOutput = false, openedAt = 0;
+  var sawOutput = false, openedAt = 0, fallbackSent = false, closing = false;
   var prev = null, chunk = null;
 
   box.addEventListener("scroll", function () {
@@ -5641,9 +5673,10 @@ if ("serviceWorker" in navigator) {
   });
 
   function placeCloseBtn() {
-    var r = box.getBoundingClientRect();
-    closeBtn.style.top = (r.top + 8) + "px";
-    closeBtn.style.left = (r.right - 44) + "px";
+    var r = box.getBoundingClientRect(), w = wrap.getBoundingClientRect();
+    closeBtn.style.top = (r.top - w.top + 8) + "px";
+    closeBtn.style.left = (r.right - w.left - 44) + "px";
+    closeBtn.style.right = "auto";
   }
 
   function toImageData(img) {
@@ -5768,7 +5801,7 @@ if ("serviceWorker" in navigator) {
   }
 
   async function tick() {
-    if (!isOpen || polling) return;
+    if (!isOpen || polling || closing) return;
     if (typeof dosCi === "undefined" || !dosCi || typeof dosCi.screenshot !== "function") return;
     polling = true;
     try {
@@ -5776,9 +5809,12 @@ if ("serviceWorker" in navigator) {
       if (!raw || !raw.data || !isOpen) return;
       var id = toImageData(raw);
 
-      if (isIdeFrame(id)) {                 // Turbo's blue editor: never draw it in our screen
-        if (!sawOutput && Date.now() - openedAt > 8000) returnToEditor(true);  // compile error: reveal the editor
-        return;                             // otherwise keep the last output frame / "Compiling..." text
+      if (isIdeFrame(id)) {
+        if (!sawOutput && !fallbackSent && Date.now() - openedAt > 6000) {
+          fallbackSent = true;
+          dosCombo([KBD.LALT], KBD.F5, 60);
+        }
+        return;
       }
 
       if (prev && prev.width === id.width && prev.height === id.height && looksLikeText(id)) {
@@ -5799,7 +5835,7 @@ if ("serviceWorker" in navigator) {
     function open() {
     if (isOpen) return;
     hist.innerHTML = ""; chunk = null; prev = null; stick = true;
-    sawOutput = false; openedAt = Date.now();
+    sawOutput = false; fallbackSent = false; closing = false; openedAt = Date.now();
     live.style.display = "none"; waitEl.style.display = "block";
     isOpen = true;
     box.classList.add("on");
@@ -5810,25 +5846,33 @@ if ("serviceWorker" in navigator) {
   }
 
   // FIXED RETURN TO BLUE EDITOR: Closes overlay and returns straight to IDE without bouncing
-    async function returnToEditor(skipKey) {
-    if (!isOpen) return;
+  function hideOverlay() {
     isOpen = false;
     clearInterval(timer);
     timer = null;
     box.classList.remove("on");
     closeBtn.style.display = "none";
-    if (skipKey === true) return;          // just hide the overlay, send no key
+    try { focusDos(); } catch (e) {}
+  }
+
+  async function returnToEditor(skipKey) {
+    if (!isOpen) return;
+    if (skipKey === true) { hideOverlay(); return; }
+    closing = true;
+    var ok = false;
     try {
       focusDos();
-      for (var n = 0; n < 4; n++) {
+      for (var n = 0; n < 5; n++) {
         var ide = await isEditorOnScreen();
-        if (ide === true) break;           // already in the editor
+        if (ide === null) { await delay(150); ide = await isEditorOnScreen(); }
+        if (ide !== false) { ok = true; break; }
         await pressDosKey(KBD.ESC, false, 40, 100);
-        await delay(250);
-        if (ide === null) break;           // screenshots unavailable: one ESC only
+        await delay(300);
       }
-      focusDos();
-    } catch (e) {}
+    } catch (e) { ok = true; }
+    closing = false;
+    if (ok) hideOverlay();
+    else showToast("Program is still running. Finish it (or press any key), then tap Go Back.", 4000);
   }
 
   closeBtn.addEventListener("click", returnToEditor);
@@ -5871,6 +5915,16 @@ if ("serviceWorker" in navigator) {
   }, true);
 
   window.TCOut = { open: open, close: returnToEditor, isOpen: function () { return isOpen; } };
+  
+  var barEl = document.getElementById("action-bar");
+  if (barEl) {
+    barEl.addEventListener("click", function (e) {
+      if (!isOpen || !e.target.closest || !e.target.closest("#tb-userscreen")) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      returnToEditor();
+    }, true);
+  }
 })();
 </script>
   
