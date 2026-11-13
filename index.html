@@ -3193,7 +3193,7 @@ async function ensureZoomed(firstTimeFallback) {
   }
 }
 
-function tcStrip(t) { return String(t).replace(/^#include\s+"tcpace\.h"[ \t]*\r?\n/i, ""); }
+function tcStrip(t) { return String(t).replace(/^#include\s+"(?:[A-Za-z]:\\)?tcpace\.h"[ \t]*\r?\n/i, ""); }
 
 function tcHeader(cpp) {
   var L = [
@@ -3208,11 +3208,18 @@ function tcHeader(cpp) {
     '#include <dos.h>',
     '#include <conio.h>',
     'static int __tcn = 0;',
+    'static char __tcb[1024];',
     'static void __tcp(void) { if (++__tcn >= 4) { __tcn = 0; delay(25); } }',
     'static int __tcpf(const char *f, ...) { va_list a; int r; va_start(a, f); r = vprintf(f, a); va_end(a); __tcp(); return r; }',
     'static int __tcputs(const char *s) { int r = puts(s); __tcp(); return r; }',
+    'static int __tccpf(const char *f, ...) { va_list a; int r; va_start(a, f); r = vsprintf(__tcb, f, a); va_end(a); cputs(__tcb); __tcp(); return r; }',
+    'static int __tccputs(const char *s) { int r = cputs(s); __tcp(); return r; }',
+    'static int __tcputch(int c) { int r = putch(c); if (c == 10) __tcp(); return r; }',
     '#define printf __tcpf',
-    '#define puts __tcputs'
+    '#define puts __tcputs',
+    '#define cprintf __tccpf',
+    '#define cputs __tccputs',
+    '#define putch __tcputch'
   ];
   if (cpp) L.push(
     '#include <iostream.h>',
@@ -3242,7 +3249,7 @@ async function openCodeInEditor(name, code) {
     if (typeof dosCi.fsWriteFile !== "function") throw new Error("Filesystem write unavailable in this session.");
     var useCpp = /\.cpp$/i.test(name) && /\b(cout|cin|endl)\b/.test(code);
     await dosCi.fsWriteFile("TCPACE.H", new TextEncoder().encode(tcHeader(useCpp)));
-    code = '#include "tcpace.h"\n' + code;
+    code = '#include "C:\\TCPACE.H"\n' + code;
     await dosCi.fsWriteFile(name, new TextEncoder().encode(code));
   }
   await prepDos();
