@@ -3221,12 +3221,10 @@ function tcHeader(cpp) {
     '#define cputs __tccputs',
     '#define putch __tcputch'
   ];
-  if (cpp) L.push(
+    if (cpp) L.push(
     '#include <iostream.h>',
     'static ostream& __tcendl(ostream& o) { o << \'\\n\'; o.flush(); __tcp(); return o; }',
-    'static ostream& __tcout(void) { __tcp(); return cout; }',
-    '#define endl __tcendl',
-    '#define cout __tcout()'
+    '#define endl __tcendl'
   );
   L.push(
     'void __tcexit(void) { unsigned char m = peekb(0x40, 0x49); if (m <= 3 || m == 7) cputs("\\r\\n\\r\\n[Program finished - press any key, or tap Go Back]"); while (kbhit()) getch(); getch(); }',
