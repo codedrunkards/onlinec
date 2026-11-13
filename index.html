@@ -666,6 +666,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
   .out-hint b { color: var(--cyan-accent); }
   .out-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .out-gfx { background:#000; border:1px solid var(--border-color); border-radius:6px; padding:8px; overflow:auto; max-height:min(55vh,480px); text-align:center; }
+.out-gfx img { max-width:100%; height:auto; image-rendering:pixelated; display:block; margin:0 auto; }
   .out-btn {
     background-color: var(--bg-elevated); border: 1px solid var(--border-color); color: var(--text-primary);
     padding: 8px 14px; border-radius: 6px; font-size: 0.82rem; font-family: var(--font-mono); cursor: pointer;
@@ -2253,43 +2255,22 @@ void main() {
     </div>
   </div>
 
-  <!-- Program Output popup: everything the program printed, as plain text -->
-  <div class="modal-backdrop" id="output-modal">
-    <div class="modal-dialog out-dialog" id="out-dialog" tabindex="-1">
-      <div class="modal-header">
-        <h3 class="modal-title">📟 Program Output</h3>
-        <button type="button" class="modal-close-btn" id="out-close-btn" aria-label="Close">&times;</button>
-      </div>
-
-      <div class="out-status">
-        <span class="out-dot" id="out-dot"></span>
-        <span id="out-status-text">Tap ▶ Run, then come back here</span>
-        <span class="out-meta" id="out-meta"></span>
-      </div>
-
-      <pre class="out-screen" id="out-screen" tabindex="0" style="display:none;"></pre>
-      <div class="out-hint" id="out-hint"></div>
-
-      <div class="out-toolbar">
-        <button type="button" class="out-btn primary" id="out-copy">📋 Copy</button>
-        <button type="button" class="out-btn" id="out-download">⬇️ Download .txt</button>
-        <button type="button" class="out-btn" id="out-clear">🧹 Clear</button>
-        <button type="button" class="out-btn" id="out-dos">🖥️ DOS screen</button>
-      </div>
-
-      <details class="out-capture" id="out-capture-box">
-        <summary>⚙ Capture mode (exact output, works without any screen reading)</summary>
-        <p>Runs your program with its output saved to a file and reads that file back. Everything printed with
-           <code>printf</code>, <code>cout</code>, <code>puts</code>, <code>putchar</code> is captured exactly.
-           Because nothing can be typed while it runs, put the values your program asks for
-           (<code>scanf</code>/<code>cin</code>) below, one per line.</p>
-        <textarea id="out-stdin" spellcheck="false" placeholder="Input for the program (optional), one value per line&#10;e.g.&#10;5&#10;10"></textarea>
-        <button type="button" class="out-btn primary" id="out-run-capture">▶ Run in capture mode</button>
-      </details>
-
-      <label class="out-auto"><input type="checkbox" id="out-auto"> Open this window automatically after Run</label>
+  <!-- Program Output popup: whole output only, scroll + download -->
+<div class="modal-backdrop" id="output-modal">
+  <div class="modal-dialog out-dialog" id="out-dialog" tabindex="-1">
+    <div class="modal-header">
+      <h3 class="modal-title">📟 Program Output</h3>
+      <button type="button" class="modal-close-btn" id="out-close-btn" aria-label="Close">&times;</button>
+    </div>
+    <div class="out-status"><span class="out-meta" id="out-meta" style="margin-left:0;"></span></div>
+    <pre class="out-screen" id="out-screen" tabindex="0"></pre>
+    <div class="out-gfx" id="out-gfx" style="display:none;"><img id="out-gfx-img" alt="Graphics output"></div>
+    <div class="out-toolbar">
+      <button type="button" class="out-btn primary" id="out-dl-txt">⬇️ Download Text</button>
+      <button type="button" class="out-btn primary" id="out-dl-png">⬇️ Download Image</button>
     </div>
   </div>
+</div>
 
   <!-- Save to List Modal Dialog -->
   <div class="modal-backdrop" id="save-list-modal">
@@ -3515,10 +3496,7 @@ async function actRun() {
 // The Output button opens the text popup. While the real DOS output screen is showing
 // (the button glows "Go Back") it still takes you back to the editor, as before.
 async function actOutput() {
-  const b = document.getElementById("tb-userscreen");
-  const onDosScreen = !!(b && b.classList.contains("go-back-glow"));
-  if (!onDosScreen && window.OutCap) { window.OutCap.open(); return; }
-  await exclusive(null, actOutputDosScreen);
+  await exclusive(null, actOutputDosScreen);   // ONLY Alt+F5 switch: editor <-> DOS output screen
 }
 
 // Alt+F5 toggle between the editor and the DOS output screen
@@ -3561,6 +3539,10 @@ async function actPaste() {
   openModal();
 }
 
+function actProgramOutput() {
+  if (window.OutCap) window.OutCap.openIfReady();
+}
+  
 // id      : button id is "tb-" + id (or "dom" if given)
 // busy    : text of the "Please wait" popup. Give it to anything that sends many keys.
 // needsFile: button does nothing until a file is open
@@ -3573,6 +3555,7 @@ const ACTIONS = [
   { id: "saveas",   icon: "📝", label: "Save As",  needsFile: true, busy: "Reading your code...", run: actSaveAs },
   { id: "run",      icon: "▶️", label: "Run",      hint: "Ctrl+F9", needsFile: true, run: actRun },
   { id: "output",   dom: "tb-userscreen", icon: "🖥️", label: "Output", direct: true, run: actOutput },
+  { id: "progout",   icon: "📟", label: "Program Output", direct: true, run: actProgramOutput },
   { id: "clear",    icon: "🧹", label: "Clear",    needsFile: true, busy: "Clearing the editor...", run: actClear },
   { id: "download", icon: "⬇️", label: "Download", needsFile: true, busy: "Reading your code...", run: actDownload },
 ];
@@ -5695,9 +5678,8 @@ if ("serviceWorker" in navigator) {
 
   const $ = (id) => document.getElementById(id);
   const modal = $("output-modal"), dialogEl = $("out-dialog"), screenEl = $("out-screen"),
-        hintEl = $("out-hint"), dotEl = $("out-dot"), statusEl = $("out-status-text"),
-        metaEl = $("out-meta"), autoBox = $("out-auto"), stdinBox = $("out-stdin"),
-        captureBox = $("out-capture-box"), outBtn = $("tb-userscreen");
+        gfxBox = $("out-gfx"), gfxImg = $("out-gfx-img"), metaEl = $("out-meta"),
+        btnTxt = $("out-dl-txt"), btnPng = $("out-dl-png");
   if (!modal || !screenEl) return;
 
   // --------------------------------------------------------------------------
@@ -5742,24 +5724,24 @@ if ("serviceWorker" in navigator) {
 
   // --------------------------------------------------------------------------
   // Run state + live stream
+  // State
   // --------------------------------------------------------------------------
-  const stats = { chunks: 0, bytes: 0, lastAt: 0 };
-  let hook = "none";                 // none | stdout | missing
+  
   let attachedCi = null;
-  let runStartedAt = 0, runChunks = 0, source = "live";   // source: live | file
-  let suspendLive = false;           // true while capture mode owns the display
-  let capRunning = false, capStep = "";
-  let usedNote = "";                 // message shown in the empty-state box
-
-  // The hook may hand us raw writes ("Hi\r\n") or one finished line per call ("Hi\r").
-  // We work out which one it is from the first lines, so lines are never glued together.
+  let runStartedAt = 0;
+  let visitedOutput = false;   // user has looked at the DOS output screen during this run
+  let gfxFrame = null;         // last graphics-mode picture (data URL)
+  let lastFrame = null;        // last picture of the output screen (any mode)
   let mode = null, held = [], sawCR = false, holdTimer = null;
+
+  function say(m) { if (typeof showToast === "function") showToast(m, 4500); }
+
+  // ---- live text from DOS (same logic as before) ----
   function applyMsg(m) { feedText(m); if (mode === true) feedText("\n"); }
   function resolveMode(m) {
     clearTimeout(holdTimer); holdTimer = null; mode = m;
     const h = held; held = [];
     for (const x of h) applyMsg(x);
-    scheduleRender();
   }
   function clearHold() { clearTimeout(holdTimer); holdTimer = null; held = []; sawCR = false; }
   function toText(m) {
@@ -5771,255 +5753,133 @@ if ("serviceWorker" in navigator) {
     return String(m == null ? "" : m);
   }
   function onStdout(raw) {
-    if (suspendLive) return;
     const msg = toText(raw);
-    stats.chunks++; runChunks++; stats.bytes += msg.length; stats.lastAt = Date.now();
-    if (!isOpen() && outBtn) outBtn.classList.add("has-new");
     if (mode === null) {
       held.push(msg);
-      if (msg.indexOf("\n") >= 0) { resolveMode(false); return; }   // real newlines inside: raw stream
-      if (sawCR) { resolveMode(true); return; }                     // "text\r" then another message: line per call
+      if (msg.indexOf("\n") >= 0) { resolveMode(false); return; }
+      if (sawCR) { resolveMode(true); return; }
       sawCR = /\r$/.test(msg);
       clearTimeout(holdTimer);
       holdTimer = setTimeout(() => resolveMode(sawCR), 500);
       return;
     }
     applyMsg(msg);
-    scheduleRender();
   }
-
   function attach(ci) {
     if (!ci || attachedCi === ci) return;
     attachedCi = ci;
     try {
       const ev = typeof ci.events === "function" ? ci.events() : null;
-      if (ev && typeof ev.onStdout === "function") { ev.onStdout(onStdout); hook = "stdout"; }
-      else hook = "missing";
-    } catch (e) { console.warn("Output hook failed:", e); hook = "missing"; }
-    scheduleRender();
+      if (ev && typeof ev.onStdout === "function") ev.onStdout(onStdout);
+    } catch (e) { console.warn("Output hook failed:", e); }
   }
 
-  // A new run starts: forget the previous run's text
+  // A new run starts: forget the previous run completely
   function beginRun() {
     clearHold(); resetTerm();
-    runChunks = 0; runStartedAt = Date.now(); source = "live"; usedNote = "";
-    if (outBtn) outBtn.classList.remove("has-new");
-    scheduleRender();
-    if (autoBox && autoBox.checked) setTimeout(() => { if (!isOpen()) open(); }, 700);
-  }
-  function reset() {
-    clearHold(); resetTerm(); runChunks = 0; runStartedAt = 0; source = "live"; usedNote = "";
-    render(true);
+    runStartedAt = Date.now();
+    visitedOutput = false; gfxFrame = null; lastFrame = null;
   }
 
   // --------------------------------------------------------------------------
-  // Popup
+  // Picture of the DOS output screen (this is what makes graphics.h work)
+  // While the output screen is showing, a picture is taken every 0.5 s.
+  // The last GRAPHICS picture is kept, so it survives closegraph().
   // --------------------------------------------------------------------------
-  let statusTimer = null, renderQueued = false;
+  let grabbing = false;
+  function imgToUrl(img) {
+    const c = document.createElement("canvas");
+    c.width = img.width; c.height = img.height;
+    c.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(img.data), img.width, img.height), 0, 0);
+    return c.toDataURL("image/png");
+  }
+  async function grabFrame() {
+    if (grabbing || !runStartedAt || !dosCi || document.hidden || typeof dosCi.screenshot !== "function") return;
+    grabbing = true;
+    try {
+      const img = await dosCi.screenshot();
+      if (!img || !img.data) return;
+      const isText = (img.width === 720 && img.height === 400);   // normal 80x25 text screen
+      if (isText) {                                              // skip if it is really the editor (grey menu bar)
+        const y = Math.floor(img.height / 25 * 0.5), step = Math.max(1, Math.floor(img.width / 60));
+        let grey = 0, total = 0;
+        for (let x = 2; x < img.width - 2; x += step) {
+          const i = (y * img.width + x) * 4; total++;
+          if (Math.abs(img.data[i] - 170) < 30 && Math.abs(img.data[i + 1] - 170) < 30 && Math.abs(img.data[i + 2] - 170) < 30) grey++;
+        }
+        if (total && grey / total > 0.5) return;
+      }
+      visitedOutput = true;
+      const url = imgToUrl(img);
+      lastFrame = url;
+      if (!isText) gfxFrame = url;
+    } catch (e) {} finally { grabbing = false; }
+  }
+  setInterval(() => {
+    if (typeof editorOnScreen !== "undefined" && editorOnScreen === false) grabFrame();
+  }, 500);
+
+  // --------------------------------------------------------------------------
+  // Popup: only the whole output, scrollable, with download
+  // --------------------------------------------------------------------------
   function isOpen() { return modal.classList.contains("visible"); }
-  function scheduleRender() {
-    if (renderQueued) return;
-    renderQueued = true;
-    setTimeout(() => { renderQueued = false; render(); }, 80);
-  }
-  function emptyHint() {
-    const waited = runStartedAt && (Date.now() - runStartedAt > 4000);
-    let head = usedNote || (!runStartedAt ? "Nothing has run yet." : (waited ? "Nothing was printed by this run (yet)." : "Program is running…"));
-    return "<b>" + head + "</b><br>" +
-      "• Tap <b>▶ Run</b>, then open this window again – the text appears here as the program prints it.<br>" +
-      "• If the program is waiting for a key or a number, finish it on the <b>🖥️ DOS screen</b> first.<br>" +
-      "• If you ran it and this stays empty, open <b>Capture mode</b> below and run it there – it saves exactly what " +
-      "<code>printf</code>/<code>cout</code> print into a file and shows it here.<br>" +
-      "• Text drawn straight onto the screen (<code>cprintf</code>, <code>graphics.h</code>) is not text output, so it can't be captured by either method.";
-  }
-  function render(force) {
-    if (!isOpen() && !force) return;
+  function render() {
     const text = currentText();
-    if (!text) {
-      hintEl.innerHTML = emptyHint();
-      hintEl.style.display = "block"; screenEl.style.display = "none";
-    } else {
-      hintEl.style.display = "none"; screenEl.style.display = "block";
-      const shown = text.length > RENDER_TAIL ? "[... earlier output hidden on screen - Copy / Download give everything ...]\n" + text.slice(-RENDER_TAIL) : text;
-      const stick = screenEl.scrollTop + screenEl.clientHeight >= screenEl.scrollHeight - 30;
-      screenEl.textContent = shown;
-      if (stick) screenEl.scrollTop = screenEl.scrollHeight;
-    }
-    updateStatus();
-  }
-  function updateStatus() {
-    if (!statusEl) return;
-    const now = Date.now(), has = lines.length > 1 || lines[0].length > 0;
-    let dot = "", txt;
-    if (capRunning)                    { dot = "busy"; txt = capStep || "Capture mode running…"; }
-    else if (source === "file")        { dot = "ok";   txt = "Exact output read from the capture file"; }
-    else if (hook === "none")          { dot = "warn"; txt = "Waiting for the emulator to start…"; }
-    else if (hook === "missing")       { dot = "warn"; txt = "No live hook in this emulator build – use Capture mode below"; }
-    else if (runChunks > 0 && now - stats.lastAt < 1500) { dot = "live"; txt = "Receiving output…"; }
-    else if (runChunks > 0)            { dot = "ok";   txt = "Captured live from DOS"; }
-    else if (runStartedAt)             { dot = (now - runStartedAt > 4000) ? "warn" : ""; txt = (now - runStartedAt > 4000) ? "No text received from this run" : "Program is running…"; }
-    else                               { txt = "Tap ▶ Run, then come back here"; }
-    dotEl.className = "out-dot" + (dot ? " " + dot : "");
-    statusEl.textContent = txt;
-    const t = has ? currentText() : "";
-    metaEl.textContent = t ? (t.split("\n").length + " lines · " + t.length + " chars") : "";
+    const img = gfxFrame || (!text ? lastFrame : null);
+    if (text) { screenEl.style.display = "block"; screenEl.textContent = text; screenEl.scrollTop = 0; }
+    else if (!img) { screenEl.style.display = "block"; screenEl.textContent = "(The program printed no output.)"; }
+    else screenEl.style.display = "none";
+    if (img) { gfxImg.src = img; gfxBox.style.display = "block"; } else { gfxImg.removeAttribute("src"); gfxBox.style.display = "none"; }
+    btnTxt.style.display = text ? "" : "none";
+    btnPng.style.display = img ? "" : "none";
+    metaEl.textContent = text ? (text.split("\n").length + " lines · " + text.length + " chars") : (img ? "Graphics output" : "");
   }
   function open() {
+    render();
     modal.classList.add("visible");
     if (typeof toggleModalScroll === "function") toggleModalScroll(true);
-    if (outBtn) outBtn.classList.remove("has-new");
-    render(true);
-    clearInterval(statusTimer); statusTimer = setInterval(updateStatus, 500);
-    try { dialogEl.focus({ preventScroll: true }); } catch (e) {}   // keys now stay in this window, not in DOS
+    try { dialogEl.focus({ preventScroll: true }); } catch (e) {}
   }
   function close() {
     modal.classList.remove("visible");
     if (typeof toggleModalScroll === "function") toggleModalScroll(false);
     if (typeof clearKeyMatrix === "function") clearKeyMatrix();
-    clearInterval(statusTimer); statusTimer = null;
   }
 
-  // --------------------------------------------------------------------------
-  // Copy / Download / Clear / DOS screen
-  // --------------------------------------------------------------------------
-  function say(m) { if (typeof showToast === "function") showToast(m); }
-  async function copyOut() {
-    const t = currentText();
-    if (!t) { say("Nothing to copy yet"); return; }
-    try { await navigator.clipboard.writeText(t); }
-    catch (e) {
-      const ta = document.createElement("textarea");
-      ta.value = t; ta.style.cssText = "position:fixed;opacity:0;top:0;left:0;";
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand("copy"); } catch (e2) {}
-      ta.remove();
-    }
-    say("Output copied");
+  // Opens only AFTER: Run -> Output screen viewed -> back in the editor
+  async function openIfReady() {
+    if (!dosCi) { say("Please start Turbo C++ first!"); return; }
+    if (!runStartedAt) { say("Run your program first."); return; }
+    const ide = await isEditorOnScreen();
+    if (ide === false) { say("Tap 'Go Back' to return to the editor first, then tap Program Output."); return; }
+    if (!visitedOutput) { say("Tap Output to see the program's output screen first, then Go Back and tap Program Output."); return; }
+    open();
   }
-  function downloadOut() {
-    const t = currentText();
-    if (!t) { say("Nothing to download yet"); return; }
-    const base = (typeof lastDosFilename === "string" && lastDosFilename ? lastDosFilename.replace(/\.[^.]*$/, "") : "program").toLowerCase();
-    const url = URL.createObjectURL(new Blob([t + "\r\n"], { type: "text/plain;charset=utf-8" }));
+
+  function baseName() {
+    return (typeof lastDosFilename === "string" && lastDosFilename ? lastDosFilename.replace(/\.[^.]*$/, "") : "program").toLowerCase();
+  }
+  function saveAs(href, name) {
     const a = document.createElement("a");
-    a.href = url; a.download = base + "_output.txt";
+    a.href = href; a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
+  }
+  btnTxt.addEventListener("click", () => {
+    const t = currentText(); if (!t) return;
+    const url = URL.createObjectURL(new Blob([t + "\r\n"], { type: "text/plain;charset=utf-8" }));
+    saveAs(url, baseName() + "_output.txt");
     setTimeout(() => URL.revokeObjectURL(url), 3000);
-    say("Downloaded " + base + "_output.txt");
-  }
-  function showDosScreen() {
-    close();
-    if (typeof exclusive === "function" && typeof actOutputDosScreen === "function") exclusive(null, actOutputDosScreen);
-  }
+  });
+  btnPng.addEventListener("click", () => {
+    const src = gfxImg.getAttribute("src"); if (!src) return;
+    saveAs(src, baseName() + "_output.png");
+  });
 
-  // --------------------------------------------------------------------------
-  // CAPTURE MODE: run with output redirected to a file, then read the file
-  // --------------------------------------------------------------------------
-  let capArgs = "";      // what we typed into Run > Arguments (so it can be removed again)
-
-  // Run menu (Alt+R) -> "Arguments..." (A). Gives the program command-line text, which in
-  // Turbo C++ also accepts DOS redirection (< and >).
-  async function setRunArguments(text) {
-    await dosCombo([KBD.LALT], 82);                          // Alt+R
-    await delay(300);
-    await pressDosKey(65, false, 25, 400);                   // A  = Arguments...
-    await pressDosKey(269, false, 20, 40);                   // End
-    for (let i = 0; i < capArgs.length + 3; i++) await pressDosKey(KBD.BACKSPACE, false, 12, 10);
-    if (text) await typeDosText(text);
-    await delay(80);
-    await pressDosKey(KBD.ENTER, false, 25, 300);
-    capArgs = text || "";
-  }
-  async function peekFile(name) {
-    try { return await readDosFile(name); } catch (e) { return null; }
-  }
-  // Waits until the program has started and its output file has stopped growing
-  async function waitForCaptureFile(cfg) {
-    const t0 = Date.now();
-    let started = false, startedAt = 0, lastSize = -1, changedAt = 0, pokes = 0, pokedAt = 0, bytes = null;
-    for (;;) {
-      await delay(cfg.poll);
-      const now = Date.now();
-      const b = await peekFile(CAP_OUT);
-      if (b) {
-        bytes = b;
-        if (!started) { started = true; startedAt = now; lastSize = b.length; changedAt = now; }
-        else if (b.length !== lastSize) { lastSize = b.length; changedAt = now; }
-        capStep = "Program running…"; updateStatus();
-        if (b.length > 0 && now - changedAt > cfg.settle) return { bytes: b, started: true };            // output complete
-        // started but nothing written yet: usually waiting at getch() (stdout is flushed on exit) - ESC is "any key"
-        if (now - startedAt > cfg.firstPoke && pokes < cfg.maxPokes && now - pokedAt > cfg.pokeEvery) {
-          await pressDosKey(KBD.ESC, false, 25, 60); pokes++; pokedAt = now;
-        }
-        if (b.length === 0 && pokes >= cfg.maxPokes && now - pokedAt > cfg.pokeEvery) return { bytes: b, started: true };  // ended, printed nothing
-        if (now - startedAt > cfg.runLimit) return { bytes: b, started: true, timedOut: true };
-      } else if (now - t0 > cfg.startLimit) {
-        return { bytes: null, started: false };
-      }
-    }
-  }
-  const CAP_CFG = { poll: 450, settle: 1500, firstPoke: 1200, pokeEvery: 1200, maxPokes: 5, startLimit: 25000, runLimit: 20000 };
-
-  function latin1(u8) { let s = ""; for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return s; }
-
-  async function runCaptured() {
-    if (typeof ensureCompilerStarted === "function" && !ensureCompilerStarted()) return;
-    if (!lastDosFilename) { say("Tap New or Open first."); return; }
-    if (capRunning) return;
-    const raw = stdinBox ? stdinBox.value : "";
-    const stdinText = raw ? raw.replace(/\r\n|\r|\n/g, "\r\n").replace(/(\r\n)?$/, "\r\n") : "";
-    capRunning = true; capStep = "Preparing…"; suspendLive = true; updateStatus();
-    let res = null, failed = "";
-    const ok = await exclusive(null, async () => {
-      try {
-        await prepDos();
-        try { if (typeof dosCi.fsDeleteFile === "function") await withTimeout(dosCi.fsDeleteFile(CAP_OUT), 2000); } catch (e) {}
-        await dosCi.fsWriteFile(CAP_IN, new TextEncoder().encode(stdinText));   // empty file = scanf/cin get EOF instead of hanging
-        capStep = "Setting up the run…"; updateStatus();
-        await setRunArguments("<C:\\" + CAP_IN + " >C:\\" + CAP_OUT);
-        capStep = "Compiling and running…"; updateStatus();
-        await dosCombo([KBD.LCTRL], KBD.F9);
-        res = await waitForCaptureFile(CAP_CFG);
-        if (res && res.timedOut) { try { await dosCombo([KBD.LCTRL], 284, 60); } catch (e) {} }   // Ctrl+Break for endless loops
-        await delay(300);
-        await dosEscapeAll();
-      } catch (e) {
-        failed = (e && e.message) || String(e);
-      } finally {
-        capStep = "Cleaning up…"; updateStatus();
-        try { await setRunArguments(""); } catch (e) {}          // normal Run must not keep redirecting
-      }
-    });
-    capRunning = false; suspendLive = false;
-    if (!ok) { updateStatus(); return; }
-    clearHold(); resetTerm(); runChunks = 0; runStartedAt = Date.now();
-    if (failed) { source = "live"; usedNote = "Capture mode failed: " + failed; }
-    else if (!res || !res.started) { source = "live"; usedNote = "The program did not start – check the editor for compiler errors, then try again."; }
-    else {
-      source = "file";
-      feedText(latin1(res.bytes));
-      if (!res.bytes.length) { source = "live"; usedNote = "The program finished without printing anything."; }
-      else if (res.timedOut) say("Program ran too long – showing what it printed so far.");
-    }
-    render(true);
-  }
-
-  // --------------------------------------------------------------------------
-  // Wiring
-  // --------------------------------------------------------------------------
   $("out-close-btn").addEventListener("click", close);
-  $("out-copy").addEventListener("click", copyOut);
-  $("out-download").addEventListener("click", downloadOut);
-  $("out-clear").addEventListener("click", reset);
-  $("out-dos").addEventListener("click", showDosScreen);
-  $("out-run-capture").addEventListener("click", runCaptured);
   modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
   window.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen()) { e.preventDefault(); close(); } });
 
-  try { autoBox.checked = localStorage.getItem("tc_out_auto") === "1"; } catch (e) {}
-  autoBox.addEventListener("change", () => { try { localStorage.setItem("tc_out_auto", autoBox.checked ? "1" : "0"); } catch (e) {} });
-
-  // A program can also be started from the physical keyboard (Ctrl+F9): mark the new run
+  // Ctrl+F9 from the physical keyboard also marks a new run
   window.addEventListener("keydown", (e) => {
     if (e.key === "F9" && e.ctrlKey && !e.altKey && !e.repeat) {
       if (e.target && e.target.closest && e.target.closest(".modal-backdrop")) return;
@@ -6027,18 +5887,12 @@ if ("serviceWorker" in navigator) {
     }
   }, true);
 
-  // Safety net: if the emulator became ready before this script ran, still attach
   const poll = setInterval(() => {
     try { if (typeof dosCi !== "undefined" && dosCi) { attach(dosCi); clearInterval(poll); } } catch (e) {}
   }, 400);
   setTimeout(() => clearInterval(poll), 90000);
 
-  window.OutCap = {
-    attach, beginRun, open, close, reset, runCaptured,
-    text: currentText,
-    _feed: onStdout, _stats: stats, _cfg: CAP_CFG,
-    _state: () => ({ hook, mode, source, runChunks, capRunning, capArgs })
-  };
+  window.OutCap = { attach, beginRun, openIfReady, open, close, text: currentText };
 })();
 </script>
 
